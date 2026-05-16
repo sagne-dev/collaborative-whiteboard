@@ -1,0 +1,14 @@
+{
+  "name": "collaborative-whiteboard",
+  "version": "1.0.0",
+  "description": "Figma-style real-time collaborative whiteboard — all 7 phases",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js"
+  },
+  "dependencies": {
+    "ws": "^8.17.0"
+  },
+  "license": "ISC"
+}
