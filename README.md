@@ -84,3 +84,5 @@ whiteboard/
 ## Want a link that ALWAYS works?
 
 You'd need to **deploy** to a hosting service:
+
+and also you can injoy it by using it with your friends and colligues
