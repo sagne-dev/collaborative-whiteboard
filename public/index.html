@@ -3,8 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Whiteboard — Real-time Collaborative</title>
+  <title>CollabSpace — Whiteboard & Watch Party</title>
   <link rel="stylesheet" href="style.css" />
+  <!-- YouTube IFrame Player API -->
+  <script src="https://www.youtube.com/iframe_api"></script>
 </head>
 <body>
 
@@ -17,78 +19,296 @@
           <path d="M10 34 Q16 18 24 24 Q32 30 38 14" stroke="#4ECDC4" stroke-width="3" stroke-linecap="round" fill="none"/>
           <circle cx="24" cy="24" r="3" fill="#FF6B6B"/>
         </svg>
-        <h1>Whiteboard</h1>
+        <div>
+          <h1>CollabSpace</h1>
+          <p class="join-tagline">Whiteboard & Watch Party</p>
+        </div>
       </div>
-      <p class="join-sub">Real-time collaborative canvas</p>
+      <p class="join-sub">Draw together or watch videos & YouTube in real-time sync</p>
 
       <label>Your name
         <input id="name-input" type="text" placeholder="e.g. Alice" maxlength="20" />
       </label>
       <label>Room ID
-        <input id="room-input" type="text" placeholder="e.g. my-room" maxlength="40" />
+        <input id="room-input" type="text" placeholder="e.g. movie-night" maxlength="40" />
         <small>Share this ID with collaborators</small>
       </label>
-      <button id="join-btn">Join Whiteboard →</button>
+      <button id="join-btn">Join Room →</button>
     </div>
   </div>
 
-  <!-- BOARD SCREEN (hidden by CSS class, not HTML attribute) -->
+  <!-- BOARD / ROOM SCREEN (hidden initially until user joins) -->
   <div id="board-screen" class="hidden">
 
-    <!-- Toolbar -->
-    <aside id="toolbar">
-      <div class="toolbar-section">
-        <button class="tool-btn active" data-tool="pen" title="Pen">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+    <!-- Persistent Top Navigation Bar (Mode Switcher) -->
+    <header id="top-nav">
+      <div class="nav-left">
+        <div class="nav-brand">
+          <svg width="28" height="28" viewBox="0 0 48 48" fill="none">
+            <rect width="48" height="48" rx="10" fill="#16213e"/>
+            <path d="M10 34 Q16 18 24 24 Q32 30 38 14" stroke="#4ECDC4" stroke-width="4" stroke-linecap="round" fill="none"/>
+            <circle cx="24" cy="24" r="4" fill="#FF6B6B"/>
+          </svg>
+          <span class="brand-title">CollabSpace</span>
+        </div>
+      </div>
+
+      <!-- Mode Switcher Tabs -->
+      <nav class="mode-switcher" aria-label="Room Modes">
+        <button id="mode-whiteboard-btn" class="mode-tab active" data-mode="whiteboard">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
             <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
           </svg>
+          <span>Whiteboard Mode</span>
         </button>
-        <button class="tool-btn" data-tool="eraser" title="Eraser">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <path d="M20 20H7L3 16l13-13 7 7-3 10z"/>
+        <button id="mode-watchparty-btn" class="mode-tab" data-mode="watchparty">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
           </svg>
+          <span>Watch Party Mode</span>
+          <span id="nav-chat-badge" class="nav-badge hidden">0</span>
         </button>
+      </nav>
+
+      <!-- Right Meta Bar -->
+      <div class="nav-meta">
+        <div id="nav-room-badge" class="meta-pill room-pill" title="Click to copy invite link">
+          <span class="meta-icon">🔗</span>
+          <span id="nav-room-label">Room: ...</span>
+          <span class="copy-hint" id="copy-hint">Copied!</span>
+        </div>
+
+        <div id="nav-user-pill" class="meta-pill">
+          <span class="user-avatar-dot" id="nav-user-dot"></span>
+          <span id="nav-user-name">Guest</span>
+        </div>
+
+        <div id="status" class="status connected">🟢 Connected</div>
+      </div>
+    </header>
+
+    <!-- Workspace Views Container -->
+    <div id="workspace-views">
+
+      <!-- ══════════════════════════════════════
+           1. WHITEBOARD MODE VIEW
+      ══════════════════════════════════════ -->
+      <div id="whiteboard-view" class="view-panel active">
+        <!-- Toolbar -->
+        <aside id="toolbar">
+          <div class="toolbar-section">
+            <button class="tool-btn active" data-tool="pen" title="Pen">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+              </svg>
+            </button>
+            <button class="tool-btn" data-tool="eraser" title="Eraser">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M20 20H7L3 16l13-13 7 7-3 10z"/>
+              </svg>
+            </button>
+          </div>
+
+          <div class="toolbar-section">
+            <label class="color-wrap" title="Pick color">
+              <input id="color-picker" type="color" value="#ffffff" />
+              <span class="color-preview" style="background:#ffffff"></span>
+            </label>
+          </div>
+
+          <div class="toolbar-section">
+            <span class="slider-label">Size</span>
+            <input id="width-slider" type="range" min="1" max="40" value="4" class="vslider" />
+            <span id="width-label">4</span>
+          </div>
+
+          <div class="toolbar-section">
+            <button class="action-btn" id="undo-btn" title="Undo (Ctrl+Z)">↩</button>
+            <button class="action-btn" id="redo-btn" title="Redo (Ctrl+Y)">↪</button>
+            <button class="action-btn danger" id="clear-btn" title="Clear all">✕</button>
+          </div>
+
+          <div id="room-label" class="room-label"></div>
+        </aside>
+
+        <!-- Presence panel -->
+        <div id="presence-panel">
+          <span class="presence-title">Online (<span id="user-count-display">0</span>)</span>
+          <ul id="user-list"></ul>
+        </div>
+
+        <!-- Canvas area -->
+        <main id="canvas-wrap">
+          <canvas id="canvas"></canvas>
+          <div id="cursor-overlay"></div>
+        </main>
+
+        <!-- Hint bar -->
+        <div id="hint-bar">
+          <kbd>Ctrl+Z</kbd> Undo &nbsp;·&nbsp; <kbd>Ctrl+Y</kbd> Redo &nbsp;·&nbsp; Click room ID above to share link
+        </div>
       </div>
 
-      <div class="toolbar-section">
-        <label class="color-wrap" title="Pick color">
-          <input id="color-picker" type="color" value="#ffffff" />
-          <span class="color-preview" style="background:#ffffff"></span>
-        </label>
+      <!-- ══════════════════════════════════════
+           2. WATCH PARTY MODE VIEW
+      ══════════════════════════════════════ -->
+      <div id="watchparty-view" class="view-panel">
+
+        <!-- Main Stage: Synchronized Video Player -->
+        <div id="video-stage">
+
+          <!-- Top Video Control Bar (URL loader & Sample videos) -->
+          <div class="video-toolbar">
+            <div class="video-source-box">
+              <span class="source-label">Video URL:</span>
+              <input id="video-url-input" type="url" placeholder="Paste any video link (YouTube, Google Drive, MP4, web link)..." />
+              <button id="video-load-btn" class="v-btn primary-v-btn">Load Video</button>
+            </div>
+
+            <div class="sample-videos-wrap">
+              <select id="sample-videos-select" class="sample-select" aria-label="Select sample video">
+                <option value="" disabled selected>Sample Videos</option>
+                <optgroup label="YouTube Videos">
+                  <option value="https://www.youtube.com/watch?v=aqz-KE-bpKQ">YouTube: Big Buck Bunny (4K)</option>
+                  <option value="https://www.youtube.com/watch?v=Z4C82eyhwgU">YouTube: Caminandes</option>
+                  <option value="https://www.youtube.com/watch?v=jNQXAC9IVRw">YouTube: Me at the zoo</option>
+                </optgroup>
+                <optgroup label="Google & Direct Media (MP4)">
+                  <option value="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4">Google Cloud: Big Buck Bunny</option>
+                  <option value="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4">Google Cloud: Elephants Dream</option>
+                  <option value="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4">Google Cloud: For Bigger Blazes</option>
+                  <option value="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4">Google Cloud: Tears of Steel</option>
+                </optgroup>
+              </select>
+            </div>
+
+            <div class="video-sync-actions">
+              <button id="video-sync-btn" class="v-btn sync-btn" title="Force sync playback time with room">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+                <span>Resync</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Video Player Display Container -->
+          <div class="video-display-wrapper">
+            <!-- 1. HTML5 Video Player for Direct URLs/MP4s -->
+            <video id="shared-video" playsinline preload="auto" controls></video>
+
+            <!-- 2. YouTube Video Player for YouTube URLs -->
+            <div id="youtube-player-container" class="youtube-player-container hidden">
+              <div id="youtube-player"></div>
+            </div>
+
+            <!-- 3. Universal Embed Player for Google Drive, Vimeo, & Web Links -->
+            <div id="embed-player-container" class="embed-player-container hidden">
+              <iframe id="embed-iframe" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" referrerpolicy="no-referrer" allowfullscreen></iframe>
+            </div>
+
+            <!-- Sync toast overlay -->
+            <div id="video-sync-toast" class="sync-toast hidden"></div>
+
+            <!-- Autoplay restricted prompt if browser blocks playback -->
+            <div id="video-autoplay-overlay" class="autoplay-overlay hidden">
+              <div class="autoplay-card">
+                <div class="autoplay-icon">▶️</div>
+                <h3>Synchronized Playback Ready</h3>
+                <p>Click below to join the room's synchronized video and audio stream.</p>
+                <button id="unmute-play-btn" class="v-btn primary-v-btn">Join Video Stream</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Synchronized Room Skip & Playback Control Bar -->
+          <div id="room-sync-bar" class="room-sync-bar">
+            <div class="sync-bar-left">
+              <button id="room-play-pause-btn" class="sync-ctrl-btn" title="Toggle Play / Pause for everyone in room">
+                <span id="room-play-icon">▶️</span>
+                <span id="room-play-text">Play Room</span>
+              </button>
+              <button id="skip-back-10-btn" class="sync-ctrl-btn skip-btn" title="Skip back 10 seconds for everyone in room">
+                ⏪ -10s
+              </button>
+              <button id="skip-forward-10-btn" class="sync-ctrl-btn skip-btn" title="Skip forward 10 seconds for everyone in room">
+                ⏩ +10s
+              </button>
+              <button id="skip-forward-30-btn" class="sync-ctrl-btn skip-btn" title="Skip forward 30 seconds for everyone in room">
+                ⏩ +30s
+              </button>
+            </div>
+
+            <div class="sync-bar-center">
+              <span class="sync-time-label" id="sync-current-time">00:00</span>
+              <input type="range" id="sync-scrubber" class="sync-scrubber" min="0" max="100" value="0" step="1" title="Seek to position for everyone in room" />
+              <span class="sync-time-label" id="sync-duration-time">00:00</span>
+            </div>
+
+            <div class="sync-bar-right">
+              <div class="jump-time-wrap">
+                <input type="text" id="jump-time-input" placeholder="mm:ss" maxlength="8" title="Enter time e.g. 05:30" />
+                <button id="jump-time-btn" class="sync-ctrl-btn jump-btn" title="Jump room to exact time">Jump</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Video Stage Footer Status & Theater Chat Toggle -->
+          <div class="video-footer-bar">
+            <div class="now-playing-info">
+              <span class="now-playing-tag" id="video-type-tag">NOW PLAYING</span>
+              <span id="video-title-display">Big Buck Bunny (MP4)</span>
+            </div>
+
+            <div class="playback-badge" id="video-status-badge">
+              <span class="badge-dot"></span>
+              <span id="video-state-text">Ready</span>
+            </div>
+
+            <!-- Pop in chat toggle button (visible when sidebar is collapsed) -->
+            <button id="theater-chat-btn" class="theater-chat-toggle hidden" title="Expand Chat Sidebar">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              <span>Show Chat</span>
+              <span id="theater-chat-badge" class="chat-badge hidden">0</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════
+             3. COLLAPSIBLE TEXT CHAT SIDEBAR
+        ══════════════════════════════════════ -->
+        <aside id="chat-sidebar" class="chat-sidebar">
+          <div class="chat-header">
+            <div class="chat-header-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              <span>Room Chat</span>
+            </div>
+            <!-- Collapse Button: "unpop" sidebar to enter full-width theater view -->
+            <button id="chat-collapse-btn" class="chat-collapse-btn" title="Collapse chat for Theater Mode">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+              <span>Collapse</span>
+            </button>
+          </div>
+
+          <!-- Messages scroll area -->
+          <div id="chat-messages" class="chat-messages">
+            <div class="chat-welcome-msg">
+              <p>🍿 <strong>Watch Party Chat</strong></p>
+              <small>YouTube & MP4 playback (play, pause, seek) is synced in real-time. Chat with everyone here!</small>
+            </div>
+          </div>
+
+          <!-- Message input form -->
+          <form id="chat-form" class="chat-input-form">
+            <input id="chat-input" type="text" placeholder="Send a message to the room..." maxlength="500" autocomplete="off" />
+            <button type="submit" id="chat-send-btn" title="Send message">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </form>
+        </aside>
+
       </div>
 
-      <div class="toolbar-section">
-        <span class="slider-label">Size</span>
-        <input id="width-slider" type="range" min="1" max="40" value="4" class="vslider" />
-        <span id="width-label">4</span>
-      </div>
-
-      <div class="toolbar-section">
-        <button class="action-btn" id="undo-btn" title="Undo (Ctrl+Z)">↩</button>
-        <button class="action-btn" id="redo-btn" title="Redo (Ctrl+Y)">↪</button>
-        <button class="action-btn danger" id="clear-btn" title="Clear all">✕</button>
-      </div>
-
-      <div id="status" class="status">⚫ Connecting…</div>
-      <div id="room-label" class="room-label"></div>
-    </aside>
-
-    <!-- Presence panel -->
-    <div id="presence-panel">
-      <span class="presence-title">Online</span>
-      <ul id="user-list"></ul>
     </div>
 
-    <!-- Canvas area -->
-    <main id="canvas-wrap">
-      <canvas id="canvas"></canvas>
-      <div id="cursor-overlay"></div>
-    </main>
-
-    <!-- Hint bar -->
-    <div id="hint-bar">
-      <kbd>Ctrl+Z</kbd> Undo &nbsp;·&nbsp; <kbd>Ctrl+Y</kbd> Redo &nbsp;·&nbsp; Share the URL to invite others
-    </div>
   </div>
 
   <script src="js/app.js"></script>
