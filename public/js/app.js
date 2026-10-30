@@ -211,7 +211,7 @@ const state = {
   pendingOutgoingCall     : null, // { targetUserId, targetName, timeout }
   pendingIncomingCall     : null, // { fromUserId, fromName, fromColor }
   zoomViewLayout          : 'grid', // 'grid' | 'focus'
-  isCallActive            : false,
+  isCallActive            : true,
   callTimerInterval       : null,
   dailyCall               : null,
   isDailyConnected        : false,
@@ -252,11 +252,7 @@ function setMode(newMode) {
     scrollToChatBottom();
 
     if (zoomActiveMeetingView) zoomActiveMeetingView.classList.remove('hidden');
-    if (!state.isCallActive) {
-      joinRoomCall();
-    } else {
-      renderZoomGrid();
-    }
+    joinRoomCall();
   }
 }
 
@@ -2281,28 +2277,8 @@ function highlightActiveSpeaker() {
 function renderZoomGrid() {
   if (!zoomVideoStageGrid) return;
 
-  if (!state.isCallActive) {
-    zoomVideoStageGrid.className = 'zoom-stage-grid';
-    zoomVideoStageGrid.innerHTML = `
-      <div class="zoom-rejoin-card">
-        <div class="zoom-rejoin-icon">📹</div>
-        <h3>You left the video call</h3>
-        <p>Ready to rejoin and talk with everyone in the room?</p>
-        <button id="zoom-rejoin-btn" class="zoom-btn-rejoin">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
-          <span>Rejoin Video Call</span>
-        </button>
-      </div>
-    `;
-    const rejoinBtn = document.getElementById('zoom-rejoin-btn');
-    if (rejoinBtn) {
-      rejoinBtn.addEventListener('click', () => joinRoomCall());
-    }
-    if (zoomGridParticipantsBadge) {
-      zoomGridParticipantsBadge.textContent = '👥 Call paused';
-    }
-    return;
-  }
+  // Clean out any leftover rejoin cards or invalid elements
+  zoomVideoStageGrid.querySelectorAll('.zoom-rejoin-card').forEach(el => el.remove());
 
   const tiles = [];
 
@@ -2314,24 +2290,7 @@ function renderZoomGrid() {
       console.warn('Daily participants read error:', e);
     }
 
-    const local = pObj.local;
-    const localVTrack = (local && local.tracks && local.tracks.video && local.tracks.video.persistentTrack)
-      || (state.localVideoStream ? state.localVideoStream.getVideoTracks()[0] : null);
-    const localSTrack = (local && local.tracks && local.tracks.screenVideo && local.tracks.screenVideo.persistentTrack)
-      || (state.localScreenStream ? state.localScreenStream.getVideoTracks()[0] : null);
-
-    tiles.push({
-      id: 'local',
-      session_id: local ? local.session_id : 'local',
-      name: `${state.userName || 'You'} (You)`,
-      color: state.userColor || '#4ECDC4',
-      isLocal: true,
-      videoTrack: localVTrack,
-      screenTrack: localSTrack,
-      isCamOff: state.isCamOff || !(local && local.video),
-      isMuted: state.isMicMuted || !(local && local.audio),
-    });
-
+    // Remote participants first (other callers)
     for (const key of Object.keys(pObj)) {
       if (key === 'local') continue;
       const p = pObj[key];
@@ -2352,8 +2311,58 @@ function renderZoomGrid() {
         isMuted: isMuted,
       });
     }
+
+    // Local participant (You)
+    const local = pObj.local;
+    const localVTrack = (local && local.tracks && local.tracks.video && local.tracks.video.persistentTrack)
+      || (state.localVideoStream ? state.localVideoStream.getVideoTracks()[0] : null);
+    const localSTrack = (local && local.tracks && local.tracks.screenVideo && local.tracks.screenVideo.persistentTrack)
+      || (state.localScreenStream ? state.localScreenStream.getVideoTracks()[0] : null);
+
+    tiles.push({
+      id: 'local',
+      session_id: local ? local.session_id : 'local',
+      name: `${state.userName || 'You'} (You)`,
+      color: state.userColor || '#4ECDC4',
+      isLocal: true,
+      videoTrack: localVTrack,
+      screenTrack: localSTrack,
+      isCamOff: state.isCamOff || !(local && local.video),
+      isMuted: state.isMicMuted || !(local && local.audio),
+    });
   } else {
     // WebRTC Mesh / Fallback Mode
+    const peerIds = new Set();
+    if (state.activeCall && state.activeCall.peerId) {
+      peerIds.add(state.activeCall.peerId);
+    }
+    for (const [id] of state.voiceConnections) {
+      if (id !== state.userId) peerIds.add(id);
+    }
+    for (const [id] of state.userMap) {
+      if (id !== state.userId) peerIds.add(id);
+    }
+
+    // Remote participants first (the other person that is calling / talking)
+    for (const pid of peerIds) {
+      const u = state.userMap.get(pid);
+      const conn = state.voiceConnections.get(pid);
+      const vTrack = conn?.remoteVideoStream?.getVideoTracks()[0] || null;
+
+      tiles.push({
+        id: pid,
+        session_id: pid,
+        name: u?.name || 'Participant',
+        color: u?.color || '#4ECDC4',
+        isLocal: false,
+        videoTrack: vTrack,
+        screenTrack: null,
+        isCamOff: !vTrack || (vTrack.readyState !== 'live') || !!(u && u.isCamOff),
+        isMuted: !!(u && u.isMuted),
+      });
+    }
+
+    // Local user (You)
     const localVTrack = state.localVideoStream ? state.localVideoStream.getVideoTracks()[0] : null;
     const localSTrack = state.localScreenStream ? state.localScreenStream.getVideoTracks()[0] : null;
 
@@ -2368,35 +2377,6 @@ function renderZoomGrid() {
       isCamOff: state.isCamOff,
       isMuted: state.isMicMuted,
     });
-
-    const peerIds = new Set();
-    if (state.activeCall && state.activeCall.peerId) {
-      peerIds.add(state.activeCall.peerId);
-    }
-    for (const [id] of state.voiceConnections) {
-      if (id !== state.userId) peerIds.add(id);
-    }
-    for (const [id] of state.userMap) {
-      if (id !== state.userId) peerIds.add(id);
-    }
-
-    for (const pid of peerIds) {
-      const u = state.userMap.get(pid);
-      const conn = state.voiceConnections.get(pid);
-      const vTrack = conn?.remoteVideoStream?.getVideoTracks()[0] || null;
-
-      tiles.push({
-        id: pid,
-        session_id: pid,
-        name: u?.name || 'Participant',
-        color: u?.color || '#4ECDC4',
-        isLocal: false,
-        videoTrack: vTrack,
-        screenTrack: null,
-        isCamOff: !!(u && u.isCamOff),
-        isMuted: !!(u && u.isMuted),
-      });
-    }
   }
 
   // Check for active screen sharing
@@ -2459,12 +2439,15 @@ function renderZoomGrid() {
 
   const activeIds = new Set(renderItems.map(i => i.tileId));
 
-  // Remove stale tiles
-  const existingTiles = zoomVideoStageGrid.querySelectorAll('.zoom-tile');
-  existingTiles.forEach(el => {
-    const tid = el.getAttribute('data-tile-id');
-    if (!activeIds.has(tid)) {
-      el.remove();
+  // Remove stale tiles and any non-tile elements
+  Array.from(zoomVideoStageGrid.children).forEach(child => {
+    if (!child.classList.contains('zoom-tile')) {
+      child.remove();
+    } else {
+      const tid = child.getAttribute('data-tile-id');
+      if (!activeIds.has(tid)) {
+        child.remove();
+      }
     }
   });
 
@@ -2648,7 +2631,7 @@ async function leaveActiveCall(reason = 'Call Ended') {
     state.activeCall = null;
   }
 
-  renderZoomGrid();
+  setMode('whiteboard');
   playChime('disconnect');
   showVideoToast(`🔴 ${reason}`);
 }

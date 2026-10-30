@@ -1308,21 +1308,9 @@ kbd {
   position: relative;
 }
 
-/* Rejoin Call Card (Shown when user leaves call) */
+/* Rejoin Call Card (Permanently hidden - video call is always direct & live) */
 .zoom-rejoin-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  padding: 2.5rem 2rem;
-  background: #141526;
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  text-align: center;
-  max-width: 420px;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
-  margin: auto;
+  display: none !important;
 }
 
 .zoom-rejoin-icon {
@@ -3017,15 +3005,7 @@ kbd {
   }
 
   .zoom-rejoin-card {
-    padding: 1.5rem 1rem;
-    max-width: 90vw;
-    margin: auto;
-  }
-
-  .zoom-btn-rejoin {
-    min-height: 48px;
-    font-size: 0.88rem;
-    padding: 0.65rem 1.25rem;
+    display: none !important;
   }
 
   /* ── E. Shared Chat Sidebar Mobile Full-Screen Drawer ── */
