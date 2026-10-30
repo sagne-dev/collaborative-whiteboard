@@ -13,67 +13,76 @@
 </head>
 <body>
 
-  <!-- JOIN / LANDING HERO SCREEN -->
-  <div id="join-screen">
-    <!-- Background Hero Video with Overlay -->
-    <div class="hero-video-container">
-      <video class="hero-video" autoplay muted loop playsinline poster="assets/hero-bg.mp4">
-        <source src="assets/hero-bg.mp4" type="video/mp4" />
-        <source src="https://videos.pexels.com/video-files/6706926/6706926-hd_1920_1080_25fps.mp4" type="video/mp4" />
-      </video>
-      <div class="hero-video-overlay"></div>
-      <div class="hero-glow-orb hero-glow-1"></div>
-      <div class="hero-glow-orb hero-glow-2"></div>
-    </div>
+  <!-- SPLIT SCREEN SIGN IN / JOIN (Matches Image Exactly) -->
+  <div id="join-screen" class="login-split-container">
 
-    <!-- Centered Glassmorphic Join Card -->
-    <div class="join-card">
-      <div class="join-pill-badge">
-        <span class="badge-pulse-dot"></span>
-        <span>Realtime Collaboration Suite</span>
-      </div>
-
-      <div class="join-logo">
-        <div class="brand-icon-box">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+    <!-- LEFT COLUMN: Clean Sign In Form -->
+    <div class="login-left-pane">
+      <!-- Top Bar: Brand Logo & Dark Mode Icon -->
+      <div class="login-top-bar">
+        <div class="login-brand">
+          <div class="login-brand-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="2" y1="12" x2="22" y2="12"></line>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10z"></path>
+            </svg>
+          </div>
+          <span class="login-brand-name">CollabSpace</span>
+        </div>
+        <div class="login-theme-icon" title="CollabSpace Dark Theme">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
           </svg>
         </div>
-        <div class="brand-text">
-          <h1>CollabSpace</h1>
-          <p class="join-tagline">Whiteboard · Watch Party · Video Call</p>
-        </div>
       </div>
 
-      <p class="join-sub">Draw together, stream synchronized videos, and connect face-to-face in high definition.</p>
+      <!-- Center Form Content -->
+      <div class="login-form-center">
+        <h1 class="login-main-title">Sign in</h1>
+        <p class="login-sub-title">
+          New here? <span class="login-link-text">Enter any Room ID</span>
+        </p>
 
-      <div class="join-form-fields">
-        <label for="name-input" class="input-label">Your Name
-          <div class="input-wrapper">
-            <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <form class="login-fields-form" onsubmit="event.preventDefault();">
+          <div class="login-field-group">
+            <label for="name-input" class="login-field-label">Your Name</label>
             <input id="name-input" type="text" placeholder="e.g. Alex" maxlength="20" autocomplete="name" />
           </div>
-        </label>
-        <label for="room-input" class="input-label">Room ID
-          <div class="input-wrapper">
-            <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-            <input id="room-input" type="text" placeholder="e.g. team-sync" maxlength="40" autocomplete="off" />
+
+          <div class="login-field-group">
+            <label for="room-input" class="login-field-label">Room ID</label>
+            <input id="room-input" type="text" placeholder="e.g. design-sync" maxlength="40" autocomplete="off" />
           </div>
-          <small class="input-hint">Share this room ID with teammates to connect instantly</small>
-        </label>
+
+          <button type="button" id="join-btn" class="login-submit-button">
+            Sign in
+          </button>
+        </form>
       </div>
 
-      <button id="join-btn" class="join-btn-primary">
-        <span>Enter Workspace</span>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-      </button>
-
-      <div class="join-features-strip">
-        <div class="feature-tag"><span>⚡</span> Instant P2P</div>
-        <div class="feature-tag"><span>🎙️</span> HD Audio</div>
-        <div class="feature-tag"><span>🔒</span> Zero Tracking</div>
+      <!-- Bottom Note / Safety -->
+      <div class="login-bottom-note">
+        <span>Protected by instant P2P WebRTC & Daily.co SFU encryption</span>
       </div>
     </div>
+
+    <!-- RIGHT COLUMN: People Talking Picture & Hero Typography (Matches Image Exactly) -->
+    <div class="login-right-pane">
+      <img class="login-hero-image" src="assets/people-talking.jpg" alt="Diverse people talking and collaborating" />
+      <div class="login-hero-overlay"></div>
+
+      <div class="login-hero-text-block">
+        <h2 class="login-hero-headline">Every conversation sparks real progress.</h2>
+        <p class="login-hero-paragraph">
+          Collaborate in crystal-clear HD video calls, sketch ideas on an infinite live whiteboard, and enjoy synchronized watch parties with your team in real time.
+        </p>
+        <p class="login-hero-footnote">
+          CollabSpace Realtime Suite · Zero-latency WebRTC & Daily.co SFU
+        </p>
+      </div>
+    </div>
+
   </div>
 
   <!-- BOARD / ROOM SCREEN (hidden initially until user joins) -->
