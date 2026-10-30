@@ -28,6 +28,13 @@
 ### 4. 🔄 Seamless Mode Switcher
 - Persistent top navigation bar allowing users to switch freely between **Whiteboard Mode** and **Watch Party Mode** without disconnecting or losing room members.
 
+### 5. 🎙️ Real-Time Audio-Only Voice Chat
+- **WebRTC Peer-to-Peer Audio:** Low-latency, crystal-clear voice chat between participants in the same room ID without video overhead.
+- **Automatic Connection:** Automatically connects users to the voice channel upon entering the room.
+- **Microphone Controls:** Convenient one-click mute/unmute button in the top navigation bar with live audio wave activity visualizer.
+- **Works in Both Modes:** Voice chat remains active continuously whether you are collaborating on the whiteboard or enjoying a watch party.
+- **Participant Status:** Presence panel displays microphone status (`🎙️` / `🔇`) for all members in real time.
+
 ---
 
 ## ⚡ Quick Start
@@ -56,6 +63,7 @@ Share the generated URL with your friends to draw and watch videos together!
 | Mode | Action | How |
 |------|--------|-----|
 | **Both** | Switch Mode | Click **Whiteboard Mode** or **Watch Party Mode** in the top navigation bar |
+| **Both** | Voice Chat (Mute/Unmute) | Click the **🎙️ Voice** pill in the top navigation bar to toggle your microphone |
 | **Both** | Share Room Link | Click the **Room: [id]** pill in the top bar to copy your invite link |
 | **Whiteboard** | Draw | Click + drag on the canvas |
 | **Whiteboard** | Change color / size | Use the color picker and slider in the toolbar |
@@ -86,6 +94,7 @@ collaborative-whiteboard/
 ## 🛠️ Built With
 
 - **Node.js** + **WebSocket (`ws`)**
+- **WebRTC Audio API** (Peer-to-peer low-latency voice chat)
 - **HTML5 Canvas** (CRDT-inspired stroke sync)
 - **HTML5 Video API** (Real-time synchronized playback)
 - **Vanilla JavaScript & Modern CSS**

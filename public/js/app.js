@@ -32,6 +32,13 @@ const navUserDot        = document.getElementById('nav-user-dot');
 const navUserName       = document.getElementById('nav-user-name');
 const statusEl          = document.getElementById('status');
 
+// Voice Chat Elements
+const navVoiceBtn           = document.getElementById('nav-voice-btn');
+const voiceIcon             = document.getElementById('voice-icon');
+const voiceStatusText       = document.getElementById('voice-status-text');
+const voiceWave             = document.getElementById('voice-wave');
+const remoteAudiosContainer = document.getElementById('remote-audios-container');
+
 // Views Container
 const whiteboardView    = document.getElementById('whiteboard-view');
 const watchpartyView    = document.getElementById('watchparty-view');
@@ -133,6 +140,15 @@ const state = {
   // Chat state
   isChatCollapsed   : false,
   unreadMessages    : 0,
+
+  // WebRTC Voice Chat state
+  localAudioStream        : null,
+  isMicMuted              : false,
+  voiceConnections        : new Map(), // remoteUserId -> { pc, audioEl, candidateQueue, hasRemoteDescription }
+  audioContext            : null,
+  analyserNode            : null,
+  voiceVisualizerInterval : null,
+  voiceSupported          : typeof window !== 'undefined' && !!(window.RTCPeerConnection && navigator.mediaDevices && navigator.mediaDevices.getUserMedia),
 };
 
 // ─── Seamless Mode Switcher ────────────────────────────────────────────────────
@@ -372,16 +388,36 @@ function handleMessage(msg) {
 
     // ── Presence Events ──
     case 'user_joined': {
-      state.userMap.set(msg.userId, { id: msg.userId, color: msg.color, name: msg.name });
+      state.userMap.set(msg.userId, { id: msg.userId, color: msg.color, name: msg.name, isMuted: !!msg.isMuted });
       addCursorEl(msg.userId, msg.color, msg.name);
       renderUserList();
+      // Existing room participant connects to newly joined participant via WebRTC
+      if (state.voiceSupported && msg.userId !== state.userId) {
+        initiatePeerConnection(msg.userId);
+      }
       break;
     }
 
     case 'user_left': {
       state.userMap.delete(msg.userId);
       removeCursor(msg.userId);
+      closePeerConnection(msg.userId);
       renderUserList();
+      break;
+    }
+
+    // ── WebRTC Voice Chat Events ──
+    case 'voice_signal': {
+      handleVoiceSignal(msg);
+      break;
+    }
+
+    case 'voice_mute_status': {
+      const u = state.userMap.get(msg.userId);
+      if (u) {
+        u.isMuted = !!msg.isMuted;
+        renderUserList();
+      }
       break;
     }
 
@@ -517,13 +553,20 @@ function removeCursor(userId) {
 function renderUserList() {
   const count = state.userMap.size;
   userCountDisplay.textContent = count;
-  userList.innerHTML = [...state.userMap.values()].map(u =>
-    `<li class="user-chip" style="--c:${u.color}">
-      <span class="dot"></span>
-      ${u.name || u.id.slice(0, 6)}
-      ${u.id === state.userId ? '<em>(you)</em>' : ''}
-    </li>`
-  ).join('');
+  userList.innerHTML = [...state.userMap.values()].map(u => {
+    const isMe = u.id === state.userId;
+    const isMuted = isMe ? state.isMicMuted : !!u.isMuted;
+    const micIcon = isMuted ? '🔇' : '🎙️';
+    const micTitle = isMuted ? 'Microphone muted' : 'Microphone active';
+    return `
+      <li class="user-chip" style="--c:${u.color}">
+        <span class="dot"></span>
+        <span class="user-name-text">${escapeHtml(u.name || u.id.slice(0, 6))}</span>
+        <span class="user-mic-status ${isMuted ? 'muted' : 'unmuted'}" title="${micTitle}">${micIcon}</span>
+        ${isMe ? '<em>(you)</em>' : ''}
+      </li>
+    `;
+  }).join('');
 }
 
 // ─── Whiteboard Toolbar ───────────────────────────────────────────────────────
@@ -1534,6 +1577,7 @@ function doJoin() {
   requestAnimationFrame(() => {
     resizeCanvas();
     connect(room, name);
+    initVoiceChat();
   });
 }
 
@@ -1547,8 +1591,341 @@ function setStatus(cls, text) {
   statusEl.textContent = text;
 }
 
-// ─── Close WebSocket on Page Unload ───────────────────────────────────────────
+// ─── Real-Time WebRTC Voice Chat ───────────────────────────────────────────────
+const RTC_CONFIG = {
+  iceServers: [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' },
+    { urls: 'stun:stun2.l.google.com:19302' },
+    { urls: 'stun:stun.cloudflare.com:3478' },
+  ],
+};
+
+function updateVoiceUI(status, text) {
+  if (!navVoiceBtn) return;
+  navVoiceBtn.classList.remove('unmuted', 'muted', 'connecting');
+
+  if (status === 'active') {
+    navVoiceBtn.classList.add('unmuted');
+    if (voiceIcon) voiceIcon.textContent = '🎙️';
+    if (voiceStatusText) voiceStatusText.textContent = text || 'Voice Active';
+  } else if (status === 'muted') {
+    navVoiceBtn.classList.add('muted');
+    if (voiceIcon) voiceIcon.textContent = '🔇';
+    if (voiceStatusText) voiceStatusText.textContent = text || 'Muted';
+    if (voiceWave) voiceWave.classList.remove('talking');
+  } else if (status === 'connecting') {
+    navVoiceBtn.classList.add('connecting');
+    if (voiceIcon) voiceIcon.textContent = '⏳';
+    if (voiceStatusText) voiceStatusText.textContent = text || 'Connecting...';
+  }
+}
+
+async function initVoiceChat() {
+  if (!state.voiceSupported) {
+    console.warn('WebRTC or getUserMedia not supported in this browser.');
+    updateVoiceUI('muted', 'Voice Unsupported');
+    return;
+  }
+
+  updateVoiceUI('connecting', 'Connecting Mic...');
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+      },
+      video: false,
+    });
+
+    state.localAudioStream = stream;
+    state.isMicMuted = false;
+    updateVoiceUI('active', 'Voice Active');
+    setupAudioActivityMeter(stream);
+
+    // Attach audio track to any existing peer connections
+    for (const [, conn] of state.voiceConnections) {
+      try {
+        const senders = conn.pc.getSenders();
+        const audioTrack = stream.getAudioTracks()[0];
+        if (audioTrack) {
+          const audioSender = senders.find(s => s.track && s.track.kind === 'audio');
+          if (audioSender) {
+            audioSender.replaceTrack(audioTrack);
+          } else {
+            conn.pc.addTrack(audioTrack, stream);
+          }
+        }
+      } catch (e) {}
+    }
+
+    showVideoToast('🎙️ Voice chat connected! Microphone is live.');
+  } catch (err) {
+    console.warn('Microphone access denied or unavailable:', err.message);
+    state.localAudioStream = null;
+    state.isMicMuted = true;
+    updateVoiceUI('muted', 'Mic Off (Click to Speak)');
+    showVideoToast('ℹ️ Voice chat joined (listen only). Click mic to speak.');
+  }
+}
+
+async function toggleMicrophone() {
+  if (!state.localAudioStream) {
+    await initVoiceChat();
+    return;
+  }
+
+  state.isMicMuted = !state.isMicMuted;
+  state.localAudioStream.getAudioTracks().forEach(track => {
+    track.enabled = !state.isMicMuted;
+  });
+
+  if (state.isMicMuted) {
+    updateVoiceUI('muted', 'Muted (Unmute)');
+    showVideoToast('🔇 Microphone muted');
+  } else {
+    updateVoiceUI('active', 'Voice Active');
+    showVideoToast('🎙️ Microphone active');
+  }
+
+  wsSend({
+    type    : 'voice_mute_status',
+    isMuted : state.isMicMuted,
+  });
+
+  renderUserList();
+}
+
+if (navVoiceBtn) {
+  navVoiceBtn.addEventListener('click', toggleMicrophone);
+}
+
+function setupAudioActivityMeter(stream) {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    state.audioContext = new AudioCtx();
+    const source = state.audioContext.createMediaStreamSource(stream);
+    state.analyserNode = state.audioContext.createAnalyser();
+    state.analyserNode.fftSize = 64;
+    source.connect(state.analyserNode);
+
+    const bufferLength = state.analyserNode.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+
+    clearInterval(state.voiceVisualizerInterval);
+    state.voiceVisualizerInterval = setInterval(() => {
+      if (state.isMicMuted || !state.analyserNode) {
+        if (voiceWave) voiceWave.classList.remove('talking');
+        return;
+      }
+      state.analyserNode.getByteFrequencyData(dataArray);
+      let sum = 0;
+      for (let i = 0; i < bufferLength; i++) sum += dataArray[i];
+      const avg = sum / bufferLength;
+      if (avg > 18) {
+        voiceWave?.classList.add('talking');
+      } else {
+        voiceWave?.classList.remove('talking');
+      }
+    }, 150);
+  } catch (e) {
+    console.warn('Audio activity meter init error:', e);
+  }
+}
+
+function getOrCreatePeerConnection(targetUserId) {
+  if (state.voiceConnections.has(targetUserId)) {
+    return state.voiceConnections.get(targetUserId);
+  }
+
+  const pc = new RTCPeerConnection(RTC_CONFIG);
+  const audioEl = new Audio();
+  audioEl.autoplay = true;
+  audioEl.setAttribute('data-peer-id', targetUserId);
+  if (remoteAudiosContainer) {
+    remoteAudiosContainer.appendChild(audioEl);
+  }
+
+  const conn = {
+    pc,
+    audioEl,
+    targetUserId,
+    candidateQueue: [],
+    hasRemoteDescription: false,
+  };
+  state.voiceConnections.set(targetUserId, conn);
+
+  if (state.localAudioStream && state.localAudioStream.getAudioTracks().length > 0) {
+    state.localAudioStream.getAudioTracks().forEach(track => {
+      try { pc.addTrack(track, state.localAudioStream); } catch (e) {}
+    });
+  } else {
+    try {
+      pc.addTransceiver('audio', { direction: 'sendrecv' });
+    } catch (e) {}
+  }
+
+  pc.ontrack = (event) => {
+    if (event.streams && event.streams[0]) {
+      audioEl.srcObject = event.streams[0];
+      const p = audioEl.play();
+      if (p !== undefined) {
+        p.catch(err => console.warn(`Autoplay deferred for peer ${targetUserId}:`, err));
+      }
+    }
+  };
+
+  pc.onicecandidate = (event) => {
+    if (event.candidate) {
+      wsSend({
+        type : 'voice_signal',
+        to   : targetUserId,
+        data : {
+          type      : 'candidate',
+          candidate : event.candidate,
+        },
+      });
+    }
+  };
+
+  pc.onconnectionstatechange = () => {
+    if (pc.connectionState === 'failed' || pc.connectionState === 'closed') {
+      closePeerConnection(targetUserId);
+    }
+  };
+
+  return conn;
+}
+
+async function initiatePeerConnection(targetUserId) {
+  if (!state.voiceSupported || targetUserId === state.userId) return;
+  const conn = getOrCreatePeerConnection(targetUserId);
+  try {
+    const offer = await conn.pc.createOffer({
+      offerToReceiveAudio: true,
+      offerToReceiveVideo: false,
+    });
+    await conn.pc.setLocalDescription(offer);
+    wsSend({
+      type : 'voice_signal',
+      to   : targetUserId,
+      data : {
+        type : 'offer',
+        sdp  : offer,
+      },
+    });
+  } catch (err) {
+    console.warn(`Failed to create offer for ${targetUserId}:`, err);
+  }
+}
+
+async function handleVoiceSignal(msg) {
+  const senderId = msg.from;
+  const data = msg.data;
+  if (!senderId || !data) return;
+
+  const conn = getOrCreatePeerConnection(senderId);
+
+  try {
+    if (data.type === 'offer') {
+      const isOfferCollision = conn.pc.signalingState !== 'stable';
+      const isPolite = state.userId < senderId;
+      if (isOfferCollision && !isPolite) {
+        return;
+      }
+
+      await conn.pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
+      conn.hasRemoteDescription = true;
+
+      while (conn.candidateQueue.length > 0) {
+        const c = conn.candidateQueue.shift();
+        try {
+          await conn.pc.addIceCandidate(new RTCIceCandidate(c));
+        } catch (e) {}
+      }
+
+      if (state.localAudioStream) {
+        const senders = conn.pc.getSenders();
+        state.localAudioStream.getAudioTracks().forEach(track => {
+          if (!senders.some(s => s.track === track)) {
+            try { conn.pc.addTrack(track, state.localAudioStream); } catch (e) {}
+          }
+        });
+      }
+
+      const answer = await conn.pc.createAnswer();
+      await conn.pc.setLocalDescription(answer);
+
+      wsSend({
+        type : 'voice_signal',
+        to   : senderId,
+        data : {
+          type : 'answer',
+          sdp  : answer,
+        },
+      });
+    } else if (data.type === 'answer') {
+      if (conn.pc.signalingState === 'have-local-offer') {
+        await conn.pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
+        conn.hasRemoteDescription = true;
+
+        while (conn.candidateQueue.length > 0) {
+          const c = conn.candidateQueue.shift();
+          try {
+            await conn.pc.addIceCandidate(new RTCIceCandidate(c));
+          } catch (e) {}
+        }
+      }
+    } else if (data.type === 'candidate' && data.candidate) {
+      if (conn.hasRemoteDescription && conn.pc.remoteDescription) {
+        try {
+          await conn.pc.addIceCandidate(new RTCIceCandidate(data.candidate));
+        } catch (e) {}
+      } else {
+        conn.candidateQueue.push(data.candidate);
+      }
+    }
+  } catch (err) {
+    console.warn(`Voice signal error from ${senderId}:`, err);
+  }
+}
+
+function closePeerConnection(userId) {
+  const conn = state.voiceConnections.get(userId);
+  if (!conn) return;
+  try { conn.pc.close(); } catch (e) {}
+  try {
+    conn.audioEl.srcObject = null;
+    conn.audioEl.remove();
+  } catch (e) {}
+  state.voiceConnections.delete(userId);
+}
+
+function cleanupVoiceChat() {
+  for (const [id] of state.voiceConnections) {
+    closePeerConnection(id);
+  }
+  if (state.localAudioStream) {
+    state.localAudioStream.getTracks().forEach(t => t.stop());
+    state.localAudioStream = null;
+  }
+  if (state.voiceVisualizerInterval) {
+    clearInterval(state.voiceVisualizerInterval);
+    state.voiceVisualizerInterval = null;
+  }
+  if (state.audioContext) {
+    try { state.audioContext.close(); } catch (e) {}
+    state.audioContext = null;
+  }
+  updateVoiceUI('muted', 'Voice Off');
+}
+
+// ─── Close WebSocket & Clean Voice on Page Unload ─────────────────────────────
 window.addEventListener('beforeunload', () => {
+  cleanupVoiceChat();
   if (state.ws && state.ws.readyState === WebSocket.OPEN) {
     state.ws.close();
   }

@@ -72,6 +72,15 @@
 
       <!-- Right Meta Bar -->
       <div class="nav-meta">
+        <!-- Voice Chat Pill Button -->
+        <button id="nav-voice-btn" class="meta-pill voice-pill unmuted" title="Click to mute / unmute microphone">
+          <span class="voice-icon" id="voice-icon">🎙️</span>
+          <span id="voice-status-text">Voice Active</span>
+          <span class="voice-wave" id="voice-wave" title="Audio Activity">
+            <span></span><span></span><span></span>
+          </span>
+        </button>
+
         <div id="nav-room-badge" class="meta-pill room-pill" title="Click to copy invite link">
           <span class="meta-icon">🔗</span>
           <span id="nav-room-label">Room: ...</span>
@@ -310,6 +319,9 @@
     </div>
 
   </div>
+
+  <!-- WebRTC Remote Audios Container -->
+  <div id="remote-audios-container" style="display:none;" aria-hidden="true"></div>
 
   <script src="js/app.js"></script>
 </body>

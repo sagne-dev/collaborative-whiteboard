@@ -466,7 +466,7 @@ wss.on('connection', (ws) => {
           strokes : [...room.strokes.values()],
           deleted : [...room.deleted],
           users   : [...room.users.entries()].map(([id, u]) => ({
-            id, color: u.color, name: u.name,
+            id, color: u.color, name: u.name, isMuted: !!u.isMuted,
           })),
           video   : room.video ? {
             url         : room.video.url,
@@ -481,10 +481,11 @@ wss.on('connection', (ws) => {
         });
 
         broadcast(room, {
-          type  : 'user_joined',
+          type    : 'user_joined',
           userId,
           color,
-          name  : userName,
+          name    : userName,
+          isMuted : false,
         }, ws);
 
         addSystemChatMessage(room, `👋 ${userName} joined the room`);
@@ -708,6 +709,32 @@ wss.on('connection', (ws) => {
         if (room.chat.length > 100) room.chat.shift();
         debounceSave(roomId);
         broadcast(room, { type: 'chat_message', message: chatItem });
+        break;
+      }
+
+      // ── WebRTC Audio Voice Chat Signaling ──
+      case 'voice_signal': {
+        if (!room || !msg.to) return;
+        const targetUser = room.users.get(msg.to);
+        if (targetUser && targetUser.ws && targetUser.ws.readyState === WebSocket.OPEN) {
+          targetUser.ws.send(JSON.stringify({
+            type : 'voice_signal',
+            from : userId,
+            data : msg.data,
+          }));
+        }
+        break;
+      }
+
+      case 'voice_mute_status': {
+        if (!room) return;
+        const user = room.users.get(userId);
+        if (user) user.isMuted = !!msg.isMuted;
+        broadcast(room, {
+          type    : 'voice_mute_status',
+          userId,
+          isMuted : !!msg.isMuted,
+        }, ws);
         break;
       }
 
