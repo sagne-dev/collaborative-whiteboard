@@ -27,7 +27,13 @@ const introScreen       = document.getElementById('intro-screen');
 const introRoomLabel    = document.getElementById('intro-room-label');
 const introBackBtn      = document.getElementById('intro-back-btn');
 const introLaunchBtn    = document.getElementById('intro-launch-btn');
+const introLaunchP2Btn  = document.getElementById('intro-launch-p2-btn');
 const introLaunchMobileBtn = document.getElementById('intro-launch-mobile-btn');
+const introToPage2Btn   = document.getElementById('intro-to-page2-btn');
+const introBackToPage1Btn = document.getElementById('intro-back-to-page1-btn');
+const introPage1        = document.getElementById('intro-page-1');
+const introPage2        = document.getElementById('intro-page-2');
+const introDots         = document.querySelectorAll('.intro-dot');
 const introColCards     = document.querySelectorAll('.intro-col-card');
 
 // Persistent Top Bar
@@ -1796,6 +1802,9 @@ if (exploreFeaturesLink) {
 if (introLaunchBtn) {
   introLaunchBtn.addEventListener('click', launchWorkspace);
 }
+if (introLaunchP2Btn) {
+  introLaunchP2Btn.addEventListener('click', launchWorkspace);
+}
 if (introLaunchMobileBtn) {
   introLaunchMobileBtn.addEventListener('click', launchWorkspace);
 }
@@ -1803,10 +1812,43 @@ if (introBackBtn) {
   introBackBtn.addEventListener('click', returnToSignIn);
 }
 
+// 2-Page Scroll Navigation (Page 1 <-> Page 2)
+if (introToPage2Btn) {
+  introToPage2Btn.addEventListener('click', () => {
+    introPage2?.scrollIntoView({ behavior: 'smooth' });
+  });
+}
+if (introBackToPage1Btn) {
+  introBackToPage1Btn.addEventListener('click', () => {
+    introPage1?.scrollIntoView({ behavior: 'smooth' });
+  });
+}
+
+// Floating Page Dot Indicators
+introDots.forEach(dot => {
+  dot.addEventListener('click', () => {
+    const pageNum = dot.getAttribute('data-page');
+    const target = pageNum === '2' ? introPage2 : introPage1;
+    target?.scrollIntoView({ behavior: 'smooth' });
+  });
+});
+
+// Sync active dot on scroll
+if (introScreen) {
+  introScreen.addEventListener('scroll', () => {
+    const halfHeight = introScreen.clientHeight / 2;
+    const isPage2 = introPage2 && introPage2.getBoundingClientRect().top <= halfHeight;
+    introDots.forEach(dot => {
+      const pageNum = dot.getAttribute('data-page');
+      dot.classList.toggle('active', (isPage2 && pageNum === '2') || (!isPage2 && pageNum === '1'));
+    });
+  }, { passive: true });
+}
+
 // Keyboard on Intro Screen: pressing Enter launches workspace
 if (introScreen) {
   introScreen.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && document.activeElement !== introBackBtn) {
+    if (e.key === 'Enter' && document.activeElement !== introBackBtn && document.activeElement !== introBackToPage1Btn) {
       launchWorkspace();
     }
   });
