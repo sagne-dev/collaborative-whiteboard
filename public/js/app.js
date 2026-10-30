@@ -406,10 +406,19 @@ function handleMessage(msg) {
       state.cursors.clear();
       for (const u of (msg.users || [])) {
         state.userMap.set(u.id, u);
-        if (u.id !== state.userId) addCursorEl(u.id, u.color, u.name);
+        if (u.id !== state.userId) {
+          addCursorEl(u.id, u.color, u.name);
+          if (state.voiceSupported) {
+            getOrCreatePeerConnection(u.id);
+            if (state.userId > u.id) {
+              initiatePeerConnection(u.id);
+            }
+          }
+        }
       }
       renderUserList();
       renderZoomLobby();
+      renderZoomGrid();
       scheduleRedraw();
 
       // Video Player: init if present, otherwise cleanly hide & reset
@@ -487,10 +496,13 @@ function handleMessage(msg) {
       addCursorEl(msg.userId, msg.color, msg.name);
       renderUserList();
       renderZoomLobby();
-      // If voice chat is active (and not in an exclusive 1-on-1 video call), connect peer
-      if (state.voiceSupported && msg.userId !== state.userId && !state.activeCall) {
-        initiatePeerConnection(msg.userId);
+      if (state.voiceSupported && msg.userId !== state.userId) {
+        getOrCreatePeerConnection(msg.userId);
+        if (state.userId > msg.userId) {
+          initiatePeerConnection(msg.userId);
+        }
       }
+      renderZoomGrid();
       break;
     }
 
@@ -501,6 +513,7 @@ function handleMessage(msg) {
       closePeerConnection(msg.userId);
       renderUserList();
       renderZoomLobby();
+      renderZoomGrid();
 
       if (state.activeCall && state.activeCall.peerId === msg.userId) {
         terminateActiveCall(`${leavingName} left the room`);
@@ -1725,8 +1738,10 @@ function doJoin() {
 
   requestAnimationFrame(() => {
     resizeCanvas();
+  });
+
+  initVoiceChat().finally(() => {
     connect(room, name);
-    initVoiceChat();
   });
 }
 
@@ -1795,7 +1810,7 @@ async function initVoiceChat() {
     setupAudioActivityMeter(stream);
 
     // Attach audio track to any existing peer connections
-    for (const [, conn] of state.voiceConnections) {
+    for (const [targetUserId, conn] of state.voiceConnections) {
       try {
         const senders = conn.pc.getSenders();
         const audioTrack = stream.getAudioTracks()[0];
@@ -1805,9 +1820,14 @@ async function initVoiceChat() {
             audioSender.replaceTrack(audioTrack);
           } else {
             conn.pc.addTrack(audioTrack, stream);
+            if (state.userId > targetUserId) {
+              initiatePeerConnection(targetUserId);
+            }
           }
         }
-      } catch (e) {}
+      } catch (e) {
+        console.warn('Error attaching audio track:', e);
+      }
     }
 
     showVideoToast('🎙️ Voice chat connected! Microphone is live.');
@@ -2354,6 +2374,9 @@ function renderZoomGrid() {
       peerIds.add(state.activeCall.peerId);
     }
     for (const [id] of state.voiceConnections) {
+      if (id !== state.userId) peerIds.add(id);
+    }
+    for (const [id] of state.userMap) {
       if (id !== state.userId) peerIds.add(id);
     }
 
@@ -2926,6 +2949,8 @@ function getOrCreatePeerConnection(targetUserId) {
   const pc = new RTCPeerConnection(RTC_CONFIG);
   const audioEl = new Audio();
   audioEl.autoplay = true;
+  audioEl.playsInline = true;
+  audioEl.setAttribute('playsinline', '');
   audioEl.setAttribute('data-peer-id', targetUserId);
   if (remoteAudiosContainer) {
     remoteAudiosContainer.appendChild(audioEl);
@@ -2938,6 +2963,7 @@ function getOrCreatePeerConnection(targetUserId) {
     candidateQueue: [],
     hasRemoteDescription: false,
     remoteVideoStream: null,
+    remoteAudioStream: null,
   };
   state.voiceConnections.set(targetUserId, conn);
 
@@ -2963,12 +2989,12 @@ function getOrCreatePeerConnection(targetUserId) {
 
   pc.ontrack = (event) => {
     if (event.track.kind === 'audio') {
-      if (event.streams && event.streams[0]) {
-        audioEl.srcObject = event.streams[0];
-        const p = audioEl.play();
-        if (p !== undefined) {
-          p.catch(err => console.warn(`Autoplay deferred for peer ${targetUserId}:`, err));
-        }
+      const audioStream = (event.streams && event.streams[0]) ? event.streams[0] : new MediaStream([event.track]);
+      audioEl.srcObject = audioStream;
+      conn.remoteAudioStream = audioStream;
+      const p = audioEl.play();
+      if (p !== undefined) {
+        p.catch(err => console.warn(`Autoplay deferred for peer ${targetUserId}:`, err));
       }
     } else if (event.track.kind === 'video') {
       const vStream = (event.streams && event.streams[0]) ? event.streams[0] : new MediaStream([event.track]);
@@ -3144,3 +3170,17 @@ window.addEventListener('beforeunload', () => {
     state.ws.close();
   }
 });
+
+// ─── Browser Autoplay Policy Audio Unlocker ──────────────────────────────────
+function unlockAllRemoteAudios() {
+  if (state.audioContext && state.audioContext.state === 'suspended') {
+    state.audioContext.resume().catch(() => {});
+  }
+  for (const [, conn] of state.voiceConnections) {
+    if (conn.audioEl && conn.audioEl.srcObject) {
+      conn.audioEl.play().catch(() => {});
+    }
+  }
+}
+document.addEventListener('click', unlockAllRemoteAudios, { passive: true });
+document.addEventListener('touchstart', unlockAllRemoteAudios, { passive: true });
