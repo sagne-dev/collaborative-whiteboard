@@ -20,6 +20,15 @@ const boardScreen       = document.getElementById('board-screen');
 const nameInput         = document.getElementById('name-input');
 const roomInput         = document.getElementById('room-input');
 const joinBtn           = document.getElementById('join-btn');
+const exploreFeaturesLink = document.getElementById('explore-features-link');
+
+// Intro / Onboarding Screen (Between Login & Workspace)
+const introScreen       = document.getElementById('intro-screen');
+const introRoomLabel    = document.getElementById('intro-room-label');
+const introBackBtn      = document.getElementById('intro-back-btn');
+const introLaunchBtn    = document.getElementById('intro-launch-btn');
+const introLaunchMobileBtn = document.getElementById('intro-launch-mobile-btn');
+const introColCards     = document.querySelectorAll('.intro-col-card');
 
 // Persistent Top Bar
 const modeWhiteboardBtn = document.getElementById('mode-whiteboard-btn');
@@ -1721,7 +1730,7 @@ sessionStorage.setItem('wb_uid', state.userId);
 const urlRoom = new URLSearchParams(location.search).get('room');
 if (urlRoom) roomInput.value = urlRoom;
 
-function doJoin() {
+function prepareAndShowIntro() {
   const room = roomInput.value.trim() || 'lobby';
   const name = nameInput.value.trim() || 'Guest';
   state.roomId = room;
@@ -1729,6 +1738,27 @@ function doJoin() {
 
   history.replaceState(null, '', '?room=' + encodeURIComponent(room));
 
+  if (introRoomLabel) {
+    introRoomLabel.textContent = `Room: ${room} · ${name}`;
+  }
+
+  joinScreen.classList.add('hidden');
+  if (introScreen) {
+    introScreen.classList.remove('hidden');
+    introScreen.scrollTop = 0;
+    if (introLaunchBtn) introLaunchBtn.focus();
+  } else {
+    launchWorkspace();
+  }
+}
+
+function launchWorkspace() {
+  const room = state.roomId || roomInput.value.trim() || 'lobby';
+  const name = state.userName || nameInput.value.trim() || 'Guest';
+  state.roomId = room;
+  state.userName = name;
+
+  if (introScreen) introScreen.classList.add('hidden');
   joinScreen.classList.add('hidden');
   boardScreen.classList.remove('hidden');
 
@@ -1741,9 +1771,64 @@ function doJoin() {
   });
 }
 
-joinBtn.addEventListener('click', doJoin);
-nameInput.addEventListener('keydown', e => { if (e.key === 'Enter') doJoin(); });
-roomInput.addEventListener('keydown', e => { if (e.key === 'Enter') doJoin(); });
+function returnToSignIn() {
+  if (introScreen) introScreen.classList.add('hidden');
+  boardScreen.classList.add('hidden');
+  joinScreen.classList.remove('hidden');
+  nameInput.focus();
+}
+
+// Event Listeners for Sign In & Intro Navigation
+joinBtn.addEventListener('click', prepareAndShowIntro);
+nameInput.addEventListener('keydown', e => { if (e.key === 'Enter') prepareAndShowIntro(); });
+roomInput.addEventListener('keydown', e => { if (e.key === 'Enter') prepareAndShowIntro(); });
+
+if (exploreFeaturesLink) {
+  exploreFeaturesLink.addEventListener('click', prepareAndShowIntro);
+  exploreFeaturesLink.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      prepareAndShowIntro();
+    }
+  });
+}
+
+if (introLaunchBtn) {
+  introLaunchBtn.addEventListener('click', launchWorkspace);
+}
+if (introLaunchMobileBtn) {
+  introLaunchMobileBtn.addEventListener('click', launchWorkspace);
+}
+if (introBackBtn) {
+  introBackBtn.addEventListener('click', returnToSignIn);
+}
+
+// Keyboard on Intro Screen: pressing Enter launches workspace
+if (introScreen) {
+  introScreen.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && document.activeElement !== introBackBtn) {
+      launchWorkspace();
+    }
+  });
+}
+
+// Interactive tap / click on cards for mobile & desktop
+introColCards.forEach(card => {
+  card.addEventListener('click', () => {
+    const isAlreadyActive = card.classList.contains('active-revealed');
+    introColCards.forEach(c => c.classList.remove('active-revealed'));
+    if (!isAlreadyActive) {
+      card.classList.add('active-revealed');
+    }
+  });
+
+  card.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      card.click();
+    }
+  });
+});
 
 // ─── Status ────────────────────────────────────────────────────────────────────
 function setStatus(cls, text) {

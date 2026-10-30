@@ -41,7 +41,7 @@
       <div class="login-form-center">
         <h1 class="login-main-title">Sign in</h1>
         <p class="login-sub-title">
-          New here? <span class="login-link-text">Enter any Room ID</span>
+          New here? <span id="explore-features-link" class="login-link-text" role="button" tabindex="0" title="Click to view tool intro">Enter any Room ID · Explore Tools</span>
         </p>
 
         <form class="login-fields-form" onsubmit="event.preventDefault();">
@@ -82,6 +82,131 @@
         </p>
       </div>
     </div>
+
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       INTRO / ONBOARDING SCREEN (Matches Wolaita Kings Reference Style)
+       ══════════════════════════════════════════════════════════════ -->
+  <div id="intro-screen" class="intro-screen-container hidden">
+
+    <!-- Top Navigation Bar (Wolaita Style) -->
+    <header class="intro-nav-bar">
+      <div class="intro-nav-brand">
+        <span class="intro-sparkle-icon" aria-hidden="true">✦</span>
+        <span class="intro-brand-name">CollabSpace</span>
+      </div>
+
+      <div class="intro-nav-actions">
+        <div id="intro-room-tag" class="intro-room-tag" title="Target Room">
+          <span class="intro-tag-dot"></span>
+          <span id="intro-room-label">Room: lobby</span>
+        </div>
+        <button type="button" id="intro-back-btn" class="intro-nav-text-btn" title="Back to Sign In">
+          Back to Sign In
+        </button>
+        <button type="button" id="intro-launch-btn" class="intro-launch-btn" title="Launch Collaborative Workspace">
+          Launch Workspace <span class="intro-btn-arrow">→</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Hero Headline (Giant Typography matching Reference Image) -->
+    <main class="intro-hero-section">
+      <div class="intro-hero-content">
+        <h1 class="intro-main-headline">
+          We built <span class="intro-gold-highlight">3 powerful tools</span><br>
+          for your team to collaborate.<br>
+          Hover or tap to reveal their features
+        </h1>
+        <p class="intro-hero-subtext">
+          Everything your remote team needs to brainstorm, communicate, and watch together — in one zero-friction workspace.
+        </p>
+      </div>
+    </main>
+
+    <!-- Bottom 3-Column Interactive Grid (01 / 02 / 03 with subtle hairlines) -->
+    <footer class="intro-grid-footer">
+      <div class="intro-columns-grid">
+
+        <!-- Column 01: Interactive Whiteboard -->
+        <div class="intro-col-card" data-card="whiteboard" tabindex="0" role="region" aria-label="Interactive Whiteboard Tool">
+          <div class="intro-col-accent-bar"></div>
+          <div class="intro-col-meta">
+            <span class="intro-col-num">01</span>
+            <span class="intro-col-badge">Canvas</span>
+          </div>
+          <h2 class="intro-col-title">Interactive Whiteboard</h2>
+          <div class="intro-col-subtitle">REAL-TIME MULTI-USER CANVAS</div>
+          
+          <div class="intro-col-reveal-body">
+            <p class="intro-col-description">
+              Draw, sketch, and brainstorm ideas together on an infinite canvas. Features pressure-sensitive pens, shapes, color swatches, laser pointer, undo/redo, and live multiplayer cursors.
+            </p>
+            <div class="intro-col-chips">
+              <span class="intro-chip">Pressure Pens</span>
+              <span class="intro-chip">Live Cursors</span>
+              <span class="intro-chip">Infinite Canvas</span>
+            </div>
+          </div>
+          <div class="intro-col-tap-prompt">Hover or tap to reveal</div>
+        </div>
+
+        <!-- Column 02: Synchronized Watch Party -->
+        <div class="intro-col-card" data-card="watchparty" tabindex="0" role="region" aria-label="Synchronized Watch Party Tool">
+          <div class="intro-col-accent-bar"></div>
+          <div class="intro-col-meta">
+            <span class="intro-col-num">02</span>
+            <span class="intro-col-badge">Media</span>
+          </div>
+          <h2 class="intro-col-title">Synchronized Watch Party</h2>
+          <div class="intro-col-subtitle">UNIVERSAL VIDEO & YOUTUBE SYNC</div>
+          
+          <div class="intro-col-reveal-body">
+            <p class="intro-col-description">
+              Stream MP4 videos or YouTube links together with millisecond playback synchronization. Play, pause, and seek stay in sync for everyone in the room with built-in live chat.
+            </p>
+            <div class="intro-col-chips">
+              <span class="intro-chip">YouTube & MP4</span>
+              <span class="intro-chip">Frame-Locked Sync</span>
+              <span class="intro-chip">Realtime Chat</span>
+            </div>
+          </div>
+          <div class="intro-col-tap-prompt">Hover or tap to reveal</div>
+        </div>
+
+        <!-- Column 03: Direct Video & Voice Calling -->
+        <div class="intro-col-card" data-card="videocall" tabindex="0" role="region" aria-label="HD Video & Voice Calling Tool">
+          <div class="intro-col-accent-bar"></div>
+          <div class="intro-col-meta">
+            <span class="intro-col-num">03</span>
+            <span class="intro-col-badge">Meetings</span>
+          </div>
+          <h2 class="intro-col-title">HD Video & Voice Calling</h2>
+          <div class="intro-col-subtitle">ZOOM-STYLE DYNAMIC SFU GRID</div>
+          
+          <div class="intro-col-reveal-body">
+            <p class="intro-col-description">
+              Call and talk face-to-face in crystal-clear audio and video. Features responsive auto-splitting video grids, screen sharing, active speaker detection, and instant mute/camera toggles.
+            </p>
+            <div class="intro-col-chips">
+              <span class="intro-chip">Dynamic Split Grids</span>
+              <span class="intro-chip">Screen Share</span>
+              <span class="intro-chip">SFU Routing</span>
+            </div>
+          </div>
+          <div class="intro-col-tap-prompt">Hover or tap to reveal</div>
+        </div>
+
+      </div>
+
+      <!-- Quick Launch Floating Action Bar for Mobile -->
+      <div class="intro-mobile-action-bar">
+        <button type="button" id="intro-launch-mobile-btn" class="intro-launch-btn mobile-full">
+          Launch Workspace Now <span class="intro-btn-arrow">→</span>
+        </button>
+      </div>
+    </footer>
 
   </div>
 
