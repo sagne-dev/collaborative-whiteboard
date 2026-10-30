@@ -22,6 +22,19 @@ const PERSIST_DIR = path.join(ROOT_DIR, 'data');
 
 if (!fs.existsSync(PERSIST_DIR)) fs.mkdirSync(PERSIST_DIR, { recursive: true });
 
+// Clean up any stale room history files from previous sessions on server startup
+try {
+  if (fs.existsSync(PERSIST_DIR)) {
+    const files = fs.readdirSync(PERSIST_DIR);
+    for (const f of files) {
+      if (f.endsWith('.json')) {
+        try { fs.unlinkSync(path.join(PERSIST_DIR, f)); } catch (e) {}
+      }
+    }
+    console.log('🧹 Cleaned up stale room history files on startup.');
+  }
+} catch (e) {}
+
 // ─── Default Sample Video ─────────────────────────────────────────────────────
 const DEFAULT_VIDEO = {
   url         : 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
@@ -49,14 +62,14 @@ function getRoom(roomId) {
       strokes : new Map(persisted.strokes.map(s => [s.id, s])),
       deleted : new Set(persisted.deleted),
       users   : new Map(),
-      video   : persisted.video || { ...DEFAULT_VIDEO, lastUpdate: Date.now() },
+      video   : persisted.video || null,
       chat    : Array.isArray(persisted.chat) ? persisted.chat : [],
     });
   }
   return rooms.get(roomId);
 }
 
-// ─── Persistence ──────────────────────────────────────────────────────────────
+// ─── Persistence & Room Cleanup ───────────────────────────────────────────────
 function roomFile(roomId) {
   return path.join(PERSIST_DIR, roomId.replace(/[^a-z0-9_-]/gi, '_') + '.json');
 }
@@ -78,20 +91,59 @@ function loadRoom(roomId) {
 
 function saveRoom(roomId) {
   const room = rooms.get(roomId);
-  if (!room) return;
+  // If the room does not exist or has 0 users, do not persist to disk
+  if (!room || room.users.size === 0) return;
   const data = {
     strokes : [...room.strokes.values()],
     deleted : [...room.deleted],
     video   : room.video,
     chat    : room.chat.slice(-100),
   };
-  fs.writeFileSync(roomFile(roomId), JSON.stringify(data), 'utf8');
+  try {
+    fs.writeFileSync(roomFile(roomId), JSON.stringify(data), 'utf8');
+  } catch (err) {
+    console.warn(`[save] Error saving room ${roomId}:`, err.message);
+  }
 }
 
 const saveTimers = new Map();
 function debounceSave(roomId, ms = 2000) {
+  const room = rooms.get(roomId);
+  if (!room || room.users.size === 0) return;
   clearTimeout(saveTimers.get(roomId));
   saveTimers.set(roomId, setTimeout(() => saveRoom(roomId), ms));
+}
+
+function clearRoomHistory(roomId) {
+  if (!roomId) return;
+
+  // 1. Cancel any pending debounce save timer
+  if (saveTimers.has(roomId)) {
+    clearTimeout(saveTimers.get(roomId));
+    saveTimers.delete(roomId);
+  }
+
+  // 2. Delete persisted room file from disk
+  const file = roomFile(roomId);
+  if (fs.existsSync(file)) {
+    try {
+      fs.unlinkSync(file);
+      console.log(`[room] Deleted persisted file for empty room: ${roomId}`);
+    } catch (err) {
+      console.warn(`[room] Could not delete file for room ${roomId}:`, err.message);
+    }
+  }
+
+  // 3. Clear all in-memory state for this room
+  const room = rooms.get(roomId);
+  if (room) {
+    room.strokes.clear();
+    room.deleted.clear();
+    room.chat = [];
+    room.video = null;
+    rooms.delete(roomId);
+    console.log(`[room] Cleared all blackboard and chat history for empty room: ${roomId}`);
+  }
 }
 
 // ─── Stream Resolver & Streaming Proxy ─────────────────────────────────────────
@@ -353,22 +405,40 @@ function addSystemChatMessage(room, text) {
 }
 
 wss.on('connection', (ws) => {
-  let userId = null;
-  let roomId = null;
-  let room   = null;
+  let userId  = null;
+  let roomId  = null;
+  let room    = null;
+  let hasLeft = false;
 
   function send(obj) {
     if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(obj));
   }
 
   function leave() {
-    if (!room || !userId) return;
+    if (hasLeft || !room || !userId) return;
+    hasLeft = true;
+
     const leavingUser = room.users.get(userId);
     const userName = leavingUser ? leavingUser.name : userId;
-    room.users.delete(userId);
-    broadcast(room, { type: 'user_left', userId, name: userName });
-    addSystemChatMessage(room, `🚪 ${userName} left the room`);
-    saveRoom(roomId);
+    const currentRoomId = roomId;
+    const currentRoom = room;
+
+    currentRoom.users.delete(userId);
+
+    if (currentRoom.users.size > 0) {
+      // Room still has remaining users: notify them and keep active state
+      broadcast(currentRoom, { type: 'user_left', userId, name: userName });
+      addSystemChatMessage(currentRoom, `🚪 ${userName} left the room`);
+      debounceSave(currentRoomId);
+    } else {
+      // ALL users have closed/left the room: completely wipe all blackboard, chat and video history!
+      console.log(`[room] All users left room "${currentRoomId}". Clearing all history.`);
+      clearRoomHistory(currentRoomId);
+    }
+
+    room   = null;
+    userId = null;
+    roomId = null;
   }
 
   ws.on('message', (raw) => {
@@ -379,6 +449,7 @@ wss.on('connection', (ws) => {
 
       case 'join': {
         if (room) leave();
+        hasLeft = false;
         userId = msg.userId || generateId();
         roomId = msg.roomId || 'default';
         room   = getRoom(roomId);

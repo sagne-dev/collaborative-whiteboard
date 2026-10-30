@@ -293,28 +293,48 @@ function handleMessage(msg) {
 
       state.strokes.clear();
       state.deleted.clear();
-      for (const s of msg.strokes) state.strokes.set(s.id, s);
-      for (const id of msg.deleted) state.deleted.add(id);
+      state.currentStroke = null;
+      for (const s of (msg.strokes || [])) state.strokes.set(s.id, s);
+      for (const id of (msg.deleted || [])) state.deleted.add(id);
 
       state.userMap.clear();
       overlay.innerHTML = '';
       state.cursors.clear();
-      for (const u of msg.users) {
+      for (const u of (msg.users || [])) {
         state.userMap.set(u.id, u);
         if (u.id !== state.userId) addCursorEl(u.id, u.color, u.name);
       }
       renderUserList();
       scheduleRedraw();
 
+      // Video Player: init if present, otherwise cleanly hide & reset
       if (msg.video && msg.video.url) {
         initVideoPlayer(msg.video);
+      } else {
+        hideAllPlayers();
+        state.videoUrl   = null;
+        state.videoTitle = 'No Video Loaded';
+        videoTitleDisplay.textContent = 'No Video Loaded';
+        videoTypeTag.textContent = 'WATCH PARTY';
+        videoTypeTag.style.background = 'rgba(255, 255, 255, 0.08)';
+        videoTypeTag.style.color = '#fff';
+        updateSyncTimeline(0, 0);
+        updateVideoBadge(false);
       }
+
+      // Chat Messages: clear DOM and load room chat
+      chatMessages.innerHTML = '';
+      state.unreadMessages = 0;
+      updateChatBadges();
 
       if (Array.isArray(msg.chat)) {
         for (const chatItem of msg.chat) {
           appendChatMessage(chatItem, false);
         }
       }
+
+      if (videoUrlInput) videoUrlInput.value = '';
+      if (chatInput) chatInput.value = '';
       break;
     }
 
@@ -1526,3 +1546,10 @@ function setStatus(cls, text) {
   statusEl.className = 'status ' + cls;
   statusEl.textContent = text;
 }
+
+// ─── Close WebSocket on Page Unload ───────────────────────────────────────────
+window.addEventListener('beforeunload', () => {
+  if (state.ws && state.ws.readyState === WebSocket.OPEN) {
+    state.ws.close();
+  }
+});

@@ -77,7 +77,7 @@ collaborative-whiteboard/
 │   ├── index.html     # Mode switcher, Whiteboard canvas, Video stage & Chat sidebar UI
 │   ├── style.css      # Dark modern UI, Theater mode, and responsive layout
 │   └── js/app.js      # Real-time WebSocket sync for drawing, video player & chat
-├── data/              # Auto-saved room state (drawings, video state & chat)
+├── data/              # Temporary room state while active (automatically cleared when room is empty)
 └── package.json
 ```
 
