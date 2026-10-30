@@ -68,6 +68,13 @@
           <span>Watch Party Mode</span>
           <span id="nav-chat-badge" class="nav-badge hidden">0</span>
         </button>
+        <button id="mode-videocall-btn" class="mode-tab" data-mode="videocall">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="23 7 16 12 23 17 23 7"></polygon>
+            <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+          </svg>
+          <span>Video Call Mode</span>
+        </button>
       </nav>
 
       <!-- Right Meta Bar -->
@@ -314,6 +321,57 @@
           </form>
         </aside>
 
+      </div>
+
+      <!-- ══════════════════════════════════════
+           3. VIDEO CALL MODE VIEW
+      ══════════════════════════════════════ -->
+      <div id="videocall-view" class="view-panel">
+        <div id="video-call-container">
+          <!-- Video Call Controls Bar -->
+          <div class="video-call-controls-bar">
+            <div class="vc-control-group">
+              <button id="vc-mic-btn" class="vc-action-btn unmuted" title="Toggle Microphone (Mute / Unmute)">
+                <span class="vc-btn-icon" id="vc-mic-icon">🎙️</span>
+                <span id="vc-mic-text">Mute</span>
+              </button>
+              <button id="vc-camera-btn" class="vc-action-btn cam-active" title="Toggle Camera (Video On / Off)">
+                <span class="vc-btn-icon" id="vc-cam-icon">📹</span>
+                <span id="vc-cam-text">Turn Off Camera</span>
+              </button>
+            </div>
+
+            <div class="vc-call-info">
+              <span class="vc-status-badge">
+                <span class="badge-dot pulse"></span>
+                <span id="vc-peer-count">1 in call</span>
+              </span>
+            </div>
+
+            <div class="vc-control-group">
+              <button id="vc-fullscreen-btn" class="vc-action-btn secondary" title="Toggle Fullscreen Video Grid">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+                <span>Fullscreen</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Face-to-Face Video Grid -->
+          <div id="video-call-grid" class="video-call-grid">
+            <!-- Local User Tile -->
+            <div id="local-video-tile" class="video-tile local-tile">
+              <video id="local-video-el" playsinline autoplay muted></video>
+              <div class="tile-avatar-placeholder hidden" id="local-avatar-placeholder">
+                <div class="tile-avatar-circle" id="local-avatar-circle">U</div>
+                <span class="tile-avatar-name" id="local-avatar-name">You (Camera Off)</span>
+              </div>
+              <div class="tile-meta-overlay">
+                <span class="tile-user-name" id="local-tile-name">You</span>
+                <span class="tile-mic-indicator" id="local-tile-mic">🎙️</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
     </div>

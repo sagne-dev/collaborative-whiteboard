@@ -1265,6 +1265,272 @@ kbd {
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--border-light); }
 
+/* ══════════════════════════════════════════════════════════════
+   3. VIDEO CALL MODE STYLES
+══════════════════════════════════════════════════════════════ */
+#videocall-view {
+  display: none;
+  width: 100%;
+  height: 100%;
+  background: #0d0d18;
+  position: relative;
+  overflow: hidden;
+}
+
+#videocall-view.active {
+  display: flex;
+  flex-direction: column;
+}
+
+#video-call-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding: 1rem 1.25rem 1.25rem;
+  gap: 1rem;
+  box-sizing: border-box;
+}
+
+/* Video Call Floating Controls Bar */
+.video-call-controls-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.6rem 1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.vc-control-group {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.vc-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+}
+
+.vc-action-btn.unmuted {
+  background: rgba(78, 205, 196, 0.14);
+  border-color: rgba(78, 205, 196, 0.5);
+  color: #4ECDC4;
+}
+
+.vc-action-btn.unmuted:hover {
+  background: rgba(78, 205, 196, 0.25);
+  box-shadow: 0 0 12px rgba(78, 205, 196, 0.3);
+}
+
+.vc-action-btn.muted {
+  background: rgba(255, 107, 107, 0.14);
+  border-color: rgba(255, 107, 107, 0.5);
+  color: #FF6B6B;
+}
+
+.vc-action-btn.muted:hover {
+  background: rgba(255, 107, 107, 0.25);
+}
+
+.vc-action-btn.cam-active {
+  background: rgba(69, 183, 209, 0.14);
+  border-color: rgba(69, 183, 209, 0.5);
+  color: #45B7D1;
+}
+
+.vc-action-btn.cam-active:hover {
+  background: rgba(69, 183, 209, 0.25);
+  box-shadow: 0 0 12px rgba(69, 183, 209, 0.3);
+}
+
+.vc-action-btn.cam-muted {
+  background: rgba(255, 107, 107, 0.14);
+  border-color: rgba(255, 107, 107, 0.5);
+  color: #FF6B6B;
+}
+
+.vc-action-btn.cam-muted:hover {
+  background: rgba(255, 107, 107, 0.25);
+}
+
+.vc-action-btn.secondary {
+  background: var(--surface2);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.vc-action-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--border-light);
+}
+
+.vc-call-info {
+  display: flex;
+  align-items: center;
+}
+
+.vc-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(78, 205, 196, 0.1);
+  border: 1px solid rgba(78, 205, 196, 0.3);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  color: #4ECDC4;
+  font-weight: 600;
+}
+
+.badge-dot.pulse {
+  animation: pulseDot 1.5s infinite;
+}
+
+@keyframes pulseDot {
+  0%   { transform: scale(0.9); opacity: 0.7; }
+  50%  { transform: scale(1.3); opacity: 1; box-shadow: 0 0 8px #4ECDC4; }
+  100% { transform: scale(0.9); opacity: 0.7; }
+}
+
+/* Face-to-Face Video Grid Layout */
+.video-call-grid {
+  display: grid;
+  gap: 1rem;
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  grid-auto-rows: 1fr;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+}
+
+.video-call-grid.single-user {
+  grid-template-columns: 1fr;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.video-call-grid.two-users {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.video-call-grid.four-users {
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+}
+
+/* Video Tiles */
+.video-tile {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 240px;
+  background: #141426;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 2px solid var(--border);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.video-tile.speaking {
+  border-color: #4ECDC4;
+  box-shadow: 0 0 16px rgba(78, 205, 196, 0.4);
+}
+
+.video-tile video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #000;
+}
+
+/* Mirror local user's camera feed like Google Meet / Zoom */
+.video-tile.local-tile video {
+  transform: scaleX(-1);
+}
+
+/* Camera-Off Avatar Placeholder */
+.tile-avatar-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, #1e1e38 0%, #111122 100%);
+  gap: 0.8rem;
+  z-index: 2;
+}
+
+.tile-avatar-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--user-color, #4ECDC4);
+  color: #0d0d1a;
+  font-size: 2.2rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
+}
+
+.tile-avatar-name {
+  font-size: 0.9rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+/* Meta overlay on video tile */
+.tile-meta-overlay {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(13, 13, 26, 0.75);
+  backdrop-filter: blur(8px);
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 3;
+}
+
+.tile-user-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.tile-mic-indicator {
+  font-size: 0.76rem;
+}
+
 /* ── Responsive rules ── */
 @media (max-width: 768px) {
   :root {

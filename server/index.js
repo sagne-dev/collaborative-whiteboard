@@ -466,7 +466,7 @@ wss.on('connection', (ws) => {
           strokes : [...room.strokes.values()],
           deleted : [...room.deleted],
           users   : [...room.users.entries()].map(([id, u]) => ({
-            id, color: u.color, name: u.name, isMuted: !!u.isMuted,
+            id, color: u.color, name: u.name, isMuted: !!u.isMuted, isCamOff: !!u.isCamOff,
           })),
           video   : room.video ? {
             url         : room.video.url,
@@ -481,11 +481,12 @@ wss.on('connection', (ws) => {
         });
 
         broadcast(room, {
-          type    : 'user_joined',
+          type     : 'user_joined',
           userId,
           color,
-          name    : userName,
-          isMuted : false,
+          name     : userName,
+          isMuted  : false,
+          isCamOff : false,
         }, ws);
 
         addSystemChatMessage(room, `👋 ${userName} joined the room`);
@@ -734,6 +735,18 @@ wss.on('connection', (ws) => {
           type    : 'voice_mute_status',
           userId,
           isMuted : !!msg.isMuted,
+        }, ws);
+        break;
+      }
+
+      case 'video_cam_status': {
+        if (!room) return;
+        const user = room.users.get(userId);
+        if (user) user.isCamOff = !!msg.isCamOff;
+        broadcast(room, {
+          type     : 'video_cam_status',
+          userId,
+          isCamOff : !!msg.isCamOff,
         }, ws);
         break;
       }

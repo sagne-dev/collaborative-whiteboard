@@ -24,6 +24,7 @@ const joinBtn           = document.getElementById('join-btn');
 // Persistent Top Bar
 const modeWhiteboardBtn = document.getElementById('mode-whiteboard-btn');
 const modeWatchPartyBtn = document.getElementById('mode-watchparty-btn');
+const modeVideoCallBtn  = document.getElementById('mode-videocall-btn');
 const navChatBadge      = document.getElementById('nav-chat-badge');
 const navRoomBadge      = document.getElementById('nav-room-badge');
 const navRoomLabel      = document.getElementById('nav-room-label');
@@ -42,6 +43,26 @@ const remoteAudiosContainer = document.getElementById('remote-audios-container')
 // Views Container
 const whiteboardView    = document.getElementById('whiteboard-view');
 const watchpartyView    = document.getElementById('watchparty-view');
+const videocallView     = document.getElementById('videocall-view');
+
+// Video Call Elements
+const videoCallContainer     = document.getElementById('video-call-container');
+const videoCallGrid          = document.getElementById('video-call-grid');
+const vcMicBtn               = document.getElementById('vc-mic-btn');
+const vcMicIcon              = document.getElementById('vc-mic-icon');
+const vcMicText              = document.getElementById('vc-mic-text');
+const vcCameraBtn            = document.getElementById('vc-camera-btn');
+const vcCamIcon              = document.getElementById('vc-cam-icon');
+const vcCamText              = document.getElementById('vc-cam-text');
+const vcPeerCount            = document.getElementById('vc-peer-count');
+const vcFullscreenBtn        = document.getElementById('vc-fullscreen-btn');
+const localVideoTile         = document.getElementById('local-video-tile');
+const localVideoEl           = document.getElementById('local-video-el');
+const localAvatarPlaceholder = document.getElementById('local-avatar-placeholder');
+const localAvatarCircle      = document.getElementById('local-avatar-circle');
+const localAvatarName        = document.getElementById('local-avatar-name');
+const localTileName          = document.getElementById('local-tile-name');
+const localTileMic           = document.getElementById('local-tile-mic');
 
 // Whiteboard Elements
 const canvas            = document.getElementById('canvas');
@@ -144,11 +165,15 @@ const state = {
   // WebRTC Voice Chat state
   localAudioStream        : null,
   isMicMuted              : false,
-  voiceConnections        : new Map(), // remoteUserId -> { pc, audioEl, candidateQueue, hasRemoteDescription }
+  voiceConnections        : new Map(), // remoteUserId -> { pc, audioEl, candidateQueue, hasRemoteDescription, remoteVideoStream }
   audioContext            : null,
   analyserNode            : null,
   voiceVisualizerInterval : null,
   voiceSupported          : typeof window !== 'undefined' && !!(window.RTCPeerConnection && navigator.mediaDevices && navigator.mediaDevices.getUserMedia),
+
+  // WebRTC Video Call state
+  localVideoStream        : null,
+  isCamOff                : false,
 };
 
 // ─── Seamless Mode Switcher ────────────────────────────────────────────────────
@@ -156,32 +181,34 @@ function setMode(newMode) {
   if (state.currentMode === newMode) return;
   state.currentMode = newMode;
 
-  if (newMode === 'whiteboard') {
-    modeWhiteboardBtn.classList.add('active');
-    modeWatchPartyBtn.classList.remove('active');
-    whiteboardView.classList.add('active');
-    watchpartyView.classList.remove('active');
+  modeWhiteboardBtn.classList.toggle('active', newMode === 'whiteboard');
+  modeWatchPartyBtn.classList.toggle('active', newMode === 'watchparty');
+  if (modeVideoCallBtn) modeVideoCallBtn.classList.toggle('active', newMode === 'videocall');
 
+  whiteboardView.classList.toggle('active', newMode === 'whiteboard');
+  watchpartyView.classList.toggle('active', newMode === 'watchparty');
+  if (videocallView) videocallView.classList.toggle('active', newMode === 'videocall');
+
+  if (newMode === 'whiteboard') {
     requestAnimationFrame(() => {
       resizeCanvas();
       redrawAll();
     });
   } else if (newMode === 'watchparty') {
-    modeWatchPartyBtn.classList.add('active');
-    modeWhiteboardBtn.classList.remove('active');
-    watchpartyView.classList.add('active');
-    whiteboardView.classList.remove('active');
-
     state.unreadMessages = 0;
     updateChatBadges();
 
     wsSend({ type: 'video_sync_request' });
     scrollToChatBottom();
+  } else if (newMode === 'videocall') {
+    updateVideoCallGrid();
+    ensureLocalCamera();
   }
 }
 
-modeWhiteboardBtn.addEventListener('click', () => setMode('whiteboard'));
-modeWatchPartyBtn.addEventListener('click', () => setMode('watchparty'));
+if (modeWhiteboardBtn) modeWhiteboardBtn.addEventListener('click', () => setMode('whiteboard'));
+if (modeWatchPartyBtn) modeWatchPartyBtn.addEventListener('click', () => setMode('watchparty'));
+if (modeVideoCallBtn)  modeVideoCallBtn.addEventListener('click',  () => setMode('videocall'));
 
 // ─── Canvas Resizing & Rendering ───────────────────────────────────────────────
 function resizeCanvas() {
@@ -321,6 +348,7 @@ function handleMessage(msg) {
         if (u.id !== state.userId) addCursorEl(u.id, u.color, u.name);
       }
       renderUserList();
+      updateVideoCallGrid();
       scheduleRedraw();
 
       // Video Player: init if present, otherwise cleanly hide & reset
@@ -388,9 +416,16 @@ function handleMessage(msg) {
 
     // ── Presence Events ──
     case 'user_joined': {
-      state.userMap.set(msg.userId, { id: msg.userId, color: msg.color, name: msg.name, isMuted: !!msg.isMuted });
+      state.userMap.set(msg.userId, {
+        id       : msg.userId,
+        color    : msg.color,
+        name     : msg.name,
+        isMuted  : !!msg.isMuted,
+        isCamOff : !!msg.isCamOff,
+      });
       addCursorEl(msg.userId, msg.color, msg.name);
       renderUserList();
+      updateVideoCallGrid();
       // Existing room participant connects to newly joined participant via WebRTC
       if (state.voiceSupported && msg.userId !== state.userId) {
         initiatePeerConnection(msg.userId);
@@ -403,10 +438,11 @@ function handleMessage(msg) {
       removeCursor(msg.userId);
       closePeerConnection(msg.userId);
       renderUserList();
+      updateVideoCallGrid();
       break;
     }
 
-    // ── WebRTC Voice Chat Events ──
+    // ── WebRTC Voice & Video Events ──
     case 'voice_signal': {
       handleVoiceSignal(msg);
       break;
@@ -417,6 +453,26 @@ function handleMessage(msg) {
       if (u) {
         u.isMuted = !!msg.isMuted;
         renderUserList();
+        const tileMic = document.getElementById(`tile-mic-${msg.userId}`);
+        if (tileMic) {
+          tileMic.textContent = u.isMuted ? '🔇' : '🎙️';
+        }
+      }
+      break;
+    }
+
+    case 'video_cam_status': {
+      const u = state.userMap.get(msg.userId);
+      if (u) {
+        u.isCamOff = !!msg.isCamOff;
+      }
+      const placeholder = document.getElementById(`avatar-placeholder-${msg.userId}`);
+      if (placeholder) {
+        if (msg.isCamOff) {
+          placeholder.classList.remove('hidden');
+        } else {
+          placeholder.classList.add('hidden');
+        }
       }
       break;
     }
@@ -1690,6 +1746,8 @@ async function toggleMicrophone() {
     showVideoToast('🎙️ Microphone active');
   }
 
+  updateVcMicUI();
+
   wsSend({
     type    : 'voice_mute_status',
     isMuted : state.isMicMuted,
@@ -1698,8 +1756,27 @@ async function toggleMicrophone() {
   renderUserList();
 }
 
+function updateVcMicUI() {
+  if (!vcMicBtn) return;
+  if (state.isMicMuted) {
+    vcMicBtn.className = 'vc-action-btn muted';
+    if (vcMicIcon) vcMicIcon.textContent = '🔇';
+    if (vcMicText) vcMicText.textContent = 'Unmute';
+    if (localTileMic) localTileMic.textContent = '🔇';
+  } else {
+    vcMicBtn.className = 'vc-action-btn unmuted';
+    if (vcMicIcon) vcMicIcon.textContent = '🎙️';
+    if (vcMicText) vcMicText.textContent = 'Mute';
+    if (localTileMic) localTileMic.textContent = '🎙️';
+  }
+}
+
 if (navVoiceBtn) {
   navVoiceBtn.addEventListener('click', toggleMicrophone);
+}
+
+if (vcMicBtn) {
+  vcMicBtn.addEventListener('click', toggleMicrophone);
 }
 
 function setupAudioActivityMeter(stream) {
@@ -1736,6 +1813,223 @@ function setupAudioActivityMeter(stream) {
   }
 }
 
+// ─── Real-Time WebRTC Video Call Grid & Controls ──────────────────────────────
+async function ensureLocalCamera() {
+  if (state.localVideoStream && state.localVideoStream.getVideoTracks().length > 0) {
+    const track = state.localVideoStream.getVideoTracks()[0];
+    if (track.readyState === 'live') {
+      track.enabled = !state.isCamOff;
+      if (localVideoEl && localVideoEl.srcObject !== state.localVideoStream) {
+        localVideoEl.srcObject = state.localVideoStream;
+      }
+      updateCameraUI();
+      return;
+    }
+  }
+
+  if (!state.voiceSupported) return;
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        width: { ideal: 1280, max: 1920 },
+        height: { ideal: 720, max: 1080 },
+        facingMode: 'user',
+      },
+    });
+
+    state.localVideoStream = stream;
+    const track = stream.getVideoTracks()[0];
+    track.enabled = !state.isCamOff;
+
+    if (localVideoEl) {
+      localVideoEl.srcObject = stream;
+      localVideoEl.play().catch(() => {});
+    }
+
+    // Attach video track to all existing peer connections
+    for (const [, conn] of state.voiceConnections) {
+      try {
+        const senders = conn.pc.getSenders();
+        const videoSender = senders.find(s => (s.track && s.track.kind === 'video') || (s.track === null && s.dtlsTransport));
+        if (videoSender) {
+          videoSender.replaceTrack(track);
+        } else {
+          conn.pc.addTrack(track, stream);
+          if (conn.pc.signalingState === 'stable') {
+            initiatePeerConnection(conn.targetUserId);
+          }
+        }
+      } catch (err) {
+        console.warn('Error attaching video track to peer:', err);
+      }
+    }
+
+    updateCameraUI();
+  } catch (err) {
+    console.warn('Camera access denied or unavailable:', err.message);
+    state.localVideoStream = null;
+    state.isCamOff = true;
+    updateCameraUI();
+    showVideoToast('ℹ️ Camera off or unavailable. Avatar displayed.');
+  }
+}
+
+async function toggleCamera() {
+  if (!state.localVideoStream) {
+    state.isCamOff = false;
+    await ensureLocalCamera();
+    return;
+  }
+
+  state.isCamOff = !state.isCamOff;
+  state.localVideoStream.getVideoTracks().forEach(track => {
+    track.enabled = !state.isCamOff;
+  });
+
+  updateCameraUI();
+
+  if (state.isCamOff) {
+    showVideoToast('📷 Camera turned off');
+  } else {
+    showVideoToast('📹 Camera active');
+  }
+
+  wsSend({
+    type: 'video_cam_status',
+    isCamOff: state.isCamOff,
+  });
+}
+
+function updateCameraUI() {
+  if (!vcCameraBtn) return;
+  if (state.isCamOff) {
+    vcCameraBtn.className = 'vc-action-btn cam-muted';
+    if (vcCamIcon) vcCamIcon.textContent = '📷';
+    if (vcCamText) vcCamText.textContent = 'Turn On Camera';
+    if (localAvatarPlaceholder) localAvatarPlaceholder.classList.remove('hidden');
+  } else {
+    vcCameraBtn.className = 'vc-action-btn cam-active';
+    if (vcCamIcon) vcCamIcon.textContent = '📹';
+    if (vcCamText) vcCamText.textContent = 'Turn Off Camera';
+    if (localAvatarPlaceholder) localAvatarPlaceholder.classList.add('hidden');
+  }
+
+  const myName = state.userName || 'You';
+  const initial = myName.charAt(0).toUpperCase();
+  if (localAvatarCircle) {
+    localAvatarCircle.textContent = initial;
+    localAvatarCircle.style.background = state.color || '#4ECDC4';
+  }
+  if (localAvatarName) {
+    localAvatarName.textContent = myName + ' (Camera Off)';
+  }
+  if (localTileName) {
+    localTileName.textContent = myName + ' (You)';
+  }
+  if (localTileMic) {
+    localTileMic.textContent = state.isMicMuted ? '🔇' : '🎙️';
+  }
+}
+
+if (vcCameraBtn) {
+  vcCameraBtn.addEventListener('click', toggleCamera);
+}
+
+if (vcFullscreenBtn) {
+  vcFullscreenBtn.addEventListener('click', () => {
+    if (!document.fullscreenElement) {
+      if (videoCallContainer && videoCallContainer.requestFullscreen) {
+        videoCallContainer.requestFullscreen();
+      } else if (videocallView && videocallView.requestFullscreen) {
+        videocallView.requestFullscreen();
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  });
+}
+
+function updateVideoCallGrid() {
+  if (!videoCallGrid) return;
+  const totalCount = Math.max(1, state.userMap.size);
+
+  if (vcPeerCount) {
+    vcPeerCount.textContent = totalCount === 1 ? '1 in call' : `${totalCount} in call`;
+  }
+
+  videoCallGrid.classList.remove('single-user', 'two-users', 'four-users');
+  if (totalCount === 1) {
+    videoCallGrid.classList.add('single-user');
+  } else if (totalCount === 2) {
+    videoCallGrid.classList.add('two-users');
+  } else if (totalCount <= 4) {
+    videoCallGrid.classList.add('four-users');
+  }
+
+  // Update local tile info
+  updateCameraUI();
+
+  // Update or create remote video tiles
+  for (const [peerId, u] of state.userMap) {
+    if (peerId === state.userId) continue;
+
+    let tile = document.getElementById(`video-tile-${peerId}`);
+    const initial = (u.name || 'U').charAt(0).toUpperCase();
+    const isCamOff = !!u.isCamOff;
+    const isMuted = !!u.isMuted;
+
+    if (!tile) {
+      tile = document.createElement('div');
+      tile.id = `video-tile-${peerId}`;
+      tile.className = 'video-tile remote-tile';
+      tile.setAttribute('data-peer-id', peerId);
+      tile.innerHTML = `
+        <video id="remote-video-${peerId}" playsinline autoplay></video>
+        <div class="tile-avatar-placeholder ${isCamOff ? '' : 'hidden'}" id="avatar-placeholder-${peerId}">
+          <div class="tile-avatar-circle" style="background:${u.color || '#4ECDC4'}">${escapeHtml(initial)}</div>
+          <span class="tile-avatar-name" id="avatar-name-${peerId}">${escapeHtml(u.name || 'Peer')} (Camera Off)</span>
+        </div>
+        <div class="tile-meta-overlay">
+          <span class="tile-user-name" id="tile-name-${peerId}">${escapeHtml(u.name || 'Peer')}</span>
+          <span class="tile-mic-indicator" id="tile-mic-${peerId}">${isMuted ? '🔇' : '🎙️'}</span>
+        </div>
+      `;
+      videoCallGrid.appendChild(tile);
+    } else {
+      const ph = document.getElementById(`avatar-placeholder-${peerId}`);
+      if (ph) {
+        if (isCamOff) ph.classList.remove('hidden');
+        else ph.classList.add('hidden');
+      }
+      const an = document.getElementById(`avatar-name-${peerId}`);
+      if (an) an.textContent = `${u.name || 'Peer'} (Camera Off)`;
+      const tn = document.getElementById(`tile-name-${peerId}`);
+      if (tn) tn.textContent = u.name || 'Peer';
+      const tm = document.getElementById(`tile-mic-${peerId}`);
+      if (tm) tm.textContent = isMuted ? '🔇' : '🎙️';
+    }
+
+    const conn = state.voiceConnections.get(peerId);
+    const videoEl = document.getElementById(`remote-video-${peerId}`);
+    if (conn && conn.remoteVideoStream && videoEl && videoEl.srcObject !== conn.remoteVideoStream) {
+      videoEl.srcObject = conn.remoteVideoStream;
+      videoEl.play().catch(() => {});
+    }
+  }
+
+  // Remove tiles for users who left
+  const existingTiles = videoCallGrid.querySelectorAll('.remote-tile');
+  existingTiles.forEach(tile => {
+    const peerId = tile.getAttribute('data-peer-id');
+    if (!state.userMap.has(peerId)) {
+      tile.remove();
+    }
+  });
+}
+
 function getOrCreatePeerConnection(targetUserId) {
   if (state.voiceConnections.has(targetUserId)) {
     return state.voiceConnections.get(targetUserId);
@@ -1755,6 +2049,7 @@ function getOrCreatePeerConnection(targetUserId) {
     targetUserId,
     candidateQueue: [],
     hasRemoteDescription: false,
+    remoteVideoStream: null,
   };
   state.voiceConnections.set(targetUserId, conn);
 
@@ -1768,12 +2063,33 @@ function getOrCreatePeerConnection(targetUserId) {
     } catch (e) {}
   }
 
+  if (state.localVideoStream && state.localVideoStream.getVideoTracks().length > 0) {
+    state.localVideoStream.getVideoTracks().forEach(track => {
+      try { pc.addTrack(track, state.localVideoStream); } catch (e) {}
+    });
+  } else {
+    try {
+      pc.addTransceiver('video', { direction: 'sendrecv' });
+    } catch (e) {}
+  }
+
   pc.ontrack = (event) => {
-    if (event.streams && event.streams[0]) {
-      audioEl.srcObject = event.streams[0];
-      const p = audioEl.play();
-      if (p !== undefined) {
-        p.catch(err => console.warn(`Autoplay deferred for peer ${targetUserId}:`, err));
+    if (event.track.kind === 'audio') {
+      if (event.streams && event.streams[0]) {
+        audioEl.srcObject = event.streams[0];
+        const p = audioEl.play();
+        if (p !== undefined) {
+          p.catch(err => console.warn(`Autoplay deferred for peer ${targetUserId}:`, err));
+        }
+      }
+    } else if (event.track.kind === 'video') {
+      const vStream = (event.streams && event.streams[0]) ? event.streams[0] : new MediaStream([event.track]);
+      conn.remoteVideoStream = vStream;
+      const remoteVideo = document.getElementById(`remote-video-${targetUserId}`);
+      if (remoteVideo) {
+        remoteVideo.srcObject = vStream;
+        const p = remoteVideo.play();
+        if (p !== undefined) p.catch(() => {});
       }
     }
   };
@@ -1806,7 +2122,7 @@ async function initiatePeerConnection(targetUserId) {
   try {
     const offer = await conn.pc.createOffer({
       offerToReceiveAudio: true,
-      offerToReceiveVideo: false,
+      offerToReceiveVideo: true,
     });
     await conn.pc.setLocalDescription(offer);
     wsSend({
@@ -1852,6 +2168,15 @@ async function handleVoiceSignal(msg) {
         state.localAudioStream.getAudioTracks().forEach(track => {
           if (!senders.some(s => s.track === track)) {
             try { conn.pc.addTrack(track, state.localAudioStream); } catch (e) {}
+          }
+        });
+      }
+
+      if (state.localVideoStream) {
+        const senders = conn.pc.getSenders();
+        state.localVideoStream.getVideoTracks().forEach(track => {
+          if (!senders.some(s => s.track === track)) {
+            try { conn.pc.addTrack(track, state.localVideoStream); } catch (e) {}
           }
         });
       }
@@ -1902,6 +2227,9 @@ function closePeerConnection(userId) {
     conn.audioEl.remove();
   } catch (e) {}
   state.voiceConnections.delete(userId);
+  const tile = document.getElementById(`video-tile-${userId}`);
+  if (tile) tile.remove();
+  updateVideoCallGrid();
 }
 
 function cleanupVoiceChat() {
@@ -1911,6 +2239,10 @@ function cleanupVoiceChat() {
   if (state.localAudioStream) {
     state.localAudioStream.getTracks().forEach(t => t.stop());
     state.localAudioStream = null;
+  }
+  if (state.localVideoStream) {
+    state.localVideoStream.getTracks().forEach(t => t.stop());
+    state.localVideoStream = null;
   }
   if (state.voiceVisualizerInterval) {
     clearInterval(state.voiceVisualizerInterval);

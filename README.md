@@ -26,14 +26,23 @@
 - **Pop-In Toggle:** Reopen the chat sidebar at any moment with one click.
 
 ### 4. 🔄 Seamless Mode Switcher
-- Persistent top navigation bar allowing users to switch freely between **Whiteboard Mode** and **Watch Party Mode** without disconnecting or losing room members.
+- Persistent top navigation bar allowing users to switch freely between **Whiteboard Mode**, **Watch Party Mode**, and **Video Call Mode** without disconnecting or losing room members.
 
 ### 5. 🎙️ Real-Time Audio-Only Voice Chat
 - **WebRTC Peer-to-Peer Audio:** Low-latency, crystal-clear voice chat between participants in the same room ID without video overhead.
 - **Automatic Connection:** Automatically connects users to the voice channel upon entering the room.
 - **Microphone Controls:** Convenient one-click mute/unmute button in the top navigation bar with live audio wave activity visualizer.
-- **Works in Both Modes:** Voice chat remains active continuously whether you are collaborating on the whiteboard or enjoying a watch party.
+- **Works Across All Modes:** Voice chat remains active continuously whether you are collaborating on the whiteboard, enjoying a watch party, or in a call.
 - **Participant Status:** Presence panel displays microphone status (`🎙️` / `🔇`) for all members in real time.
+
+### 6. 📹 Dedicated Face-to-Face Video Call Mode
+- **Clean Video Grid Layout:** Responsive face-to-face video grid dynamically adapting to 1, 2, 4, or more participants.
+- **WebRTC Video & Audio Streams:** Peer-to-peer video streaming with automatic connection handling and fallback.
+- **Independent Media Controls:** Dedicated controls bar with independent **Camera toggle** (video on/off) and **Microphone toggle** (mute/unmute).
+- **Camera-Off Avatar Fallback:** Shows personalized avatar circle with participant initial and room color when camera is disabled.
+- **Local Mirroring:** Mirrors local camera preview for natural interaction (Google Meet / Zoom style).
+- **Fullscreen Theater Mode:** Expand video call grid to full screen with one click.
+- **Active Participant Counter:** Real-time indicator of users connected in the video call.
 
 ---
 
@@ -62,9 +71,9 @@ Share the generated URL with your friends to draw and watch videos together!
 
 | Mode | Action | How |
 |------|--------|-----|
-| **Both** | Switch Mode | Click **Whiteboard Mode** or **Watch Party Mode** in the top navigation bar |
-| **Both** | Voice Chat (Mute/Unmute) | Click the **🎙️ Voice** pill in the top navigation bar to toggle your microphone |
-| **Both** | Share Room Link | Click the **Room: [id]** pill in the top bar to copy your invite link |
+| **All Modes** | Switch Mode | Click **Whiteboard Mode**, **Watch Party Mode**, or **Video Call Mode** in the top navigation bar |
+| **All Modes** | Voice Chat (Mute/Unmute) | Click the **🎙️ Voice** pill in the top navigation bar to toggle your microphone |
+| **All Modes** | Share Room Link | Click the **Room: [id]** pill in the top bar to copy your invite link |
 | **Whiteboard** | Draw | Click + drag on the canvas |
 | **Whiteboard** | Change color / size | Use the color picker and slider in the toolbar |
 | **Whiteboard** | Undo / Redo | `Ctrl+Z` / `Ctrl+Y` or toolbar buttons |
@@ -72,6 +81,9 @@ Share the generated URL with your friends to draw and watch videos together!
 | **Watch Party** | Load a Video | Paste any video link (YouTube, Google Drive, MP4, web link) and click **Load Video**, or select a sample video |
 | **Watch Party** | Theater Mode | Click **Collapse** in the chat header; click **Show Chat** to pop it back in |
 | **Watch Party** | Chat | Type a message and press **Enter** or click **Send** |
+| **Video Call** | Toggle Camera | Click the **📹 Turn Off / On Camera** button in the video controls bar |
+| **Video Call** | Toggle Microphone | Click the **🎙️ Mute / Unmute** button in the video controls bar |
+| **Video Call** | Fullscreen Grid | Click the **Fullscreen** button in the video controls bar |
 
 ---
 
