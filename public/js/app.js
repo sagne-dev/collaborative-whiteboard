@@ -82,6 +82,7 @@ const zoomStageFullscreenBtn = document.getElementById('zoom-stage-fullscreen-bt
 const zoomVideoStageGrid     = document.getElementById('zoom-video-stage-grid');
 const zoomSfuBadge           = document.getElementById('zoom-sfu-badge');
 const zoomGridParticipantsBadge = document.getElementById('zoom-grid-participants-badge');
+const zoomChatToggleBtn       = document.getElementById('zoom-chat-toggle-btn');
 const zoomJoinRoomCallBtn    = document.getElementById('zoom-join-room-call-btn');
 
 // Zoom Bottom Control Bar
@@ -234,28 +235,28 @@ function setMode(newMode) {
   if (videocallView) videocallView.classList.toggle('active', newMode === 'videocall');
 
   if (newMode === 'whiteboard') {
+    if (chatSidebar) chatSidebar.classList.add('mode-hidden');
     requestAnimationFrame(() => {
       resizeCanvas();
       redrawAll();
     });
   } else if (newMode === 'watchparty') {
+    if (chatSidebar) chatSidebar.classList.remove('mode-hidden');
     state.unreadMessages = 0;
     updateChatBadges();
 
     wsSend({ type: 'video_sync_request' });
     scrollToChatBottom();
   } else if (newMode === 'videocall') {
-    // If in an active call, show active stage, else lobby
-    if (state.activeCall || state.isCallActive) {
-      if (zoomLobbyView) zoomLobbyView.classList.add('hidden');
-      if (zoomActiveMeetingView) zoomActiveMeetingView.classList.remove('hidden');
-      renderZoomGrid();
+    if (chatSidebar) chatSidebar.classList.remove('mode-hidden');
+    scrollToChatBottom();
+
+    if (zoomActiveMeetingView) zoomActiveMeetingView.classList.remove('hidden');
+    if (!state.isCallActive) {
+      joinRoomCall();
     } else {
-      if (zoomLobbyView) zoomLobbyView.classList.remove('hidden');
-      if (zoomActiveMeetingView) zoomActiveMeetingView.classList.add('hidden');
+      renderZoomGrid();
     }
-    renderZoomLobby();
-    ensureLocalCamera();
   }
 }
 
@@ -1596,7 +1597,9 @@ function toggleChatSidebar(collapse) {
 
   if (collapse) {
     chatSidebar.classList.add('collapsed');
-    theaterChatBtn.classList.remove('hidden');
+    if (state.currentMode === 'watchparty') {
+      theaterChatBtn.classList.remove('hidden');
+    }
   } else {
     chatSidebar.classList.remove('collapsed');
     theaterChatBtn.classList.add('hidden');
@@ -1654,7 +1657,7 @@ function appendChatMessage(item, isLive = true) {
   chatMessages.appendChild(entry);
   scrollToChatBottom();
 
-  if (isLive && !isMine && (state.isChatCollapsed || state.currentMode !== 'watchparty')) {
+  if (isLive && !isMine && (state.isChatCollapsed || (state.currentMode !== 'watchparty' && state.currentMode !== 'videocall'))) {
     state.unreadMessages++;
     updateChatBadges();
   }
@@ -2249,7 +2252,30 @@ function highlightActiveSpeaker() {
 
 // ─── Dynamic Responsive Zoom Video Grid Renderer ──────────────────────────────
 function renderZoomGrid() {
-  if (!zoomVideoStageGrid || !state.isCallActive) return;
+  if (!zoomVideoStageGrid) return;
+
+  if (!state.isCallActive) {
+    zoomVideoStageGrid.className = 'zoom-stage-grid';
+    zoomVideoStageGrid.innerHTML = `
+      <div class="zoom-rejoin-card">
+        <div class="zoom-rejoin-icon">📹</div>
+        <h3>You left the video call</h3>
+        <p>Ready to rejoin and talk with everyone in the room?</p>
+        <button id="zoom-rejoin-btn" class="zoom-btn-rejoin">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+          <span>Rejoin Video Call</span>
+        </button>
+      </div>
+    `;
+    const rejoinBtn = document.getElementById('zoom-rejoin-btn');
+    if (rejoinBtn) {
+      rejoinBtn.addEventListener('click', () => joinRoomCall());
+    }
+    if (zoomGridParticipantsBadge) {
+      zoomGridParticipantsBadge.textContent = '👥 Call paused';
+    }
+    return;
+  }
 
   const tiles = [];
 
@@ -2592,10 +2618,7 @@ async function leaveActiveCall(reason = 'Call Ended') {
     state.activeCall = null;
   }
 
-  if (zoomActiveMeetingView) zoomActiveMeetingView.classList.add('hidden');
-  if (zoomLobbyView) zoomLobbyView.classList.remove('hidden');
-
-  renderZoomLobby();
+  renderZoomGrid();
   playChime('disconnect');
   showVideoToast(`🔴 ${reason}`);
 }
@@ -2867,6 +2890,12 @@ if (zoomCopyLinkBtn) {
     }).catch(() => {
       prompt('Share this URL to invite friends:', url);
     });
+  });
+}
+
+if (zoomChatToggleBtn) {
+  zoomChatToggleBtn.addEventListener('click', () => {
+    toggleChatSidebar(!chatSidebar.classList.contains('collapsed'));
   });
 }
 

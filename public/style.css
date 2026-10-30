@@ -357,13 +357,15 @@ html, body {
   overflow: hidden;
   height: calc(100% - var(--nav-height));
   width: 100%;
+  display: flex;
+  flex-direction: row;
 }
 
 .view-panel {
-  position: absolute;
-  inset: 0;
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   height: 100%;
+  position: relative;
   display: none;
 }
 .view-panel.active {
@@ -602,12 +604,15 @@ kbd {
    2. WATCH PARTY VIEW
 ══════════════════════════════════════ */
 #watchparty-view {
-  display: flex;
+  display: none;
   width: 100%;
   height: 100%;
   position: relative;
   overflow: hidden;
   background: #090914;
+}
+#watchparty-view.active {
+  display: flex;
 }
 
 /* ── Main Stage (Video Stage) ── */
@@ -1053,6 +1058,11 @@ kbd {
   position: relative;
 }
 
+/* When chat is hidden by mode (e.g. Whiteboard Mode) */
+#chat-sidebar.mode-hidden {
+  display: none !important;
+}
+
 /* When chat is collapsed ("unpopped") */
 #chat-sidebar.collapsed {
   width: 0 !important;
@@ -1288,6 +1298,62 @@ kbd {
   width: 100%;
   height: 100%;
   position: relative;
+}
+
+/* Rejoin Call Card (Shown when user leaves call) */
+.zoom-rejoin-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2.5rem 2rem;
+  background: #141526;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  text-align: center;
+  max-width: 420px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+  margin: auto;
+}
+
+.zoom-rejoin-icon {
+  font-size: 2.8rem;
+}
+
+.zoom-rejoin-card h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #ffffff;
+}
+
+.zoom-rejoin-card p {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+.zoom-btn-rejoin {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #0e71eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+  border: none;
+  padding: 0.75rem 1.6rem;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(14, 113, 235, 0.4);
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.zoom-btn-rejoin:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(14, 113, 235, 0.55);
+  filter: brightness(1.1);
 }
 
 /* ─── 3A. ZOOM LOBBY & DIRECTORY ─── */

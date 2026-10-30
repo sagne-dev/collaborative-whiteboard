@@ -288,39 +288,6 @@
           </div>
         </div>
 
-        <!-- ══════════════════════════════════════
-             3. COLLAPSIBLE TEXT CHAT SIDEBAR
-        ══════════════════════════════════════ -->
-        <aside id="chat-sidebar" class="chat-sidebar">
-          <div class="chat-header">
-            <div class="chat-header-title">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-              <span>Room Chat</span>
-            </div>
-            <!-- Collapse Button: "unpop" sidebar to enter full-width theater view -->
-            <button id="chat-collapse-btn" class="chat-collapse-btn" title="Collapse chat for Theater Mode">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-              <span>Collapse</span>
-            </button>
-          </div>
-
-          <!-- Messages scroll area -->
-          <div id="chat-messages" class="chat-messages">
-            <div class="chat-welcome-msg">
-              <p>🍿 <strong>Watch Party Chat</strong></p>
-              <small>YouTube & MP4 playback (play, pause, seek) is synced in real-time. Chat with everyone here!</small>
-            </div>
-          </div>
-
-          <!-- Message input form -->
-          <form id="chat-form" class="chat-input-form">
-            <input id="chat-input" type="text" placeholder="Send a message to the room..." maxlength="500" autocomplete="off" />
-            <button type="submit" id="chat-send-btn" title="Send message">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-            </button>
-          </form>
-        </aside>
-
       </div>
 
       <!-- ══════════════════════════════════════
@@ -329,98 +296,23 @@
       <div id="videocall-view" class="view-panel">
         <div class="zoom-call-app">
 
-          <!-- ─── 3A. ZOOM LOBBY & DIRECTORY (When no active call) ─── -->
-          <div id="zoom-lobby-view" class="zoom-lobby">
-            <div class="zoom-lobby-card">
-              <div class="zoom-lobby-header">
-                <div class="zoom-logo-badge">
-                  <div class="zoom-icon-box">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <polygon points="23 7 16 12 23 17 23 7"></polygon>
-                      <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
-                    </svg>
-                  </div>
-                  <div class="zoom-title-group">
-                    <h3>Direct Video Calling</h3>
-                    <p>Call any participant face-to-face with live video & audio like Zoom</p>
-                  </div>
-                </div>
-                <span class="zoom-room-pill" id="zoom-lobby-room-tag">Room: lobby</span>
-              </div>
-
-              <!-- Local Camera Preview Card -->
-              <div class="zoom-preview-container">
-                <div class="zoom-self-preview-box">
-                  <video id="zoom-preview-video" playsinline autoplay muted></video>
-                  <div id="zoom-preview-avatar" class="zoom-avatar-fallback hidden">
-                    <div class="zoom-avatar-circle" id="zoom-preview-avatar-circle">Y</div>
-                    <span id="zoom-preview-avatar-name">You (Camera Off)</span>
-                  </div>
-                  <div class="zoom-preview-overlay">
-                    <div class="zoom-preview-info">
-                      <span class="preview-dot"></span>
-                      <span id="zoom-preview-myname">You (Ready)</span>
-                    </div>
-                    <div class="zoom-preview-actions">
-                      <button id="zoom-preview-cam-toggle" class="zoom-mini-btn active" title="Toggle Camera Preview">
-                        <span id="zoom-preview-cam-icon">📹</span>
-                      </button>
-                      <button id="zoom-preview-mic-toggle" class="zoom-mini-btn active" title="Toggle Mic">
-                        <span id="zoom-preview-mic-icon">🎙️</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Online People Directory to Call -->
-              <div class="zoom-peers-section">
-                <div class="zoom-peers-header">
-                  <div class="zoom-peers-title-group">
-                    <h4>Participants in this Room</h4>
-                    <span id="zoom-available-count" class="zoom-counter-badge">0 others online</span>
-                  </div>
-                </div>
-
-                <button id="zoom-join-room-call-btn" class="zoom-btn-join-call" title="Start or join the group video call">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <polygon points="23 7 16 12 23 17 23 7"></polygon>
-                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
-                  </svg>
-                  <span>Start / Join Room Video Call</span>
-                </button>
-
-                <div id="zoom-peers-list" class="zoom-peers-list">
-                  <!-- Populated dynamically: user avatar, name, status, and direct "📞 Video Call" button -->
-                </div>
-
-                <!-- Empty state when user is alone in the room -->
-                <div id="zoom-empty-peers" class="zoom-empty-state">
-                  <div class="empty-icon">👥</div>
-                  <h5>No other participants in this room yet</h5>
-                  <p>Share your room link with someone to start a video call.</p>
-                  <button id="zoom-copy-link-btn" class="zoom-btn-secondary">
-                    📋 Copy Room Invite Link
-                  </button>
-                </div>
-              </div>
-
-            </div>
-          </div>
-
-          <!-- ─── 3B. ACTIVE ZOOM MEETING SCREEN (Daily.co Route 1 SFU Call) ─── -->
-          <div id="zoom-active-meeting-view" class="zoom-active-stage hidden">
+          <!-- ACTIVE ZOOM MEETING SCREEN (Daily.co Route 1 SFU Call) -->
+          <div id="zoom-active-meeting-view" class="zoom-active-stage">
 
             <!-- Top Meeting Header -->
             <div class="zoom-stage-topbar">
               <div class="zoom-meeting-meta">
                 <span class="meeting-status-dot"></span>
-                <span id="zoom-meeting-title">Daily SFU Room</span>
+                <span id="zoom-meeting-title">Video Call</span>
                 <span class="meeting-time-badge" id="zoom-call-duration">00:00</span>
                 <span class="sfu-badge" id="zoom-sfu-badge">⚡ Daily.co SFU</span>
               </div>
               <div class="zoom-stage-top-actions">
                 <span id="zoom-grid-participants-badge" class="zoom-participants-pill">👥 1 in call</span>
+                <button id="zoom-chat-toggle-btn" class="zoom-top-btn" title="Toggle Chat Sidebar">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                  <span>Chat</span>
+                </button>
                 <button id="zoom-stage-fullscreen-btn" class="zoom-top-btn" title="Toggle Fullscreen">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
                 </button>
@@ -468,7 +360,40 @@
         </div>
       </div>
 
-    </div>
+      <!-- ══════════════════════════════════════
+           4. COLLAPSIBLE TEXT CHAT SIDEBAR (Shared Room Chat)
+      ══════════════════════════════════════ -->
+      <aside id="chat-sidebar" class="chat-sidebar mode-hidden">
+        <div class="chat-header">
+          <div class="chat-header-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span>Room Chat</span>
+          </div>
+          <!-- Collapse Button: "unpop" sidebar to enter full-width theater view -->
+          <button id="chat-collapse-btn" class="chat-collapse-btn" title="Collapse chat">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            <span>Collapse</span>
+          </button>
+        </div>
+
+        <!-- Messages scroll area -->
+        <div id="chat-messages" class="chat-messages">
+          <div class="chat-welcome-msg">
+            <p>💬 <strong>Room Chat</strong></p>
+            <small>Chat with everyone in this room in real time!</small>
+          </div>
+        </div>
+
+        <!-- Message input form -->
+        <form id="chat-form" class="chat-input-form">
+          <input id="chat-input" type="text" placeholder="Send a message to the room..." maxlength="500" autocomplete="off" />
+          <button type="submit" id="chat-send-btn" title="Send message">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </form>
+      </aside>
+
+    </div><!-- /#workspace-views -->
 
     <!-- ─── 4. GLOBAL OUTGOING CALLING MODAL (Ringing...) ─── -->
     <div id="zoom-calling-overlay" class="zoom-modal-backdrop hidden">
@@ -511,8 +436,6 @@
           </button>
         </div>
       </div>
-    </div>
-
     </div>
 
   </div>
