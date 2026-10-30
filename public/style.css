@@ -3621,7 +3621,7 @@ kbd {
   width: 500px;
   height: 500px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(245, 158, 11, 0.05) 0%, rgba(37, 99, 235, 0.04) 50%, transparent 70%);
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, rgba(37, 99, 235, 0.04) 50%, transparent 70%);
   pointer-events: none;
   filter: blur(80px);
   z-index: 1;
@@ -3648,16 +3648,16 @@ kbd {
 }
 
 .intro-sparkle-icon {
-  color: #f59e0b;
+  color: #3b82f6;
   font-size: 1.55rem;
   line-height: 1;
-  filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.6));
+  filter: drop-shadow(0 0 12px rgba(59, 130, 246, 0.7));
   animation: introSparklePulse 3s ease-in-out infinite alternate;
 }
 
 @keyframes introSparklePulse {
-  0% { transform: scale(0.95); opacity: 0.85; filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.4)); }
-  100% { transform: scale(1.1); opacity: 1; filter: drop-shadow(0 0 16px rgba(245, 158, 11, 0.8)); }
+  0% { transform: scale(0.95); opacity: 0.85; filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.5)); }
+  100% { transform: scale(1.1); opacity: 1; filter: drop-shadow(0 0 16px rgba(59, 130, 246, 0.9)); }
 }
 
 .intro-brand-name {
@@ -3776,9 +3776,10 @@ kbd {
   word-break: break-word;
 }
 
-.intro-gold-highlight {
-  color: #f59e0b;
-  text-shadow: 0 0 28px rgba(245, 158, 11, 0.4);
+.intro-gold-highlight,
+.intro-blue-highlight {
+  color: #3b82f6;
+  text-shadow: 0 0 28px rgba(59, 130, 246, 0.5);
   display: inline;
 }
 
@@ -3850,7 +3851,7 @@ kbd {
 .intro-col-card:hover .intro-col-accent-bar,
 .intro-col-card:focus-visible .intro-col-accent-bar,
 .intro-col-card.active-revealed .intro-col-accent-bar {
-  background: #f59e0b;
+  background: #3b82f6;
 }
 
 .intro-col-meta {
@@ -3882,9 +3883,9 @@ kbd {
 
 .intro-col-card:hover .intro-col-badge,
 .intro-col-card.active-revealed .intro-col-badge {
-  background: rgba(245, 158, 11, 0.15);
-  color: #fbbf24;
-  border-color: rgba(245, 158, 11, 0.3);
+  background: rgba(59, 130, 246, 0.16);
+  color: #93c5fd;
+  border-color: rgba(59, 130, 246, 0.4);
 }
 
 .intro-col-title {
