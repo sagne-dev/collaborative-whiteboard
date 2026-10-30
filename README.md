@@ -35,17 +35,23 @@
 - **Works Across All Modes:** Voice chat remains active continuously whether you are collaborating on the whiteboard, enjoying a watch party, or in a call.
 - **Participant Status:** Presence panel displays microphone status (`🎙️` / `🔇`) for all members in real time.
 
-### 6. 📹 Zoom-Style Direct Video Calling Mode
-- **Dedicated Video Calling Experience:** Completely distinct from Watch Party Mode with zero media player clutter — focused purely on direct face-to-face video calling like Zoom.
-- **Direct Calling & Directory Lobby:** See all participants currently in the room with live status badges and direct **"📞 Video Call"** buttons. Includes a self-camera preview box to check your video and audio before calling.
-- **Ringing & Incoming Call Alerts:** Calling a participant triggers a realistic dual-frequency ringtone and concentric pulsing visual animation. The recipient receives an incoming call modal with **Accept** and **Decline** buttons across any active mode.
-- **Zoom Meeting Stage:**
-  - **Speaker / Focus Layout:** Main remote participant front-and-center with a floating Picture-in-Picture (PiP) local preview.
-  - **Grid Layout:** Side-by-side equal columns for collaborative conversations.
-  - **Live Meeting Timer:** Real-time call duration counter (`00:00` counting up).
-  - **Zoom Floating Control Bar:** Independent **Microphone** mute/unmute, **Camera** stop/start video, layout toggle, fullscreen, and prominent red **End Call** button.
-- **Camera-Off Avatar Fallback:** Elegant avatar circle with user initials and room colors when camera is disabled.
-- **Audio Chimes & Ringtones:** Synthesized phone ringtone and ascending/descending connection chimes using the native Web Audio API (zero external assets).
+### 6. 📹 Zoom-Style Video Call Mode (Daily.co Route 1 SFU & WebRTC Mesh)
+- **Daily.co Route 1 SFU Integration:** Powered by `@daily-co/daily-js` Call Object (`subscribeToTracksAutomatically: true`) handling multi-person SFU media routing with automatic fallback.
+- **Dynamic Multi-Slot Video Grid:** Clean, responsive video grid using CSS Grid that dynamically adjusts layout slots based on how many participants join the room:
+  - **1-on-1:** Expands to fill the screen symmetrically.
+  - **3 Participants:** 2 tiles top, 1 centered below.
+  - **4 Participants:** 2x2 grid.
+  - **5-6 Participants:** 3x2 grid.
+  - **Many Participants:** Auto-fit responsive multi-tile grid.
+- **Screen Sharing:** Dedicated screen sharing with automatic spotlight layout (`.has-screen-share`) featuring high-resolution view of the shared screen alongside participant camera tiles.
+- **Active Speaker Highlighting:** Real-time active speaker detection featuring a glowing green `#22c55e` border, box-shadow glow, and animated pulsing audio wave bars (`.zoom-speaker-wave`).
+- **Bottom Control Bar:** Intuitive Zoom-style floating controls bar:
+  - **Toggle Microphone:** One-click mute/unmute with live status indicator.
+  - **Toggle Camera:** Start or stop video with instant avatar fallback.
+  - **Screen Share:** One-click toggle for sharing screen with browser-native stop detection.
+  - **Leave Call:** Cleanly disconnect and return to the room lobby.
+- **Participant Badges:** Video tiles display participant names, microphone state, active speaker indicators, and screen share badges.
+- **Lobby & Direct Calling:** Pre-call local video/audio preview with online directory and one-click "Join Room Video Call".
 
 ---
 
@@ -84,9 +90,12 @@ Share the generated URL with your friends to draw and watch videos together!
 | **Watch Party** | Load a Video | Paste any video link (YouTube, Google Drive, MP4, web link) and click **Load Video**, or select a sample video |
 | **Watch Party** | Theater Mode | Click **Collapse** in the chat header; click **Show Chat** to pop it back in |
 | **Watch Party** | Chat | Type a message and press **Enter** or click **Send** |
-| **Video Call** | Toggle Camera | Click the **📹 Turn Off / On Camera** button in the video controls bar |
-| **Video Call** | Toggle Microphone | Click the **🎙️ Mute / Unmute** button in the video controls bar |
-| **Video Call** | Fullscreen Grid | Click the **Fullscreen** button in the video controls bar |
+| **Video Call** | Join / Start Call | Click **Start / Join Room Video Call** or click **Video Call** next to any participant |
+| **Video Call** | Toggle Microphone | Click the **Mute / Unmute** button in the bottom control bar |
+| **Video Call** | Toggle Camera | Click the **Start / Stop Video** button in the bottom control bar |
+| **Video Call** | Screen Share | Click the **Share Screen** button in the bottom control bar |
+| **Video Call** | Leave Call | Click the red **Leave Call** button in the bottom control bar |
+| **Video Call** | Fullscreen Stage | Click the **Fullscreen** button in the top meeting bar |
 
 ---
 

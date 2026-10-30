@@ -74,37 +74,26 @@ const zoomIncomingName       = document.getElementById('zoom-incoming-name');
 const zoomAcceptCallBtn      = document.getElementById('zoom-accept-call-btn');
 const zoomDeclineCallBtn     = document.getElementById('zoom-decline-call-btn');
 
-// Zoom Active Meeting Stage Elements
+// Zoom Active Meeting Stage Elements (Daily.co SFU Multi-Participant Grid)
 const zoomActiveMeetingView  = document.getElementById('zoom-active-meeting-view');
 const zoomMeetingTitle       = document.getElementById('zoom-meeting-title');
 const zoomCallDuration       = document.getElementById('zoom-call-duration');
-const zoomViewToggleBtn      = document.getElementById('zoom-view-toggle-btn');
-const zoomViewToggleText     = document.getElementById('zoom-view-toggle-text');
 const zoomStageFullscreenBtn = document.getElementById('zoom-stage-fullscreen-btn');
 const zoomVideoStageGrid     = document.getElementById('zoom-video-stage-grid');
+const zoomSfuBadge           = document.getElementById('zoom-sfu-badge');
+const zoomGridParticipantsBadge = document.getElementById('zoom-grid-participants-badge');
+const zoomJoinRoomCallBtn    = document.getElementById('zoom-join-room-call-btn');
 
-const zoomRemoteMainTile     = document.getElementById('zoom-remote-main-tile');
-const zoomRemoteVideoEl      = document.getElementById('zoom-remote-video-el');
-const zoomRemoteAvatarBox    = document.getElementById('zoom-remote-avatar-box');
-const zoomRemoteAvatarCircle = document.getElementById('zoom-remote-avatar-circle');
-const zoomRemoteAvatarName   = document.getElementById('zoom-remote-avatar-name');
-const zoomRemoteTileName     = document.getElementById('zoom-remote-tile-name');
-const zoomRemoteMicBadge     = document.getElementById('zoom-remote-mic-badge');
-
-const zoomLocalTile          = document.getElementById('zoom-local-tile');
-const zoomLocalVideoEl       = document.getElementById('zoom-local-video-el');
-const zoomLocalAvatarBox     = document.getElementById('zoom-local-avatar-box');
-const zoomLocalAvatarCircle  = document.getElementById('zoom-local-avatar-circle');
-const zoomLocalAvatarName    = document.getElementById('zoom-local-avatar-name');
-const zoomLocalTileName      = document.getElementById('zoom-local-tile-name');
-const zoomLocalMicBadge      = document.getElementById('zoom-local-mic-badge');
-
+// Zoom Bottom Control Bar
 const zoomCallMicBtn         = document.getElementById('zoom-call-mic-btn');
 const zoomCallMicIcon        = document.getElementById('zoom-call-mic-icon');
 const zoomCallMicLabel       = document.getElementById('zoom-call-mic-label');
 const zoomCallCamBtn         = document.getElementById('zoom-call-cam-btn');
 const zoomCallCamIcon        = document.getElementById('zoom-call-cam-icon');
 const zoomCallCamLabel       = document.getElementById('zoom-call-cam-label');
+const zoomScreenShareBtn     = document.getElementById('zoom-screen-share-btn');
+const zoomScreenShareIcon    = document.getElementById('zoom-screen-share-icon');
+const zoomScreenShareLabel   = document.getElementById('zoom-screen-share-label');
 const zoomEndCallBtn         = document.getElementById('zoom-end-call-btn');
 
 // Whiteboard Elements
@@ -214,13 +203,21 @@ const state = {
   voiceVisualizerInterval : null,
   voiceSupported          : typeof window !== 'undefined' && !!(window.RTCPeerConnection && navigator.mediaDevices && navigator.mediaDevices.getUserMedia),
 
-  // Zoom-Style Direct Video Calling state
+  // Zoom-Style SFU & Video Calling state (Daily.co Route 1 Call Object)
   localVideoStream        : null,
   isCamOff                : false,
   activeCall              : null, // { peerId, peerName, peerColor, startTime, timerInterval, isCaller }
   pendingOutgoingCall     : null, // { targetUserId, targetName, timeout }
   pendingIncomingCall     : null, // { fromUserId, fromName, fromColor }
-  zoomViewLayout          : 'focus', // 'focus' | 'grid'
+  zoomViewLayout          : 'grid', // 'grid' | 'focus'
+  isCallActive            : false,
+  callTimerInterval       : null,
+  dailyCall               : null,
+  isDailyConnected        : false,
+  activeSpeakerId         : null,
+  isLocalSpeaking         : false,
+  isScreenSharing         : false,
+  localScreenStream       : null,
 };
 
 // ─── Seamless Mode Switcher ────────────────────────────────────────────────────
@@ -249,9 +246,10 @@ function setMode(newMode) {
     scrollToChatBottom();
   } else if (newMode === 'videocall') {
     // If in an active call, show active stage, else lobby
-    if (state.activeCall) {
+    if (state.activeCall || state.isCallActive) {
       if (zoomLobbyView) zoomLobbyView.classList.add('hidden');
       if (zoomActiveMeetingView) zoomActiveMeetingView.classList.remove('hidden');
+      renderZoomGrid();
     } else {
       if (zoomLobbyView) zoomLobbyView.classList.remove('hidden');
       if (zoomActiveMeetingView) zoomActiveMeetingView.classList.add('hidden');
@@ -548,9 +546,7 @@ function handleMessage(msg) {
       if (u) {
         u.isMuted = !!msg.isMuted;
         renderUserList();
-        if (state.activeCall && state.activeCall.peerId === msg.userId) {
-          if (zoomRemoteMicBadge) zoomRemoteMicBadge.textContent = u.isMuted ? '🔇' : '🎙️';
-        }
+        renderZoomGrid();
       }
       break;
     }
@@ -559,12 +555,7 @@ function handleMessage(msg) {
       const u = state.userMap.get(msg.userId);
       if (u) {
         u.isCamOff = !!msg.isCamOff;
-      }
-      if (state.activeCall && state.activeCall.peerId === msg.userId) {
-        if (zoomRemoteAvatarBox) {
-          if (msg.isCamOff) zoomRemoteAvatarBox.classList.remove('hidden');
-          else zoomRemoteAvatarBox.classList.add('hidden');
-        }
+        renderZoomGrid();
       }
       break;
     }
@@ -1830,6 +1821,12 @@ async function toggleMicrophone() {
     track.enabled = !state.isMicMuted;
   });
 
+  if (state.dailyCall && state.isDailyConnected) {
+    try {
+      state.dailyCall.setLocalAudio(!state.isMicMuted);
+    } catch (e) {}
+  }
+
   if (state.isMicMuted) {
     updateVoiceUI('muted', 'Muted (Unmute)');
     showVideoToast('🔇 Microphone muted');
@@ -1839,6 +1836,7 @@ async function toggleMicrophone() {
   }
 
   updateMicUI();
+  renderZoomGrid();
 
   wsSend({
     type    : 'voice_mute_status',
@@ -1869,16 +1867,27 @@ function setupAudioActivityMeter(stream) {
     state.voiceVisualizerInterval = setInterval(() => {
       if (state.isMicMuted || !state.analyserNode) {
         if (voiceWave) voiceWave.classList.remove('talking');
+        if (state.isLocalSpeaking) {
+          state.isLocalSpeaking = false;
+          highlightActiveSpeaker();
+        }
         return;
       }
       state.analyserNode.getByteFrequencyData(dataArray);
       let sum = 0;
       for (let i = 0; i < bufferLength; i++) sum += dataArray[i];
       const avg = sum / bufferLength;
-      if (avg > 18) {
+      const isSpeaking = avg > 18;
+
+      if (isSpeaking) {
         voiceWave?.classList.add('talking');
       } else {
         voiceWave?.classList.remove('talking');
+      }
+
+      if (state.isLocalSpeaking !== isSpeaking) {
+        state.isLocalSpeaking = isSpeaking;
+        highlightActiveSpeaker();
       }
     }, 150);
   } catch (e) {
@@ -1974,10 +1983,8 @@ async function ensureLocalCamera() {
       if (zoomPreviewVideo && zoomPreviewVideo.srcObject !== state.localVideoStream) {
         zoomPreviewVideo.srcObject = state.localVideoStream;
       }
-      if (zoomLocalVideoEl && zoomLocalVideoEl.srcObject !== state.localVideoStream) {
-        zoomLocalVideoEl.srcObject = state.localVideoStream;
-      }
       updateCameraUI();
+      renderZoomGrid();
       return;
     }
   }
@@ -2001,10 +2008,6 @@ async function ensureLocalCamera() {
       zoomPreviewVideo.srcObject = stream;
       zoomPreviewVideo.play().catch(() => {});
     }
-    if (zoomLocalVideoEl) {
-      zoomLocalVideoEl.srcObject = stream;
-      zoomLocalVideoEl.play().catch(() => {});
-    }
 
     // Attach to existing peer connections if call is active
     for (const [, conn] of state.voiceConnections) {
@@ -2023,11 +2026,13 @@ async function ensureLocalCamera() {
     }
 
     updateCameraUI();
+    renderZoomGrid();
   } catch (err) {
     console.warn('Camera access unavailable:', err.message);
     state.localVideoStream = null;
     state.isCamOff = true;
     updateCameraUI();
+    renderZoomGrid();
   }
 }
 
@@ -2043,7 +2048,14 @@ async function toggleCamera() {
     track.enabled = !state.isCamOff;
   });
 
+  if (state.dailyCall && state.isDailyConnected) {
+    try {
+      state.dailyCall.setLocalVideo(!state.isCamOff);
+    } catch (e) {}
+  }
+
   updateCameraUI();
+  renderZoomGrid();
 
   if (state.isCamOff) {
     showVideoToast('📷 Camera turned off');
@@ -2070,11 +2082,7 @@ function updateCameraUI() {
     if (zoomPreviewCamIcon) zoomPreviewCamIcon.textContent = isOff ? '📷' : '📹';
   }
 
-  // 2. Active Meeting stage
-  if (zoomLocalAvatarBox) {
-    if (isOff) zoomLocalAvatarBox.classList.remove('hidden');
-    else zoomLocalAvatarBox.classList.add('hidden');
-  }
+  // 2. Active Meeting stage bottom bar
   if (zoomCallCamBtn) {
     zoomCallCamBtn.className = isOff ? 'zoom-call-control-btn cam-muted' : 'zoom-call-control-btn cam-active';
     if (zoomCallCamIcon) zoomCallCamIcon.textContent = isOff ? '📷' : '📹';
@@ -2099,18 +2107,500 @@ function updateMicUI() {
     if (zoomPreviewMicIcon) zoomPreviewMicIcon.textContent = isMuted ? '🔇' : '🎙️';
   }
 
-  // 3. Active meeting stage
+  // 3. Active meeting stage bottom bar
   if (zoomCallMicBtn) {
     zoomCallMicBtn.className = isMuted ? 'zoom-call-control-btn muted' : 'zoom-call-control-btn unmuted';
     if (zoomCallMicIcon) zoomCallMicIcon.textContent = isMuted ? '🔇' : '🎙️';
     if (zoomCallMicLabel) zoomCallMicLabel.textContent = isMuted ? 'Unmute' : 'Mute';
   }
-  if (zoomLocalMicBadge) {
-    zoomLocalMicBadge.textContent = isMuted ? '🔇' : '🎙️';
+}
+
+// ─── Daily.co Route 1 SFU Call Object Management ──────────────────────────────
+async function initDailyCallObject() {
+  if (typeof window === 'undefined' || !window.Daily) {
+    console.warn('Daily.js SDK not available');
+    return null;
+  }
+  if (state.dailyCall) return state.dailyCall;
+
+  try {
+    const call = window.Daily.createCallObject({
+      subscribeToTracksAutomatically: true,
+    });
+
+    call.on('joined-meeting', (ev) => {
+      state.isDailyConnected = true;
+      if (zoomSfuBadge) {
+        zoomSfuBadge.textContent = '⚡ Daily.co SFU';
+        zoomSfuBadge.style.display = 'inline-block';
+      }
+      renderZoomGrid();
+    });
+
+    call.on('participant-joined', () => renderZoomGrid());
+    call.on('participant-updated', () => renderZoomGrid());
+    call.on('participant-left', () => renderZoomGrid());
+    call.on('track-started', () => renderZoomGrid());
+    call.on('track-stopped', () => renderZoomGrid());
+
+    call.on('active-speaker-change', (ev) => {
+      state.activeSpeakerId = ev.activeSpeaker ? ev.activeSpeaker.peerId : null;
+      highlightActiveSpeaker();
+    });
+
+    call.on('error', (ev) => {
+      console.warn('Daily SFU error:', ev);
+    });
+
+    state.dailyCall = call;
+    return call;
+  } catch (err) {
+    console.warn('Failed to create Daily call object:', err);
+    return null;
   }
 }
 
-// ─── Zoom Direct Video Calling Actions ────────────────────────────────────────
+// ─── Screen Sharing Control ───────────────────────────────────────────────────
+async function toggleScreenShare() {
+  if (state.isScreenSharing) {
+    await stopScreenShare();
+  } else {
+    await startScreenShare();
+  }
+}
+
+async function startScreenShare() {
+  try {
+    if (state.dailyCall && state.isDailyConnected) {
+      await state.dailyCall.startScreenShare();
+      state.isScreenSharing = true;
+    } else {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+        showVideoToast('⚠️ Screen sharing not supported on this browser');
+        return;
+      }
+      const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: { cursor: 'always' },
+        audio: false,
+      });
+      state.localScreenStream = stream;
+      state.isScreenSharing = true;
+
+      const track = stream.getVideoTracks()[0];
+      if (track) {
+        track.addEventListener('ended', () => {
+          stopScreenShare();
+        });
+      }
+    }
+    updateScreenShareUI(true);
+    renderZoomGrid();
+    showVideoToast('🖥️ Screen sharing started');
+  } catch (err) {
+    console.warn('Screen share cancelled or failed:', err);
+    state.isScreenSharing = false;
+    updateScreenShareUI(false);
+  }
+}
+
+async function stopScreenShare() {
+  state.isScreenSharing = false;
+  if (state.dailyCall && state.isDailyConnected) {
+    try { await state.dailyCall.stopScreenShare(); } catch (e) {}
+  }
+  if (state.localScreenStream) {
+    state.localScreenStream.getTracks().forEach(t => t.stop());
+    state.localScreenStream = null;
+  }
+  updateScreenShareUI(false);
+  renderZoomGrid();
+  showVideoToast('Screen sharing stopped');
+}
+
+function updateScreenShareUI(active) {
+  if (zoomScreenShareBtn) {
+    zoomScreenShareBtn.classList.toggle('active-sharing', active);
+  }
+  if (zoomScreenShareLabel) {
+    zoomScreenShareLabel.textContent = active ? 'Stop Share' : 'Share Screen';
+  }
+}
+
+// ─── Active Speaker Highlighting ──────────────────────────────────────────────
+function highlightActiveSpeaker() {
+  if (!zoomVideoStageGrid) return;
+  const tiles = zoomVideoStageGrid.querySelectorAll('.zoom-tile:not(.screen-share-tile)');
+  tiles.forEach(tileEl => {
+    const sessId = tileEl.getAttribute('data-session-id');
+    const isLocal = tileEl.classList.contains('is-local');
+    const waveEl = tileEl.querySelector('.zoom-speaker-wave');
+
+    const isSpeaker = (isLocal && state.isLocalSpeaking) || (sessId && sessId === state.activeSpeakerId);
+
+    if (isSpeaker) {
+      tileEl.classList.add('active-speaker');
+      if (waveEl) waveEl.classList.remove('hidden');
+    } else {
+      tileEl.classList.remove('active-speaker');
+      if (waveEl) waveEl.classList.add('hidden');
+    }
+  });
+}
+
+// ─── Dynamic Responsive Zoom Video Grid Renderer ──────────────────────────────
+function renderZoomGrid() {
+  if (!zoomVideoStageGrid || !state.isCallActive) return;
+
+  const tiles = [];
+
+  if (state.isDailyConnected && state.dailyCall) {
+    let pObj = {};
+    try {
+      pObj = state.dailyCall.participants() || {};
+    } catch (e) {
+      console.warn('Daily participants read error:', e);
+    }
+
+    const local = pObj.local;
+    const localVTrack = (local && local.tracks && local.tracks.video && local.tracks.video.persistentTrack)
+      || (state.localVideoStream ? state.localVideoStream.getVideoTracks()[0] : null);
+    const localSTrack = (local && local.tracks && local.tracks.screenVideo && local.tracks.screenVideo.persistentTrack)
+      || (state.localScreenStream ? state.localScreenStream.getVideoTracks()[0] : null);
+
+    tiles.push({
+      id: 'local',
+      session_id: local ? local.session_id : 'local',
+      name: `${state.userName || 'You'} (You)`,
+      color: state.userColor || '#4ECDC4',
+      isLocal: true,
+      videoTrack: localVTrack,
+      screenTrack: localSTrack,
+      isCamOff: state.isCamOff || !(local && local.video),
+      isMuted: state.isMicMuted || !(local && local.audio),
+    });
+
+    for (const key of Object.keys(pObj)) {
+      if (key === 'local') continue;
+      const p = pObj[key];
+      const vTrack = p.tracks?.video?.persistentTrack || null;
+      const sTrack = p.tracks?.screenVideo?.persistentTrack || null;
+      const isPlayable = !!p.video && p.tracks?.video?.state === 'playable';
+      const isMuted = !p.audio || p.tracks?.audio?.state !== 'playable';
+
+      tiles.push({
+        id: p.session_id,
+        session_id: p.session_id,
+        name: p.user_name || 'Participant',
+        color: '#4ECDC4',
+        isLocal: false,
+        videoTrack: vTrack,
+        screenTrack: sTrack,
+        isCamOff: !isPlayable,
+        isMuted: isMuted,
+      });
+    }
+  } else {
+    // WebRTC Mesh / Fallback Mode
+    const localVTrack = state.localVideoStream ? state.localVideoStream.getVideoTracks()[0] : null;
+    const localSTrack = state.localScreenStream ? state.localScreenStream.getVideoTracks()[0] : null;
+
+    tiles.push({
+      id: 'local',
+      session_id: 'local',
+      name: `${state.userName || 'You'} (You)`,
+      color: state.userColor || '#4ECDC4',
+      isLocal: true,
+      videoTrack: localVTrack,
+      screenTrack: localSTrack,
+      isCamOff: state.isCamOff,
+      isMuted: state.isMicMuted,
+    });
+
+    const peerIds = new Set();
+    if (state.activeCall && state.activeCall.peerId) {
+      peerIds.add(state.activeCall.peerId);
+    }
+    for (const [id] of state.voiceConnections) {
+      if (id !== state.userId) peerIds.add(id);
+    }
+
+    for (const pid of peerIds) {
+      const u = state.userMap.get(pid);
+      const conn = state.voiceConnections.get(pid);
+      const vTrack = conn?.remoteVideoStream?.getVideoTracks()[0] || null;
+
+      tiles.push({
+        id: pid,
+        session_id: pid,
+        name: u?.name || 'Participant',
+        color: u?.color || '#4ECDC4',
+        isLocal: false,
+        videoTrack: vTrack,
+        screenTrack: null,
+        isCamOff: !!(u && u.isCamOff),
+        isMuted: !!(u && u.isMuted),
+      });
+    }
+  }
+
+  // Check for active screen sharing
+  const screenSharingTile = tiles.find(t => t.screenTrack && t.screenTrack.readyState === 'live');
+
+  // Update dynamic CSS Grid container classes based on total participant count
+  zoomVideoStageGrid.className = 'zoom-stage-grid';
+  if (screenSharingTile) {
+    zoomVideoStageGrid.classList.add('has-screen-share');
+  } else {
+    const total = tiles.length;
+    if (total <= 1) {
+      zoomVideoStageGrid.classList.add('grid-1');
+    } else if (total === 2) {
+      zoomVideoStageGrid.classList.add('grid-2');
+    } else if (total === 3) {
+      zoomVideoStageGrid.classList.add('grid-3');
+    } else if (total === 4) {
+      zoomVideoStageGrid.classList.add('grid-4');
+    } else if (total <= 6) {
+      zoomVideoStageGrid.classList.add('grid-5-6');
+    } else {
+      zoomVideoStageGrid.classList.add('grid-many');
+    }
+  }
+
+  if (zoomGridParticipantsBadge) {
+    zoomGridParticipantsBadge.textContent = `👥 ${tiles.length} in call`;
+  }
+
+  // Build the items to render
+  const renderItems = [];
+  if (screenSharingTile) {
+    renderItems.push({
+      tileId: 'screenshare-' + screenSharingTile.id,
+      name: `${screenSharingTile.name.replace(' (You)', '')}'s Screen`,
+      isScreenShare: true,
+      track: screenSharingTile.screenTrack,
+      isLocal: false,
+      isMuted: false,
+      isCamOff: false,
+      color: '#0e71eb',
+      session_id: 'screen-' + screenSharingTile.session_id,
+    });
+  }
+
+  for (const t of tiles) {
+    renderItems.push({
+      tileId: 'tile-' + t.id,
+      name: t.name,
+      isScreenShare: false,
+      track: t.videoTrack,
+      isLocal: t.isLocal,
+      isMuted: t.isMuted,
+      isCamOff: t.isCamOff,
+      color: t.color,
+      session_id: t.session_id,
+    });
+  }
+
+  const activeIds = new Set(renderItems.map(i => i.tileId));
+
+  // Remove stale tiles
+  const existingTiles = zoomVideoStageGrid.querySelectorAll('.zoom-tile');
+  existingTiles.forEach(el => {
+    const tid = el.getAttribute('data-tile-id');
+    if (!activeIds.has(tid)) {
+      el.remove();
+    }
+  });
+
+  // Render or update each item
+  for (const item of renderItems) {
+    let tileEl = zoomVideoStageGrid.querySelector(`[data-tile-id="${item.tileId}"]`);
+    if (!tileEl) {
+      tileEl = document.createElement('div');
+      tileEl.className = `zoom-tile ${item.isLocal ? 'is-local' : ''} ${item.isScreenShare ? 'screen-share-tile' : ''}`;
+      tileEl.setAttribute('data-tile-id', item.tileId);
+      tileEl.setAttribute('data-session-id', item.session_id);
+
+      tileEl.innerHTML = `
+        <video autoplay playsinline ${item.isLocal ? 'muted' : ''}></video>
+        <div class="zoom-tile-avatar-box hidden">
+          <div class="zoom-large-avatar" style="background:${item.color}">${escapeHtml((item.name || 'U').charAt(0).toUpperCase())}</div>
+          <span class="zoom-avatar-label">${escapeHtml(item.name)} (Camera Off)</span>
+        </div>
+        <div class="zoom-tile-badge-strip"></div>
+        <div class="zoom-tile-name-tag">
+          <span class="zoom-tile-name">${escapeHtml(item.name)}</span>
+          <span class="zoom-mic-badge">${item.isMuted ? '🔇' : '🎙️'}</span>
+          <div class="zoom-speaker-wave hidden">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+      `;
+      zoomVideoStageGrid.appendChild(tileEl);
+    } else {
+      tileEl.setAttribute('data-session-id', item.session_id);
+      const nameEl = tileEl.querySelector('.zoom-tile-name');
+      if (nameEl && nameEl.textContent !== item.name) nameEl.textContent = item.name;
+      const micBadge = tileEl.querySelector('.zoom-mic-badge');
+      if (micBadge) micBadge.textContent = item.isMuted ? '🔇' : '🎙️';
+    }
+
+    // Video stream binding
+    const videoEl = tileEl.querySelector('video');
+    const avatarBox = tileEl.querySelector('.zoom-tile-avatar-box');
+    const badgeStrip = tileEl.querySelector('.zoom-tile-badge-strip');
+
+    if (item.isScreenShare) {
+      if (avatarBox) avatarBox.classList.add('hidden');
+      if (badgeStrip) {
+        badgeStrip.innerHTML = '<span class="zoom-tile-badge screen">🖥️ Screen Share</span>';
+      }
+      if (videoEl && item.track) {
+        if (!videoEl.srcObject || videoEl.srcObject.getVideoTracks()[0] !== item.track) {
+          videoEl.srcObject = new MediaStream([item.track]);
+          videoEl.play().catch(() => {});
+        }
+      }
+    } else {
+      if (item.isCamOff || !item.track || item.track.readyState !== 'live') {
+        if (avatarBox) avatarBox.classList.remove('hidden');
+      } else {
+        if (avatarBox) avatarBox.classList.add('hidden');
+      }
+      if (videoEl) {
+        if (item.track && item.track.readyState === 'live') {
+          if (!videoEl.srcObject || videoEl.srcObject.getVideoTracks()[0] !== item.track) {
+            videoEl.srcObject = new MediaStream([item.track]);
+            videoEl.play().catch(() => {});
+          }
+        } else {
+          videoEl.srcObject = null;
+        }
+      }
+    }
+  }
+
+  highlightActiveSpeaker();
+}
+
+// ─── Start / Join Video Call ──────────────────────────────────────────────────
+async function joinRoomCall(targetUserId = null, peerName = null, peerColor = null, isCaller = false) {
+  setMode('videocall');
+  await ensureLocalCamera();
+
+  state.isCallActive = true;
+  if (targetUserId) {
+    state.activeCall = {
+      peerId: targetUserId,
+      peerName: peerName || 'User',
+      peerColor: peerColor || '#4ECDC4',
+      startTime: Date.now(),
+      isCaller: isCaller,
+    };
+  }
+
+  if (zoomLobbyView) zoomLobbyView.classList.add('hidden');
+  if (zoomActiveMeetingView) zoomActiveMeetingView.classList.remove('hidden');
+
+  const startTime = Date.now();
+  if (state.callTimerInterval) clearInterval(state.callTimerInterval);
+  state.callTimerInterval = setInterval(() => {
+    if (!state.isCallActive) return;
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
+    const s = String(elapsed % 60).padStart(2, '0');
+    if (zoomCallDuration) zoomCallDuration.textContent = `${m}:${s}`;
+  }, 1000);
+  if (zoomCallDuration) zoomCallDuration.textContent = '00:00';
+
+  if (zoomMeetingTitle) {
+    zoomMeetingTitle.textContent = peerName ? `Video Call with ${peerName}` : `Video Call: Room ${state.roomId || 'lobby'}`;
+  }
+
+  // Attempt Daily.co SFU room join
+  let dailyConnected = false;
+  try {
+    const res = await fetch(`/api/daily-room?room=${encodeURIComponent(state.roomId || 'lobby')}`);
+    const data = await res.json();
+    if (data && data.roomUrl && window.Daily) {
+      const call = await initDailyCallObject();
+      if (call) {
+        await call.join({
+          url: data.roomUrl,
+          userName: state.userName || 'Guest',
+          audioSource: !state.isMicMuted,
+          videoSource: !state.isCamOff,
+        });
+        dailyConnected = true;
+        state.isDailyConnected = true;
+        if (zoomSfuBadge) {
+          zoomSfuBadge.textContent = '⚡ Daily.co SFU';
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('Daily SFU join skipped or failed, activating WebRTC fallback:', err);
+  }
+
+  if (!dailyConnected) {
+    state.isDailyConnected = false;
+    if (zoomSfuBadge) {
+      zoomSfuBadge.textContent = '⚡ WebRTC Mesh';
+    }
+    if (targetUserId) {
+      initiatePeerConnection(targetUserId);
+    } else {
+      for (const [id] of state.userMap) {
+        if (id !== state.userId) initiatePeerConnection(id);
+      }
+    }
+  }
+
+  updateCameraUI();
+  updateMicUI();
+  renderZoomGrid();
+  playChime('connect');
+  showVideoToast(`📞 Video call active`);
+}
+
+async function leaveActiveCall(reason = 'Call Ended') {
+  if (state.callTimerInterval) {
+    clearInterval(state.callTimerInterval);
+    state.callTimerInterval = null;
+  }
+  state.isCallActive = false;
+
+  if (state.isScreenSharing) {
+    await stopScreenShare();
+  }
+
+  if (state.dailyCall) {
+    try {
+      await state.dailyCall.leave();
+      state.dailyCall.destroy();
+    } catch (e) {}
+    state.dailyCall = null;
+  }
+  state.isDailyConnected = false;
+
+  if (state.activeCall) {
+    wsSend({
+      type: 'call_ended',
+      targetUserId: state.activeCall.peerId,
+    });
+    closePeerConnection(state.activeCall.peerId);
+    state.activeCall = null;
+  }
+
+  if (zoomActiveMeetingView) zoomActiveMeetingView.classList.add('hidden');
+  if (zoomLobbyView) zoomLobbyView.classList.remove('hidden');
+
+  renderZoomLobby();
+  playChime('disconnect');
+  showVideoToast(`🔴 ${reason}`);
+}
+
+// ─── Direct Video Calling Signaling ───────────────────────────────────────────
 async function startCall(targetUserId) {
   const target = state.userMap.get(targetUserId);
   if (!target) return;
@@ -2204,15 +2694,12 @@ async function acceptIncomingCall() {
   stopRingtone();
   if (zoomIncomingOverlay) zoomIncomingOverlay.classList.add('hidden');
 
-  // Switch to Video Call Mode automatically
-  setMode('videocall');
-
   wsSend({
     type: 'call_accepted',
     targetUserId: fromUserId,
   });
 
-  await establishActiveCall(fromUserId, fromName, fromColor, false);
+  await joinRoomCall(fromUserId, fromName, fromColor, false);
 }
 
 async function handleCallAccepted(msg) {
@@ -2228,11 +2715,7 @@ async function handleCallAccepted(msg) {
   const peerName = msg.fromName || (peer ? peer.name : 'User');
   const peerColor = peer ? peer.color : '#4ECDC4';
 
-  setMode('videocall');
-  await establishActiveCall(msg.fromUserId, peerName, peerColor, true);
-
-  // As caller, initiate the WebRTC offer
-  initiatePeerConnection(msg.fromUserId);
+  await joinRoomCall(msg.fromUserId, peerName, peerColor, true);
 }
 
 function handleCallDeclined(msg) {
@@ -2255,95 +2738,10 @@ function handleCallCancelled(msg) {
   }
 }
 
-async function establishActiveCall(peerId, peerName, peerColor, isCaller) {
-  await ensureLocalCamera();
-
-  const startTime = Date.now();
-  state.activeCall = {
-    peerId,
-    peerName,
-    peerColor,
-    startTime,
-    isCaller,
-    timerInterval: setInterval(() => {
-      if (!state.activeCall) return;
-      const elapsed = Math.floor((Date.now() - startTime) / 1000);
-      const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
-      const s = String(elapsed % 60).padStart(2, '0');
-      if (zoomCallDuration) zoomCallDuration.textContent = `${m}:${s}`;
-    }, 1000),
-  };
-
-  playChime('connect');
-
-  // Show active meeting stage, hide lobby
-  if (zoomLobbyView) zoomLobbyView.classList.add('hidden');
-  if (zoomActiveMeetingView) zoomActiveMeetingView.classList.remove('hidden');
-
-  // Update meeting header
-  if (zoomMeetingTitle) zoomMeetingTitle.textContent = `Video Call with ${peerName}`;
-  if (zoomCallDuration) zoomCallDuration.textContent = '00:00';
-
-  // Update remote tile info
-  if (zoomRemoteTileName) zoomRemoteTileName.textContent = peerName;
-  if (zoomRemoteAvatarName) zoomRemoteAvatarName.textContent = `${peerName} (Camera Off)`;
-  if (zoomRemoteAvatarCircle) {
-    zoomRemoteAvatarCircle.textContent = (peerName || 'U').charAt(0).toUpperCase();
-    zoomRemoteAvatarCircle.style.background = peerColor || '#4ECDC4';
-  }
-
-  // Update local tile info
-  if (zoomLocalTileName) zoomLocalTileName.textContent = `${state.userName} (You)`;
-  if (zoomLocalAvatarName) zoomLocalAvatarName.textContent = `${state.userName} (Camera Off)`;
-  if (zoomLocalAvatarCircle) {
-    zoomLocalAvatarCircle.textContent = (state.userName || 'Y').charAt(0).toUpperCase();
-    zoomLocalAvatarCircle.style.background = state.color || '#FF6B6B';
-  }
-
-  // Attach local video stream
-  if (zoomLocalVideoEl && state.localVideoStream) {
-    zoomLocalVideoEl.srcObject = state.localVideoStream;
-    try { await zoomLocalVideoEl.play(); } catch (e) {}
-  }
-
-  // Check if remote video stream already arrived on conn
-  const conn = state.voiceConnections.get(peerId);
-  if (conn && conn.remoteVideoStream && zoomRemoteVideoEl) {
-    zoomRemoteVideoEl.srcObject = conn.remoteVideoStream;
-    zoomRemoteVideoEl.play().catch(() => {});
-  }
-
-  updateCameraUI();
-  updateMicUI();
-  showVideoToast(`📞 Connected with ${peerName}`);
-}
-
-function terminateActiveCall(reason = 'Call Ended') {
-  if (!state.activeCall) return;
-
-  const { peerId, timerInterval } = state.activeCall;
-  if (timerInterval) clearInterval(timerInterval);
-  state.activeCall = null;
-
-  playChime('disconnect');
-
-  // Close peer connection
-  closePeerConnection(peerId);
-
-  // Switch UI back to Zoom lobby
-  if (zoomActiveMeetingView) zoomActiveMeetingView.classList.add('hidden');
-  if (zoomLobbyView) zoomLobbyView.classList.remove('hidden');
-
-  if (zoomRemoteVideoEl) zoomRemoteVideoEl.srcObject = null;
-
-  renderZoomLobby();
-  showVideoToast(`🔴 ${reason}`);
-}
-
 function handleCallEnded(msg) {
-  if (state.activeCall && state.activeCall.peerId === msg.fromUserId) {
+  if (state.isCallActive && state.activeCall && state.activeCall.peerId === msg.fromUserId) {
     const peerName = state.activeCall.peerName;
-    terminateActiveCall(`${peerName} ended the call`);
+    leaveActiveCall(`${peerName} ended the call`);
   }
 }
 
@@ -2419,6 +2817,10 @@ function renderZoomLobby() {
 }
 
 // ─── Button Listeners ───
+if (zoomJoinRoomCallBtn) {
+  zoomJoinRoomCallBtn.addEventListener('click', () => joinRoomCall());
+}
+
 if (zoomCancelCallBtn) {
   zoomCancelCallBtn.addEventListener('click', cancelOutgoingCall);
 }
@@ -2433,14 +2835,12 @@ if (zoomDeclineCallBtn) {
 
 if (zoomEndCallBtn) {
   zoomEndCallBtn.addEventListener('click', () => {
-    if (state.activeCall) {
-      wsSend({
-        type: 'call_ended',
-        targetUserId: state.activeCall.peerId,
-      });
-      terminateActiveCall('You ended the call');
-    }
+    leaveActiveCall('You left the call');
   });
+}
+
+if (zoomScreenShareBtn) {
+  zoomScreenShareBtn.addEventListener('click', toggleScreenShare);
 }
 
 if (zoomPreviewCamToggle) {
@@ -2467,21 +2867,6 @@ if (zoomCopyLinkBtn) {
     }).catch(() => {
       prompt('Share this URL to invite friends:', url);
     });
-  });
-}
-
-if (zoomViewToggleBtn) {
-  zoomViewToggleBtn.addEventListener('click', () => {
-    state.zoomViewLayout = state.zoomViewLayout === 'focus' ? 'grid' : 'focus';
-    if (state.zoomViewLayout === 'grid') {
-      zoomVideoStageGrid.classList.remove('focus-layout');
-      zoomVideoStageGrid.classList.add('grid-layout');
-      if (zoomViewToggleText) zoomViewToggleText.textContent = 'Speaker View';
-    } else {
-      zoomVideoStageGrid.classList.remove('grid-layout');
-      zoomVideoStageGrid.classList.add('focus-layout');
-      if (zoomViewToggleText) zoomViewToggleText.textContent = 'Grid View';
-    }
   });
 }
 
@@ -2552,11 +2937,7 @@ function getOrCreatePeerConnection(targetUserId) {
     } else if (event.track.kind === 'video') {
       const vStream = (event.streams && event.streams[0]) ? event.streams[0] : new MediaStream([event.track]);
       conn.remoteVideoStream = vStream;
-      if (zoomRemoteVideoEl) {
-        zoomRemoteVideoEl.srcObject = vStream;
-        const p = zoomRemoteVideoEl.play();
-        if (p !== undefined) p.catch(() => {});
-      }
+      renderZoomGrid();
     }
   };
 
@@ -2693,7 +3074,7 @@ function closePeerConnection(userId) {
     conn.audioEl.remove();
   } catch (e) {}
   state.voiceConnections.delete(userId);
-  if (zoomRemoteVideoEl) zoomRemoteVideoEl.srcObject = null;
+  renderZoomGrid();
 }
 
 function cleanupVoiceChat() {

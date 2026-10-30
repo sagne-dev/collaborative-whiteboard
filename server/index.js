@@ -356,6 +356,73 @@ const httpServer = http.createServer((req, res) => {
     return;
   }
 
+  // ─── Daily.co Route 1 SFU Room Provisioning Endpoint ────────────────────────
+  if (req.url.startsWith('/api/daily-room')) {
+    const urlObj = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+    const roomParam = (urlObj.searchParams.get('room') || 'default').replace(/[^a-zA-Z0-9_-]/g, '');
+    const cleanRoomName = `collab-${roomParam.toLowerCase()}`.slice(0, 40);
+
+    const apiKey = process.env.DAILY_API_KEY;
+    const customDomain = process.env.DAILY_DOMAIN;
+
+    if (apiKey) {
+      // Call Daily REST API to create or get room
+      const postData = JSON.stringify({
+        name: cleanRoomName,
+        properties: {
+          enable_screenshare: true,
+          enable_chat: false,
+          exp: Math.floor(Date.now() / 1000) + 7200,
+        }
+      });
+      const dReq = https.request({
+        hostname: 'api.daily.co',
+        port: 443,
+        path: '/v1/rooms',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Length': Buffer.byteLength(postData),
+        }
+      }, (dRes) => {
+        let body = '';
+        dRes.on('data', chunk => body += chunk);
+        dRes.on('end', () => {
+          try {
+            const parsed = JSON.parse(body);
+            const roomUrl = parsed.url || `https://${customDomain || 'collabspace'}.daily.co/${cleanRoomName}`;
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ roomUrl, configured: true, domain: customDomain }));
+          } catch (e) {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ roomUrl: `https://${customDomain || 'collabspace'}.daily.co/${cleanRoomName}`, configured: false }));
+          }
+        });
+      });
+      dReq.on('error', () => {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ roomUrl: `https://${customDomain || 'collabspace'}.daily.co/${cleanRoomName}`, configured: false }));
+      });
+      dReq.write(postData);
+      dReq.end();
+      return;
+    }
+
+    const defaultUrl = customDomain
+      ? `https://${customDomain}.daily.co/${cleanRoomName}`
+      : `https://collabspace.daily.co/${cleanRoomName}`;
+
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      roomUrl: defaultUrl,
+      configured: false,
+      domain: customDomain || null,
+      message: 'Daily API key not configured. Using standard Daily room URL with fallback routing.'
+    }));
+    return;
+  }
+
   // Strip query strings from URL
   const urlPath  = req.url.split('?')[0];
   const filePath = path.join(PUBLIC_DIR, urlPath === '/' ? 'index.html' : urlPath);

@@ -1597,6 +1597,32 @@ kbd {
   transform: translateY(0);
 }
 
+.zoom-btn-join-call {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 0.85rem;
+  padding: 0.75rem 1.2rem;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #0e71eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+  border: none;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(14, 113, 235, 0.35);
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.zoom-btn-join-call:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(14, 113, 235, 0.5);
+  filter: brightness(1.08);
+}
+
 /* Empty peers state */
 .zoom-empty-state {
   text-align: center;
@@ -1726,58 +1752,142 @@ kbd {
   background: rgba(255, 255, 255, 0.16);
 }
 
-/* Video Stage Grid & Layouts */
+/* Video Stage Grid & Layouts (Daily.co SFU Multi-Participant Dynamic Grid) */
 .zoom-stage-grid {
   flex: 1;
   position: relative;
   width: 100%;
   height: 100%;
   min-height: 0;
+  display: grid;
+  padding: 0.85rem;
+  box-sizing: border-box;
+  gap: 1rem;
+  align-items: center;
+  justify-items: center;
+  overflow: hidden;
+}
+
+/* 1 Participant: Single tile centered, fills the screen nicely */
+.zoom-stage-grid.grid-1 {
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  padding: 0.75rem;
-  box-sizing: border-box;
 }
 
-/* Focus View: Remote is full stage, Local is floating PiP */
-.zoom-stage-grid.focus-layout .remote-main {
+.zoom-stage-grid.grid-1 .zoom-tile {
   width: 100%;
   height: 100%;
-  border-radius: 14px;
-}
-
-.zoom-stage-grid.focus-layout .local-pip {
-  position: absolute;
-  bottom: 1.5rem;
-  right: 1.5rem;
-  width: 220px;
+  max-width: 1100px;
+  max-height: calc(100vh - 210px);
   aspect-ratio: 16 / 9;
-  border-radius: 10px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
-  z-index: 10;
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  transition: all 0.2s;
 }
 
-.zoom-stage-grid.focus-layout .local-pip:hover {
-  transform: scale(1.04);
+/* 2 Participants (1-on-1): 2 equal columns filling screen */
+.zoom-stage-grid.grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: 1fr;
+}
+
+.zoom-stage-grid.grid-2 .zoom-tile {
+  width: 100%;
+  height: 100%;
+  max-height: calc(100vh - 210px);
+  aspect-ratio: 16 / 9;
+}
+
+/* 3 Participants: 2 tiles top row, 1 tile centered bottom */
+.zoom-stage-grid.grid-3 {
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+}
+
+.zoom-stage-grid.grid-3 .zoom-tile {
+  width: 100%;
+  height: 100%;
+  max-height: calc((100vh - 220px) / 2);
+  aspect-ratio: 16 / 9;
+}
+
+.zoom-stage-grid.grid-3 .zoom-tile:last-child {
+  grid-column: 1 / -1;
+  max-width: 50%;
+  justify-self: center;
+}
+
+/* 4 Participants: 2x2 grid */
+.zoom-stage-grid.grid-4 {
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+}
+
+.zoom-stage-grid.grid-4 .zoom-tile {
+  width: 100%;
+  height: 100%;
+  max-height: calc((100vh - 220px) / 2);
+  aspect-ratio: 16 / 9;
+}
+
+/* 5-6 Participants: 3x2 grid */
+.zoom-stage-grid.grid-5-6 {
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+.zoom-stage-grid.grid-5-6 .zoom-tile {
+  width: 100%;
+  height: 100%;
+  max-height: calc((100vh - 220px) / 2);
+  aspect-ratio: 16 / 9;
+}
+
+/* Many Participants (7+): Auto-fit scrolling grid */
+.zoom-stage-grid.grid-many {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-auto-rows: minmax(180px, 1fr);
+  overflow-y: auto;
+  align-content: start;
+}
+
+.zoom-stage-grid.grid-many .zoom-tile {
+  width: 100%;
+  height: 100%;
+  min-height: 180px;
+  aspect-ratio: 16 / 9;
+}
+
+/* Spotlight Screen Share Layout: Primary screen + tile column */
+.zoom-stage-grid.has-screen-share {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  grid-template-rows: 1fr;
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.zoom-stage-grid.has-screen-share .screen-share-tile {
+  grid-column: 1;
+  grid-row: 1;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
   border-color: #0e71eb;
 }
 
-/* Grid View: Side-by-side 2 equal columns */
-.zoom-stage-grid.grid-layout {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
+.zoom-stage-grid.has-screen-share .zoom-tile:not(.screen-share-tile) {
+  width: 100%;
+  height: 160px;
+  aspect-ratio: 16 / 9;
 }
 
-.zoom-stage-grid.grid-layout .zoom-tile {
-  width: 100%;
-  height: 100%;
-  border-radius: 14px;
-  position: relative;
+.zoom-stage-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  overflow-y: auto;
+  max-height: calc(100vh - 210px);
 }
 
 /* Individual Video Tiles */
@@ -1786,10 +1896,48 @@ kbd {
   background: #111222;
   border-radius: 12px;
   overflow: hidden;
-  border: 2px solid var(--border);
+  border: 2px solid rgba(255, 255, 255, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+/* Active Speaker Glowing Border Indicator */
+.zoom-tile.active-speaker {
+  border-color: #22c55e !important;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.4), 0 0 24px rgba(34, 197, 94, 0.35) !important;
+}
+
+/* Active Speaker Animated Sound Wave */
+.zoom-speaker-wave {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 12px;
+  margin-left: 4px;
+}
+
+.zoom-speaker-wave span {
+  width: 2.5px;
+  height: 100%;
+  background: #22c55e;
+  border-radius: 1px;
+  animation: speakerWave 0.65s ease-in-out infinite alternate;
+}
+
+.zoom-speaker-wave span:nth-child(2) {
+  animation-delay: 0.18s;
+}
+
+.zoom-speaker-wave span:nth-child(3) {
+  animation-delay: 0.36s;
+}
+
+@keyframes speakerWave {
+  0%   { height: 25%; }
+  100% { height: 100%; }
 }
 
 .zoom-tile video {
@@ -1797,10 +1945,82 @@ kbd {
   height: 100%;
   object-fit: cover;
   background: #000;
+  display: block;
 }
 
-.zoom-tile.local-pip video {
-  transform: scaleX(-1); /* Mirror camera */
+.zoom-tile.is-local:not(.screen-share-tile) video {
+  transform: scaleX(-1); /* Mirror local camera */
+}
+
+.zoom-tile.screen-share-tile video {
+  object-fit: contain !important;
+  background: #06060c !important;
+  transform: none !important;
+}
+
+/* Top bar SFU & Participant Badges */
+.sfu-badge {
+  background: rgba(14, 113, 235, 0.2);
+  border: 1px solid rgba(14, 113, 235, 0.4);
+  color: #60a5fa;
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.zoom-participants-pill {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: var(--text);
+  font-size: 0.76rem;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+/* Screen sharing active state on bottom toolbar button */
+.zoom-call-control-btn.active-sharing .btn-icon-wrap {
+  background: rgba(34, 197, 94, 0.2);
+  border-color: #22c55e;
+  color: #22c55e;
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.3);
+}
+
+.zoom-tile-badge-strip {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 4;
+}
+
+.zoom-tile-badge {
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.zoom-tile-badge.speaker {
+  background: rgba(34, 197, 94, 0.25);
+  border-color: #22c55e;
+  color: #4ade80;
+}
+
+.zoom-tile-badge.screen {
+  background: rgba(14, 113, 235, 0.3);
+  border-color: #0e71eb;
+  color: #93c5fd;
 }
 
 /* Avatar Fallback inside Video Tile */

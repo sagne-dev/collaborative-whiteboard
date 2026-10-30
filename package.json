@@ -8,6 +8,7 @@
     "dev": "node --watch server/index.js"
   },
   "dependencies": {
+    "@daily-co/daily-js": "^0.94.0",
     "ws": "^8.17.0"
   },
   "license": "ISC"
