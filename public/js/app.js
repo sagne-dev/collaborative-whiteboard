@@ -278,10 +278,17 @@ function resizeCanvas() {
   ctx.scale(dpr, dpr);
   redrawAll();
 }
-window.addEventListener('resize', () => {
+function handleViewportChange() {
   if (state.currentMode === 'whiteboard') {
-    resizeCanvas();
+    requestAnimationFrame(() => resizeCanvas());
+  } else if (state.currentMode === 'videocall') {
+    requestAnimationFrame(() => renderZoomGrid());
   }
+}
+
+window.addEventListener('resize', handleViewportChange);
+window.addEventListener('orientationchange', () => {
+  setTimeout(handleViewportChange, 150);
 });
 
 function renderStroke(stroke) {

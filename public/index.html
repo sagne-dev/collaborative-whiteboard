@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>CollabSpace — Whiteboard & Watch Party</title>
   <link rel="stylesheet" href="style.css" />
   <!-- YouTube IFrame Player API -->
@@ -55,25 +55,28 @@
 
       <!-- Mode Switcher Tabs -->
       <nav class="mode-switcher" aria-label="Room Modes">
-        <button id="mode-whiteboard-btn" class="mode-tab active" data-mode="whiteboard">
+        <button id="mode-whiteboard-btn" class="mode-tab active" data-mode="whiteboard" title="Whiteboard Mode">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
             <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
           </svg>
-          <span>Whiteboard Mode</span>
+          <span class="tab-label-full">Whiteboard</span>
+          <span class="tab-label-short">Draw</span>
         </button>
-        <button id="mode-watchparty-btn" class="mode-tab" data-mode="watchparty">
+        <button id="mode-watchparty-btn" class="mode-tab" data-mode="watchparty" title="Watch Party Mode">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polygon points="5 3 19 12 5 21 5 3"></polygon>
           </svg>
-          <span>Watch Party Mode</span>
+          <span class="tab-label-full">Watch Party</span>
+          <span class="tab-label-short">Watch</span>
           <span id="nav-chat-badge" class="nav-badge hidden">0</span>
         </button>
-        <button id="mode-videocall-btn" class="mode-tab" data-mode="videocall">
+        <button id="mode-videocall-btn" class="mode-tab" data-mode="videocall" title="Video Call Mode">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polygon points="23 7 16 12 23 17 23 7"></polygon>
             <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
           </svg>
-          <span>Video Call Mode</span>
+          <span class="tab-label-full">Video Call</span>
+          <span class="tab-label-short">Call</span>
         </button>
       </nav>
 

@@ -22,10 +22,18 @@
 
 html, body {
   height: 100%;
-  overflow: hidden;
+  height: 100dvh;
+  width: 100%;
+  overflow-x: hidden;
   font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   background: var(--bg);
   color: var(--text);
+  -webkit-text-size-adjust: 100%;
+  touch-action: manipulation;
+}
+
+.tab-label-short {
+  display: none;
 }
 
 /* ── Utility ── */
@@ -2454,16 +2462,766 @@ kbd {
   filter: brightness(1.1);
 }
 
-/* ── Responsive rules ── */
+/* ══════════════════════════════════════════════════════════════
+   MOBILE RESPONSIVE & ADAPTIVE STYLES
+   Optimized for smartphones, tablets, touch interactions & safe areas
+══════════════════════════════════════════════════════════════ */
+
+/* ── 1. TABLET & COMPACT DESKTOP (≤ 960px) ── */
+@media (max-width: 960px) {
+  :root {
+    --chat-width: 300px;
+    --tbw: 58px;
+  }
+  #top-nav {
+    padding: 0 0.75rem;
+    gap: 0.5rem;
+  }
+  .nav-left {
+    min-width: 0;
+  }
+  .brand-title {
+    font-size: 0.95rem;
+  }
+  .mode-tab {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+  }
+}
+
+/* ── 2. MOBILE TABLETS & SMARTPHONES (≤ 768px) ── */
 @media (max-width: 768px) {
   :root {
-    --chat-width: 280px;
+    --nav-height: 50px;
+    --chat-width: 100%;
   }
-  .brand-title { display: none; }
-  .mode-tab span { font-size: 0.75rem; }
-  .video-toolbar {
-    flex-wrap: wrap;
+
+  /* ── A. Header & Mode Switcher ── */
+  #top-nav {
+    height: var(--nav-height);
+    padding: 0 0.5rem;
+    padding-top: env(safe-area-inset-top, 0px);
+    gap: 0.4rem;
+  }
+
+  .nav-left {
+    min-width: 0;
+    gap: 0.35rem;
+  }
+
+  .brand-title {
+    display: none;
+  }
+
+  .nav-brand svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .mode-switcher {
+    padding: 2px;
+    gap: 2px;
+  }
+
+  .tab-label-full {
+    display: none !important;
+  }
+
+  .tab-label-short {
+    display: inline !important;
+    font-size: 0.76rem;
+    font-weight: 700;
+  }
+
+  .mode-tab {
+    padding: 6px 9px;
+    min-height: 38px;
+    gap: 4px;
+    border-radius: 6px;
+  }
+
+  .mode-tab svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .nav-meta {
+    gap: 0.35rem;
+  }
+
+  #voice-status-text {
+    display: none;
+  }
+
+  #nav-voice-btn {
+    padding: 5px 8px;
+    min-height: 36px;
+    border-radius: 7px;
+  }
+
+  .voice-icon {
+    font-size: 0.95rem;
+  }
+
+  #status {
+    display: none;
+  }
+
+  #nav-user-pill {
+    padding: 4px 6px;
+  }
+
+  #nav-user-name {
+    display: none;
+  }
+
+  #nav-room-badge {
+    max-width: 85px;
+    padding: 4px 7px;
+  }
+
+  #nav-room-label {
+    font-size: 0.72rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* ── B. Whiteboard View (Native App Bottom Toolbar Layout) ── */
+  #whiteboard-view {
+    display: none;
+    flex-direction: column-reverse;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #whiteboard-view.active {
+    display: flex;
+  }
+
+  #canvas-wrap {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #toolbar {
+    width: 100%;
     height: auto;
-    padding: 0.5rem;
+    min-height: 52px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-around;
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+    border-right: none;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    z-index: 30;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    gap: 6px;
+  }
+
+  .toolbar-section {
+    flex-direction: row;
+    width: auto;
+    padding: 0 6px;
+    border-bottom: none;
+    border-right: 1px solid var(--border);
+    gap: 6px;
+    align-items: center;
+  }
+
+  .toolbar-section:last-of-type {
+    border-right: none;
+    margin-top: 0;
+  }
+
+  .tool-btn, .action-btn {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    min-height: 42px;
+    border-radius: 8px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .color-wrap {
+    width: 34px;
+    height: 34px;
+  }
+
+  .vslider {
+    transform: none; /* Horizontal slider on mobile */
+    width: 46px;
+    height: 8px;
+    margin: 0 4px;
+  }
+
+  .slider-label {
+    display: none;
+  }
+
+  #width-label {
+    font-size: 0.72rem;
+    min-width: 14px;
+    text-align: center;
+  }
+
+  .room-label {
+    display: none;
+  }
+
+  #hint-bar {
+    display: none !important;
+  }
+
+  #presence-panel {
+    top: 8px;
+    right: 8px;
+    width: auto;
+    max-width: 130px;
+    max-height: 100px;
+    padding: 4px 8px;
+    font-size: 0.72rem;
+    border-radius: 8px;
+    background: rgba(26, 26, 46, 0.88);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  }
+
+  /* ── C. Watch Party View ── */
+  .video-toolbar {
+    height: auto;
+    min-height: 52px;
+    padding: 8px 10px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .video-source-box {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .source-label {
+    display: none;
+  }
+
+  #video-url-input {
+    flex: 1;
+    min-height: 40px;
+    font-size: 16px; /* Prevents iOS auto-zoom */
+    padding: 8px 10px;
+    border-radius: 8px;
+  }
+
+  #video-load-btn {
+    min-height: 40px;
+    padding: 0 14px;
+    font-size: 0.85rem;
+    border-radius: 8px;
+  }
+
+  .sample-videos-wrap {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .sample-select {
+    flex: 1;
+    min-height: 40px;
+    font-size: 14px;
+    padding: 6px 10px;
+    border-radius: 8px;
+  }
+
+  .video-sync-actions {
+    display: flex;
+  }
+
+  .sync-btn {
+    min-height: 40px;
+    padding: 0 12px;
+    border-radius: 8px;
+  }
+
+  .video-display-wrapper {
+    flex: 1;
+    width: 100%;
+    min-height: 180px;
+    position: relative;
+  }
+
+  .room-sync-bar {
+    height: auto;
+    padding: 8px 10px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .sync-bar-center {
+    width: 100%;
+    order: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .sync-scrubber {
+    flex: 1;
+    height: 8px;
+    border-radius: 4px;
+  }
+
+  .sync-bar-left {
+    width: 100%;
+    order: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    gap: 6px;
+  }
+
+  .sync-ctrl-btn {
+    min-height: 40px;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    border-radius: 8px;
+  }
+
+  #room-play-pause-btn {
+    flex: 1;
+    justify-content: center;
+    font-weight: 700;
+    background: var(--accent);
+    color: #0d0d1a;
+  }
+
+  #skip-forward-30-btn,
+  .sync-bar-right {
+    display: none;
+  }
+
+  .video-footer-bar {
+    height: 42px;
+    padding: 0 10px;
+    gap: 8px;
+  }
+
+  #video-title-display {
+    max-width: 130px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.78rem;
+  }
+
+  #video-status-badge {
+    font-size: 0.72rem;
+    padding: 2px 6px;
+  }
+
+  .theater-chat-toggle {
+    display: inline-flex !important;
+    min-height: 36px;
+    padding: 4px 10px;
+    font-size: 0.76rem;
+    border-radius: 6px;
+  }
+
+  /* ── D. Video Call View (Dynamic Grid & Bottom Controls) ── */
+  .zoom-stage-topbar {
+    padding: 6px 10px;
+    gap: 6px;
+  }
+
+  .zoom-meeting-meta {
+    gap: 6px;
+  }
+
+  #zoom-meeting-title {
+    font-size: 0.82rem;
+    max-width: 85px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .meeting-time-badge {
+    font-size: 0.72rem;
+    padding: 2px 6px;
+  }
+
+  #zoom-sfu-badge {
+    display: none;
+  }
+
+  .zoom-stage-top-actions {
+    gap: 6px;
+  }
+
+  .zoom-participants-pill {
+    font-size: 0.72rem;
+    padding: 2px 6px;
+  }
+
+  .zoom-top-btn {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.75rem;
+    min-height: 34px;
+    border-radius: 6px;
+  }
+
+  #zoom-chat-toggle-btn {
+    background: var(--accent);
+    color: #0d0d1a;
+    font-weight: 700;
+  }
+
+  #zoom-chat-toggle-btn svg {
+    stroke: #0d0d1a;
+  }
+
+  .zoom-stage-grid {
+    padding: 6px;
+    gap: 6px;
+  }
+
+  /* 1-on-1: Center single tile filling container */
+  .zoom-stage-grid.grid-1 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+  }
+
+  .zoom-stage-grid.grid-1 .zoom-tile {
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    aspect-ratio: auto;
+    border-radius: 12px;
+  }
+
+  /* 2 Participants on Mobile Portrait: Stack vertically */
+  .zoom-stage-grid.grid-2 {
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(2, 1fr);
+  }
+
+  .zoom-stage-grid.grid-2 .zoom-tile {
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    aspect-ratio: auto;
+    border-radius: 10px;
+  }
+
+  /* 3-4 Participants: 2x2 grid */
+  .zoom-stage-grid.grid-3,
+  .zoom-stage-grid.grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 6px;
+  }
+
+  .zoom-stage-grid.grid-3 .zoom-tile,
+  .zoom-stage-grid.grid-4 .zoom-tile {
+    max-height: 100%;
+    aspect-ratio: auto;
+    border-radius: 8px;
+  }
+
+  .zoom-stage-grid.grid-3 .zoom-tile:last-child {
+    max-width: 100%;
+    grid-column: auto;
+  }
+
+  /* Screen share spotlight layout on mobile */
+  .zoom-stage-grid.has-screen-share {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr auto;
+    gap: 6px;
+  }
+
+  .zoom-stage-grid.has-screen-share .screen-share-tile {
+    width: 100%;
+    height: 100%;
+    min-height: 200px;
+  }
+
+  .zoom-tile video {
+    object-fit: cover;
+  }
+
+  .zoom-tile-name-tag {
+    bottom: 6px;
+    left: 6px;
+    font-size: 0.72rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  /* Bottom Controls Bar on Mobile */
+  .zoom-stage-bottombar {
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+    gap: 0.5rem;
+    justify-content: space-around;
+  }
+
+  .zoom-control-cluster {
+    gap: 0.5rem;
+  }
+
+  .zoom-call-control-btn {
+    padding: 2px 4px;
+    gap: 2px;
+    font-size: 0.66rem;
+  }
+
+  .btn-icon-wrap {
+    width: 44px;
+    height: 44px;
+    font-size: 1.15rem;
+  }
+
+  .zoom-btn-end-call {
+    padding: 0.6rem 0.85rem;
+    font-size: 0.8rem;
+    border-radius: 10px;
+    min-height: 44px;
+  }
+
+  .zoom-btn-end-call svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .zoom-rejoin-card {
+    padding: 1.5rem 1rem;
+    max-width: 90vw;
+    margin: auto;
+  }
+
+  .zoom-btn-rejoin {
+    min-height: 48px;
+    font-size: 0.88rem;
+    padding: 0.65rem 1.25rem;
+  }
+
+  /* ── E. Shared Chat Sidebar Mobile Full-Screen Drawer ── */
+  #chat-sidebar {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100% !important;
+    z-index: 200;
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+    border-left: none;
+    box-shadow: none;
+  }
+
+  #chat-sidebar.collapsed {
+    display: none !important;
+  }
+
+  #chat-sidebar.mode-hidden {
+    display: none !important;
+  }
+
+  .chat-header {
+    height: 48px;
+    padding: 0 12px;
+  }
+
+  .chat-collapse-btn {
+    min-height: 38px;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    background: var(--surface2);
+    border-radius: 6px;
+    color: var(--text);
+  }
+
+  .chat-input-form {
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
+    gap: 6px;
+  }
+
+  #chat-input {
+    font-size: 16px !important; /* Prevents iOS auto-zoom */
+    padding: 8px 12px;
+    min-height: 44px;
+    border-radius: 8px;
+  }
+
+  #chat-send-btn {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    border-radius: 8px;
+  }
+}
+
+/* ── 3. SMALL PHONES (≤ 480px) ── */
+@media (max-width: 480px) {
+  #top-nav {
+    padding: 0 0.35rem;
+    gap: 0.3rem;
+  }
+
+  .mode-switcher {
+    padding: 2px;
+    gap: 2px;
+  }
+
+  .mode-tab {
+    padding: 6px 7px;
+    gap: 3px;
+  }
+
+  .tab-label-short {
+    font-size: 0.72rem;
+  }
+
+  #nav-user-pill {
+    display: none;
+  }
+
+  #nav-room-badge {
+    max-width: 68px;
+    padding: 4px 6px;
+  }
+
+  /* Join Screen on Mobile */
+  #join-screen {
+    padding: 1rem 0.75rem;
+    align-items: flex-start;
+    overflow-y: auto;
+  }
+
+  .join-card {
+    padding: 1.75rem 1.25rem;
+    border-radius: 14px;
+    max-width: 100%;
+    margin-top: auto;
+    margin-bottom: auto;
+  }
+
+  .join-logo h1 {
+    font-size: 1.35rem;
+  }
+
+  .join-card input {
+    font-size: 16px;
+    min-height: 44px;
+    padding: 0.75rem;
+  }
+
+  #join-btn {
+    min-height: 48px;
+    font-size: 1rem;
+  }
+
+  /* Calling & Incoming Overlays */
+  .zoom-calling-card,
+  .zoom-incoming-card {
+    padding: 1.5rem 1.25rem;
+    border-radius: 16px;
+    gap: 1rem;
+    width: 92vw;
+  }
+
+  .zoom-ring-animation {
+    width: 76px;
+    height: 76px;
+  }
+
+  .zoom-call-avatar {
+    width: 64px;
+    height: 64px;
+    font-size: 1.7rem;
+  }
+
+  .zoom-btn-decline,
+  .zoom-btn-accept,
+  .zoom-btn-hangup {
+    min-height: 48px;
+    font-size: 0.85rem;
+  }
+}
+
+/* ── 4. MOBILE LANDSCAPE ORIENTATION (Height ≤ 500px) ── */
+@media (max-height: 500px) and (orientation: landscape) {
+  :root {
+    --nav-height: 42px;
+  }
+
+  #top-nav {
+    height: var(--nav-height);
+    padding: 0 0.5rem;
+  }
+
+  .mode-tab {
+    padding: 4px 8px;
+    min-height: 32px;
+  }
+
+  .zoom-stage-topbar {
+    padding: 4px 8px;
+  }
+
+  .zoom-stage-bottombar {
+    padding: 4px 8px;
+  }
+
+  .btn-icon-wrap {
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+  }
+
+  .zoom-btn-end-call {
+    min-height: 36px;
+    padding: 4px 10px;
+    font-size: 0.78rem;
+  }
+
+  .zoom-stage-grid.grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: 1fr;
+  }
+
+  #toolbar {
+    min-height: 44px;
+    padding: 4px 8px;
+  }
+
+  .tool-btn, .action-btn {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
   }
 }
