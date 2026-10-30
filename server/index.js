@@ -751,6 +751,82 @@ wss.on('connection', (ws) => {
         break;
       }
 
+      // ── Zoom Direct Video Calling Signaling ──
+      case 'call_user': {
+        if (!room || !msg.targetUserId) return;
+        const targetUser = room.users.get(msg.targetUserId);
+        const caller = room.users.get(userId);
+        if (targetUser && targetUser.ws && targetUser.ws.readyState === WebSocket.OPEN) {
+          targetUser.ws.send(JSON.stringify({
+            type       : 'incoming_call',
+            fromUserId : userId,
+            fromName   : caller ? caller.name : userId.slice(0, 6),
+            fromColor  : caller ? caller.color : '#4ECDC4',
+          }));
+        }
+        break;
+      }
+
+      case 'call_accepted': {
+        if (!room || !msg.targetUserId) return;
+        const targetUser = room.users.get(msg.targetUserId);
+        const recipient = room.users.get(userId);
+        if (targetUser && targetUser.ws && targetUser.ws.readyState === WebSocket.OPEN) {
+          targetUser.ws.send(JSON.stringify({
+            type       : 'call_accepted',
+            fromUserId : userId,
+            fromName   : recipient ? recipient.name : userId.slice(0, 6),
+          }));
+        }
+        break;
+      }
+
+      case 'call_declined': {
+        if (!room || !msg.targetUserId) return;
+        const targetUser = room.users.get(msg.targetUserId);
+        const recipient = room.users.get(userId);
+        if (targetUser && targetUser.ws && targetUser.ws.readyState === WebSocket.OPEN) {
+          targetUser.ws.send(JSON.stringify({
+            type       : 'call_declined',
+            fromUserId : userId,
+            fromName   : recipient ? recipient.name : 'User',
+            reason     : msg.reason || 'declined',
+          }));
+        }
+        break;
+      }
+
+      case 'call_cancelled': {
+        if (!room || !msg.targetUserId) return;
+        const targetUser = room.users.get(msg.targetUserId);
+        if (targetUser && targetUser.ws && targetUser.ws.readyState === WebSocket.OPEN) {
+          targetUser.ws.send(JSON.stringify({
+            type       : 'call_cancelled',
+            fromUserId : userId,
+          }));
+        }
+        break;
+      }
+
+      case 'call_ended': {
+        if (!room) return;
+        if (msg.targetUserId) {
+          const targetUser = room.users.get(msg.targetUserId);
+          if (targetUser && targetUser.ws && targetUser.ws.readyState === WebSocket.OPEN) {
+            targetUser.ws.send(JSON.stringify({
+              type       : 'call_ended',
+              fromUserId : userId,
+            }));
+          }
+        } else {
+          broadcast(room, {
+            type       : 'call_ended',
+            fromUserId : userId,
+          }, ws);
+        }
+        break;
+      }
+
       default:
         console.warn('Unknown message type:', msg.type);
     }

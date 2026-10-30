@@ -1266,13 +1266,13 @@ kbd {
 ::-webkit-scrollbar-thumb:hover { background: var(--border-light); }
 
 /* ══════════════════════════════════════════════════════════════
-   3. VIDEO CALL MODE STYLES
+   3. ZOOM-STYLE DIRECT VIDEO CALLING STYLES
 ══════════════════════════════════════════════════════════════ */
 #videocall-view {
   display: none;
   width: 100%;
   height: 100%;
-  background: #0d0d18;
+  background: #0b0c16;
   position: relative;
   overflow: hidden;
 }
@@ -1282,253 +1282,890 @@ kbd {
   flex-direction: column;
 }
 
-#video-call-container {
+.zoom-call-app {
   display: flex;
   flex-direction: column;
   width: 100%;
   height: 100%;
-  padding: 1rem 1.25rem 1.25rem;
-  gap: 1rem;
+  position: relative;
+}
+
+/* ─── 3A. ZOOM LOBBY & DIRECTORY ─── */
+.zoom-lobby {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 1.5rem;
+  overflow-y: auto;
   box-sizing: border-box;
 }
 
-/* Video Call Floating Controls Bar */
-.video-call-controls-bar {
+.zoom-lobby-card {
+  width: 100%;
+  max-width: 680px;
+  background: #141526;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 1.75rem 2rem;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.zoom-lobby-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 1rem;
+}
+
+.zoom-logo-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.zoom-icon-box {
+  width: 44px;
+  height: 44px;
   border-radius: 12px;
-  padding: 0.6rem 1rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
-  flex-shrink: 0;
-  z-index: 10;
-}
-
-.vc-control-group {
+  background: linear-gradient(135deg, #0e71eb 0%, #228be6 100%);
   display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.vc-action-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  font-size: 0.82rem;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: inherit;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  user-select: none;
-}
-
-.vc-action-btn.unmuted {
-  background: rgba(78, 205, 196, 0.14);
-  border-color: rgba(78, 205, 196, 0.5);
-  color: #4ECDC4;
-}
-
-.vc-action-btn.unmuted:hover {
-  background: rgba(78, 205, 196, 0.25);
-  box-shadow: 0 0 12px rgba(78, 205, 196, 0.3);
-}
-
-.vc-action-btn.muted {
-  background: rgba(255, 107, 107, 0.14);
-  border-color: rgba(255, 107, 107, 0.5);
-  color: #FF6B6B;
-}
-
-.vc-action-btn.muted:hover {
-  background: rgba(255, 107, 107, 0.25);
-}
-
-.vc-action-btn.cam-active {
-  background: rgba(69, 183, 209, 0.14);
-  border-color: rgba(69, 183, 209, 0.5);
-  color: #45B7D1;
-}
-
-.vc-action-btn.cam-active:hover {
-  background: rgba(69, 183, 209, 0.25);
-  box-shadow: 0 0 12px rgba(69, 183, 209, 0.3);
-}
-
-.vc-action-btn.cam-muted {
-  background: rgba(255, 107, 107, 0.14);
-  border-color: rgba(255, 107, 107, 0.5);
-  color: #FF6B6B;
-}
-
-.vc-action-btn.cam-muted:hover {
-  background: rgba(255, 107, 107, 0.25);
-}
-
-.vc-action-btn.secondary {
-  background: var(--surface2);
-  border-color: var(--border);
-  color: var(--text);
-}
-
-.vc-action-btn.secondary:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: var(--border-light);
-}
-
-.vc-call-info {
-  display: flex;
-  align-items: center;
-}
-
-.vc-status-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(78, 205, 196, 0.1);
-  border: 1px solid rgba(78, 205, 196, 0.3);
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  color: #4ECDC4;
-  font-weight: 600;
-}
-
-.badge-dot.pulse {
-  animation: pulseDot 1.5s infinite;
-}
-
-@keyframes pulseDot {
-  0%   { transform: scale(0.9); opacity: 0.7; }
-  50%  { transform: scale(1.3); opacity: 1; box-shadow: 0 0 8px #4ECDC4; }
-  100% { transform: scale(0.9); opacity: 0.7; }
-}
-
-/* Face-to-Face Video Grid Layout */
-.video-call-grid {
-  display: grid;
-  gap: 1rem;
-  flex: 1;
-  width: 100%;
-  height: 100%;
-  min-height: 0;
-  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-  grid-auto-rows: 1fr;
   align-items: center;
   justify-content: center;
-  overflow-y: auto;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(14, 113, 235, 0.4);
 }
 
-.video-call-grid.single-user {
-  grid-template-columns: 1fr;
-  max-width: 960px;
-  margin: 0 auto;
+.zoom-title-group h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.01em;
 }
 
-.video-call-grid.two-users {
-  grid-template-columns: repeat(2, 1fr);
+.zoom-title-group p {
+  margin: 0.2rem 0 0;
+  font-size: 0.8rem;
+  color: var(--muted);
 }
 
-.video-call-grid.four-users {
-  grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(2, 1fr);
+.zoom-room-pill {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #4ECDC4;
+  background: rgba(78, 205, 196, 0.12);
+  border: 1px solid rgba(78, 205, 196, 0.3);
+  padding: 0.35rem 0.8rem;
+  border-radius: 20px;
 }
 
-/* Video Tiles */
-.video-tile {
+/* Local Camera Preview Box */
+.zoom-preview-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.zoom-self-preview-box {
   position: relative;
   width: 100%;
-  height: 100%;
-  min-height: 240px;
-  background: #141426;
+  max-width: 420px;
+  aspect-ratio: 16 / 9;
+  background: #090a14;
   border-radius: 14px;
   overflow: hidden;
   border: 2px solid var(--border);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
 }
 
-.video-tile.speaking {
-  border-color: #4ECDC4;
-  box-shadow: 0 0 16px rgba(78, 205, 196, 0.4);
-}
-
-.video-tile video {
+.zoom-self-preview-box video {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  background: #000;
+  transform: scaleX(-1); /* Mirror camera */
 }
 
-/* Mirror local user's camera feed like Google Meet / Zoom */
-.video-tile.local-tile video {
-  transform: scaleX(-1);
-}
-
-/* Camera-Off Avatar Placeholder */
-.tile-avatar-placeholder {
+.zoom-avatar-fallback {
   position: absolute;
   inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at center, #1e1e38 0%, #111122 100%);
+  background: radial-gradient(circle at center, #1e1e36 0%, #0d0d1c 100%);
+  gap: 0.6rem;
+  z-index: 2;
+}
+
+.zoom-avatar-circle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #4ECDC4;
+  color: #0b0c16;
+  font-size: 1.7rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
+.zoom-preview-overlay {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(10, 10, 20, 0.75);
+  backdrop-filter: blur(8px);
+  padding: 5px 10px;
+  border-radius: 8px;
+  z-index: 3;
+}
+
+.zoom-preview-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.preview-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 6px #22c55e;
+}
+
+.zoom-preview-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.zoom-mini-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  border-radius: 6px;
+  padding: 3px 7px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.zoom-mini-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.zoom-mini-btn.muted {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #ef4444;
+}
+
+/* Online Peers Directory */
+.zoom-peers-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.zoom-peers-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.zoom-peers-title-group h4 {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.zoom-counter-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.zoom-peers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+/* Individual User Calling Card */
+.zoom-peer-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #1b1c32;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  transition: all 0.2s;
+}
+
+.zoom-peer-card:hover {
+  border-color: rgba(14, 113, 235, 0.5);
+  background: #20223c;
+}
+
+.zoom-peer-user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.zoom-peer-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: #0b0c16;
+  font-weight: 800;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.zoom-peer-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.zoom-peer-name {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.zoom-peer-status {
+  font-size: 0.75rem;
+  color: #22c55e;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.zoom-btn-call {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  color: #ffffff;
+  border: none;
+  padding: 0.55rem 1.15rem;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.84rem;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(34, 197, 94, 0.35);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: inherit;
+}
+
+.zoom-btn-call:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(34, 197, 94, 0.5);
+  filter: brightness(1.1);
+}
+
+.zoom-btn-call:active {
+  transform: translateY(0);
+}
+
+/* Empty peers state */
+.zoom-empty-state {
+  text-align: center;
+  padding: 1.5rem 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.zoom-empty-state .empty-icon {
+  font-size: 2rem;
+  opacity: 0.7;
+}
+
+.zoom-empty-state h5 {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #ffffff;
+}
+
+.zoom-empty-state p {
+  margin: 0 0 0.6rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.zoom-btn-secondary {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.zoom-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: var(--border-light);
+}
+
+/* ─── 3B. ACTIVE ZOOM MEETING SCREEN ─── */
+.zoom-active-stage {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background: #090a12;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Top Meeting Bar */
+.zoom-stage-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 1.25rem;
+  background: rgba(15, 16, 28, 0.85);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  z-index: 20;
+}
+
+.zoom-meeting-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.meeting-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 8px #22c55e;
+  animation: pulseDot 2s infinite;
+}
+
+#zoom-meeting-title {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.meeting-time-badge {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #4ECDC4;
+  background: rgba(78, 205, 196, 0.12);
+  border: 1px solid rgba(78, 205, 196, 0.25);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.zoom-stage-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.zoom-top-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text);
+  padding: 0.4rem 0.75rem;
+  border-radius: 7px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.zoom-top-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+/* Video Stage Grid & Layouts */
+.zoom-stage-grid {
+  flex: 1;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 0.75rem;
+  box-sizing: border-box;
+}
+
+/* Focus View: Remote is full stage, Local is floating PiP */
+.zoom-stage-grid.focus-layout .remote-main {
+  width: 100%;
+  height: 100%;
+  border-radius: 14px;
+}
+
+.zoom-stage-grid.focus-layout .local-pip {
+  position: absolute;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  width: 220px;
+  aspect-ratio: 16 / 9;
+  border-radius: 10px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
+  z-index: 10;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.2s;
+}
+
+.zoom-stage-grid.focus-layout .local-pip:hover {
+  transform: scale(1.04);
+  border-color: #0e71eb;
+}
+
+/* Grid View: Side-by-side 2 equal columns */
+.zoom-stage-grid.grid-layout {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.zoom-stage-grid.grid-layout .zoom-tile {
+  width: 100%;
+  height: 100%;
+  border-radius: 14px;
+  position: relative;
+}
+
+/* Individual Video Tiles */
+.zoom-tile {
+  position: relative;
+  background: #111222;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.zoom-tile video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #000;
+}
+
+.zoom-tile.local-pip video {
+  transform: scaleX(-1); /* Mirror camera */
+}
+
+/* Avatar Fallback inside Video Tile */
+.zoom-tile-avatar-box {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, #1c1d35 0%, #0d0e1d 100%);
   gap: 0.8rem;
   z-index: 2;
 }
 
-.tile-avatar-circle {
+.zoom-large-avatar {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  color: #090a12;
+  font-size: 2.6rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.zoom-tile.local-pip .zoom-large-avatar {
+  width: 50px;
+  height: 50px;
+  font-size: 1.4rem;
+}
+
+.zoom-avatar-label {
+  font-size: 0.88rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.zoom-tile.local-pip .zoom-avatar-label {
+  font-size: 0.72rem;
+}
+
+.zoom-tile-name-tag {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(10, 10, 20, 0.8);
+  backdrop-filter: blur(6px);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 3;
+}
+
+.zoom-mic-badge {
+  font-size: 0.72rem;
+}
+
+/* Bottom Zoom Floating Controls Bar */
+.zoom-stage-bottombar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  padding: 0.85rem 1.5rem;
+  background: rgba(15, 16, 28, 0.95);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 20;
+}
+
+.zoom-control-cluster {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.zoom-call-control-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+
+.zoom-call-control-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.btn-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  background: #25283f;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: all 0.2s;
+}
+
+.zoom-call-control-btn.unmuted .btn-icon-wrap {
+  background: #25283f;
+  color: #4ECDC4;
+}
+
+.zoom-call-control-btn.muted .btn-icon-wrap {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #ef4444;
+}
+
+.zoom-call-control-btn.cam-active .btn-icon-wrap {
+  background: #25283f;
+  color: #45B7D1;
+}
+
+.zoom-call-control-btn.cam-muted .btn-icon-wrap {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #ef4444;
+}
+
+/* Red End Call Button */
+.zoom-btn-end-call {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  border: none;
+  padding: 0.65rem 1.4rem;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.45);
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.zoom-btn-end-call:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 22px rgba(239, 68, 68, 0.6);
+  filter: brightness(1.1);
+}
+
+.zoom-btn-end-call:active {
+  transform: translateY(0);
+}
+
+/* ─── 4 & 5. GLOBAL CALLING & INCOMING OVERLAYS ─── */
+.zoom-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 6, 14, 0.82);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.zoom-calling-card,
+.zoom-incoming-card {
+  width: 100%;
+  max-width: 380px;
+  background: #15162a;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 2.2rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  gap: 1.25rem;
+  animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popUp {
+  0%   { transform: scale(0.85); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Concentric Pulsing Ring Animation */
+.zoom-ring-animation {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ring-circle {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid #0e71eb;
+  opacity: 0;
+  animation: ringPulse 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+
+.ring-2 {
+  animation-delay: 0.6s;
+}
+
+.zoom-ring-animation.incoming .ring-circle {
+  border-color: #22c55e;
+}
+
+@keyframes ringPulse {
+  0%   { transform: scale(0.9); opacity: 0.8; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+
+.zoom-call-avatar {
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: var(--user-color, #4ECDC4);
-  color: #0d0d1a;
+  background: #4ECDC4;
+  color: #0b0c16;
   font-size: 2.2rem;
   font-weight: 800;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  position: relative;
+  z-index: 2;
 }
 
-.tile-avatar-name {
-  font-size: 0.9rem;
+.calling-status-text {
+  margin: 0;
+  font-size: 0.86rem;
   color: var(--muted);
-  font-weight: 600;
 }
 
-/* Meta overlay on video tile */
-.tile-meta-overlay {
-  position: absolute;
-  bottom: 12px;
-  left: 12px;
-  display: flex;
+.zoom-btn-hangup {
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: rgba(13, 13, 26, 0.75);
-  backdrop-filter: blur(8px);
-  padding: 4px 10px;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  z-index: 3;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  border: none;
+  padding: 0.65rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+  font-family: inherit;
+  transition: all 0.2s;
 }
 
-.tile-user-name {
-  font-size: 0.82rem;
-  font-weight: 600;
+.zoom-btn-hangup:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(239, 68, 68, 0.55);
+}
+
+.incoming-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.incoming-label {
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #22c55e;
+  font-weight: 700;
+}
+
+.incoming-info h3 {
+  margin: 0;
+  font-size: 1.35rem;
   color: #ffffff;
 }
 
-.tile-mic-indicator {
-  font-size: 0.76rem;
+.incoming-info p {
+  margin: 0;
+  font-size: 0.84rem;
+  color: var(--muted);
+}
+
+.incoming-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.zoom-btn-decline {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #ef4444;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.zoom-btn-decline:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: #ef4444;
+}
+
+.zoom-btn-accept {
+  flex: 1.3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  color: #ffffff;
+  border: none;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(34, 197, 94, 0.45);
+  transition: all 0.2s;
+  font-family: inherit;
+  animation: pulseButton 1.5s infinite;
+}
+
+@keyframes pulseButton {
+  0%   { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+  70%  { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+
+.zoom-btn-accept:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.1);
 }
 
 /* ── Responsive rules ── */

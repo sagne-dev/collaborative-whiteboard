@@ -35,14 +35,17 @@
 - **Works Across All Modes:** Voice chat remains active continuously whether you are collaborating on the whiteboard, enjoying a watch party, or in a call.
 - **Participant Status:** Presence panel displays microphone status (`🎙️` / `🔇`) for all members in real time.
 
-### 6. 📹 Dedicated Face-to-Face Video Call Mode
-- **Clean Video Grid Layout:** Responsive face-to-face video grid dynamically adapting to 1, 2, 4, or more participants.
-- **WebRTC Video & Audio Streams:** Peer-to-peer video streaming with automatic connection handling and fallback.
-- **Independent Media Controls:** Dedicated controls bar with independent **Camera toggle** (video on/off) and **Microphone toggle** (mute/unmute).
-- **Camera-Off Avatar Fallback:** Shows personalized avatar circle with participant initial and room color when camera is disabled.
-- **Local Mirroring:** Mirrors local camera preview for natural interaction (Google Meet / Zoom style).
-- **Fullscreen Theater Mode:** Expand video call grid to full screen with one click.
-- **Active Participant Counter:** Real-time indicator of users connected in the video call.
+### 6. 📹 Zoom-Style Direct Video Calling Mode
+- **Dedicated Video Calling Experience:** Completely distinct from Watch Party Mode with zero media player clutter — focused purely on direct face-to-face video calling like Zoom.
+- **Direct Calling & Directory Lobby:** See all participants currently in the room with live status badges and direct **"📞 Video Call"** buttons. Includes a self-camera preview box to check your video and audio before calling.
+- **Ringing & Incoming Call Alerts:** Calling a participant triggers a realistic dual-frequency ringtone and concentric pulsing visual animation. The recipient receives an incoming call modal with **Accept** and **Decline** buttons across any active mode.
+- **Zoom Meeting Stage:**
+  - **Speaker / Focus Layout:** Main remote participant front-and-center with a floating Picture-in-Picture (PiP) local preview.
+  - **Grid Layout:** Side-by-side equal columns for collaborative conversations.
+  - **Live Meeting Timer:** Real-time call duration counter (`00:00` counting up).
+  - **Zoom Floating Control Bar:** Independent **Microphone** mute/unmute, **Camera** stop/start video, layout toggle, fullscreen, and prominent red **End Call** button.
+- **Camera-Off Avatar Fallback:** Elegant avatar circle with user initials and room colors when camera is disabled.
+- **Audio Chimes & Ringtones:** Synthesized phone ringtone and ascending/descending connection chimes using the native Web Audio API (zero external assets).
 
 ---
 
