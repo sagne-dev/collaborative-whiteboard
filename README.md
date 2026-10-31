@@ -1,4 +1,4 @@
-# 🎨 CollabSpace — Collaborative Whiteboard & Watch Party
+#  CollabSpace — Collaborative Whiteboard & Watch Party
 
 **Real-time multi-user whiteboard and synchronized video watch party** — draw, collaborate, and watch videos together with friends anywhere in the world.
 
