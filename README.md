@@ -4,7 +4,7 @@
 
 ---
 
-## ✨ Features
+##  Features
 
 ### 1. 🎨 Real-Time Whiteboard Mode
 - **Multi-user Drawing:** Synchronized strokes, customizable brush sizes, and color picker.
@@ -12,7 +12,7 @@
 - **Presence & Remote Cursors:** See everyone's name, assigned color, and live cursor position.
 - **Persistence:** In-memory + disk-backed persistence per room.
 
-### 2. 🎬 Synchronized Watch Party Mode
+### 2.  Synchronized Watch Party Mode
 - **Universal Video Engine:** Supports **YouTube** (standard, shortened `youtu.be`, and Shorts), **Google Drive** video links, **Google Cloud Storage** streams, **Vimeo**, **Dailymotion**, direct **MP4/WebM/OGG/MOV** files, and any embeddable web link.
 - **Repeat Loading Support:** Seamlessly load new videos one after another without player freezing or lockups.
 - **Synchronized Playback:** Play, pause, and seek in real-time across all clients in the room via WebSockets.
@@ -25,7 +25,7 @@
 - **Unread Message Badges:** Get notified of new messages even when chat is collapsed or while in Whiteboard Mode.
 - **Pop-In Toggle:** Reopen the chat sidebar at any moment with one click.
 
-### 4. 🔄 Seamless Mode Switcher
+### 4.  Seamless Mode Switcher
 - Persistent top navigation bar allowing users to switch freely between **Whiteboard Mode**, **Watch Party Mode**, and **Video Call Mode** without disconnecting or losing room members.
 
 ### 5. 🎙️ Real-Time Audio-Only Voice Chat
@@ -99,7 +99,7 @@ Share the generated URL with your friends to draw and watch videos together!
 
 ---
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 collaborative-whiteboard/
@@ -115,7 +115,7 @@ collaborative-whiteboard/
 
 ---
 
-## 🛠️ Built With
+##  Built With
 
 - **Node.js** + **WebSocket (`ws`)**
 - **WebRTC Audio API** (Peer-to-peer low-latency voice chat)
