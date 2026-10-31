@@ -6,7 +6,7 @@
 
 ##  Features
 
-### 1. 🎨 Real-Time Whiteboard Mode
+### 1.  Real-Time Whiteboard Mode
 - **Multi-user Drawing:** Synchronized strokes, customizable brush sizes, and color picker.
 - **Tools:** Pen, Eraser, Undo (`Ctrl+Z`), Redo (`Ctrl+Y`), and Clear Board.
 - **Presence & Remote Cursors:** See everyone's name, assigned color, and live cursor position.
@@ -19,7 +19,7 @@
 - **Room State Preservation:** Seamlessly join a room mid-video with automatically calculated playback sync.
 - **Autoplay Handling:** Built-in unblock overlay for browser autoplay policies.
 
-### 3. 💬 Collapsible Text Chat & Theater Experience
+### 3.  Collapsible Text Chat & Theater Experience
 - **Dedicated Text Chat:** Real-time text-only room chat with user color tags and timestamps.
 - **Theater Mode:** Click **Collapse** to hide the chat sidebar, allowing the video player to expand to 100% full width for an immersive theater-like experience.
 - **Unread Message Badges:** Get notified of new messages even when chat is collapsed or while in Whiteboard Mode.
@@ -28,14 +28,14 @@
 ### 4.  Seamless Mode Switcher
 - Persistent top navigation bar allowing users to switch freely between **Whiteboard Mode**, **Watch Party Mode**, and **Video Call Mode** without disconnecting or losing room members.
 
-### 5. 🎙️ Real-Time Audio-Only Voice Chat
+### 5.  Real-Time Audio-Only Voice Chat
 - **WebRTC Peer-to-Peer Audio:** Low-latency, crystal-clear voice chat between participants in the same room ID without video overhead.
 - **Automatic Connection:** Automatically connects users to the voice channel upon entering the room.
 - **Microphone Controls:** Convenient one-click mute/unmute button in the top navigation bar with live audio wave activity visualizer.
 - **Works Across All Modes:** Voice chat remains active continuously whether you are collaborating on the whiteboard, enjoying a watch party, or in a call.
 - **Participant Status:** Presence panel displays microphone status (`🎙️` / `🔇`) for all members in real time.
 
-### 6. 📹 Zoom-Style Video Call Mode (Daily.co Route 1 SFU & WebRTC Mesh)
+### 6.  Zoom-Style Video Call Mode (Daily.co Route 1 SFU & WebRTC Mesh)
 - **Daily.co Route 1 SFU Integration:** Powered by `@daily-co/daily-js` Call Object (`subscribeToTracksAutomatically: true`) handling multi-person SFU media routing with automatic fallback.
 - **Dynamic Multi-Slot Video Grid:** Clean, responsive video grid using CSS Grid that dynamically adjusts layout slots based on how many participants join the room:
   - **1-on-1:** Expands to fill the screen symmetrically.
@@ -55,7 +55,7 @@
 
 ---
 
-## ⚡ Quick Start
+##  Quick Start
 
 ### 1. Run it locally
 
@@ -76,7 +76,7 @@ Share the generated URL with your friends to draw and watch videos together!
 
 ---
 
-## 🎮 How to Use
+##  How to Use
 
 | Mode | Action | How |
 |------|--------|-----|
