@@ -1697,10 +1697,7 @@ function appendChatMessage(item, isLive = true) {
   scrollToChatBottom();
 
   if (isLive && !isMine && !item.isSystem) {
-    const isActivelyChatting = document.activeElement === chatInput && !state.isChatCollapsed && (state.currentMode === 'watchparty' || state.currentMode === 'videocall');
-    if (!isActivelyChatting) {
-      showChatNotificationPopup(item.name || 'User', item.text, item.color);
-    }
+    showChatNotificationPopup(item.name || 'User', item.text, item.color);
   }
 
   if (isLive && !isMine && (state.isChatCollapsed || (state.currentMode !== 'watchparty' && state.currentMode !== 'videocall'))) {
@@ -1718,13 +1715,17 @@ function formatChatTimestamp(ts) {
 // ─── Telegram / Instagram Style In-App Chat Notification Pop-Up ───────────────
 let chatPopupTimer = null;
 let chatPopupAnimTimer = null;
+let touchStartY = 0;
 
 function playMessageNotificationSound() {
   try {
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
     if (!AudioCtx) return;
     const ctx = new AudioCtx();
-    const now = ctx.currentTime;
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+    const now = ctx.currentTime || 0;
 
     // Dual-tone chime (Instagram / Telegram style: 587Hz -> 880Hz)
     const osc1 = ctx.createOscillator();
@@ -1761,22 +1762,24 @@ function playMessageNotificationSound() {
 }
 
 function showChatNotificationPopup(senderName, messageText, color) {
-  if (!chatNotificationPopup || !chatPopupSender || !chatPopupText) return;
+  const popupEl  = chatNotificationPopup || document.getElementById('chat-notification-popup');
+  const senderEl = chatPopupSender || document.getElementById('chat-popup-sender');
+  const textEl   = chatPopupText || document.getElementById('chat-popup-text');
+  const avatarEl = chatPopupAvatar || document.getElementById('chat-popup-avatar');
 
-  // Sound chime
-  playMessageNotificationSound();
+  if (!popupEl || !senderEl || !textEl) return;
 
   const safeName = senderName || 'Someone';
-  chatPopupSender.textContent = safeName;
-  chatPopupText.textContent = messageText || '';
+  senderEl.textContent = safeName;
+  textEl.textContent = messageText || '';
 
-  if (chatPopupAvatar) {
+  if (avatarEl) {
     const initial = safeName.trim().charAt(0).toUpperCase() || 'U';
-    chatPopupAvatar.textContent = initial;
+    avatarEl.textContent = initial;
     if (color) {
-      chatPopupAvatar.style.background = color;
+      avatarEl.style.background = color;
     } else {
-      chatPopupAvatar.style.background = 'linear-gradient(135deg, #3b82f6, #8b5cf6)';
+      avatarEl.style.background = 'linear-gradient(135deg, #3b82f6, #8b5cf6)';
     }
   }
 
@@ -1784,15 +1787,31 @@ function showChatNotificationPopup(senderName, messageText, color) {
   if (chatPopupTimer) clearTimeout(chatPopupTimer);
   if (chatPopupAnimTimer) clearTimeout(chatPopupAnimTimer);
 
-  // If already visible, bounce animation to acknowledge new message
-  if (!chatNotificationPopup.classList.contains('hidden')) {
-    chatNotificationPopup.classList.remove('animate-in', 'animate-out', 'animate-bounce');
-    void chatNotificationPopup.offsetWidth; // force reflow
-    chatNotificationPopup.classList.add('animate-bounce');
+  // Directly set display block so CSS .hidden or media queries never suppress it on mobile
+  popupEl.style.display = 'block';
+
+  // Animate in or bounce
+  if (!popupEl.classList.contains('hidden') && popupEl.classList.contains('animate-in')) {
+    popupEl.classList.remove('animate-in', 'animate-out', 'animate-bounce');
+    void popupEl.offsetWidth; // force browser layout reflow
+    popupEl.classList.add('animate-bounce');
   } else {
-    chatNotificationPopup.classList.remove('hidden', 'animate-out', 'animate-bounce');
-    chatNotificationPopup.classList.add('animate-in');
+    popupEl.classList.remove('hidden', 'animate-out', 'animate-bounce');
+    void popupEl.offsetWidth;
+    popupEl.classList.add('animate-in');
   }
+
+  // Mobile haptic vibration if supported (Telegram/Instagram style)
+  try {
+    if (navigator.vibrate) {
+      navigator.vibrate([35, 45, 35]);
+    }
+  } catch (_) {}
+
+  // Play audio in safe async tick
+  setTimeout(() => {
+    playMessageNotificationSound();
+  }, 10);
 
   // Auto-dismiss after 4.5 seconds
   chatPopupTimer = setTimeout(() => {
@@ -1801,28 +1820,38 @@ function showChatNotificationPopup(senderName, messageText, color) {
 }
 
 function dismissChatNotificationPopup() {
-  if (!chatNotificationPopup || chatNotificationPopup.classList.contains('hidden')) return;
+  const popupEl = chatNotificationPopup || document.getElementById('chat-notification-popup');
+  if (!popupEl || popupEl.style.display === 'none' || popupEl.classList.contains('hidden')) return;
+
   if (chatPopupTimer) clearTimeout(chatPopupTimer);
 
-  chatNotificationPopup.classList.remove('animate-in', 'animate-bounce');
-  chatNotificationPopup.classList.add('animate-out');
+  popupEl.classList.remove('animate-in', 'animate-bounce');
+  popupEl.classList.add('animate-out');
 
   chatPopupAnimTimer = setTimeout(() => {
-    chatNotificationPopup.classList.add('hidden');
-    chatNotificationPopup.classList.remove('animate-out');
-  }, 280);
+    popupEl.style.display = 'none';
+    popupEl.classList.add('hidden');
+    popupEl.classList.remove('animate-out');
+  }, 270);
 }
 
-if (chatPopupClose) {
-  chatPopupClose.addEventListener('click', (e) => {
+// Bind close button
+const popupCloseBtn = chatPopupClose || document.getElementById('chat-popup-close');
+if (popupCloseBtn) {
+  popupCloseBtn.addEventListener('click', (e) => {
     e.stopPropagation();
+    e.preventDefault();
     dismissChatNotificationPopup();
   });
 }
 
-if (chatPopupCard) {
-  chatPopupCard.addEventListener('click', () => {
+// Bind card tap / click (works on touch and click)
+const popupCardEl = chatPopupCard || document.getElementById('chat-popup-card');
+if (popupCardEl) {
+  popupCardEl.addEventListener('click', (e) => {
+    if (e.target && e.target.closest('#chat-popup-close')) return;
     dismissChatNotificationPopup();
+
     if (state.currentMode === 'whiteboard') {
       setMode('watchparty');
     }
@@ -1832,15 +1861,41 @@ if (chatPopupCard) {
     }
   });
 
-  chatPopupCard.addEventListener('mouseenter', () => {
+  // Desktop hover pause
+  popupCardEl.addEventListener('mouseenter', () => {
     if (chatPopupTimer) clearTimeout(chatPopupTimer);
   });
 
-  chatPopupCard.addEventListener('mouseleave', () => {
-    if (!chatNotificationPopup.classList.contains('hidden')) {
+  popupCardEl.addEventListener('mouseleave', () => {
+    const popupEl = chatNotificationPopup || document.getElementById('chat-notification-popup');
+    if (popupEl && popupEl.style.display !== 'none' && !popupEl.classList.contains('hidden')) {
       chatPopupTimer = setTimeout(dismissChatNotificationPopup, 3000);
     }
   });
+
+  // Mobile touch swipe-up to dismiss
+  popupCardEl.addEventListener('touchstart', (e) => {
+    if (chatPopupTimer) clearTimeout(chatPopupTimer);
+    if (e.touches && e.touches[0]) {
+      touchStartY = e.touches[0].clientY;
+    }
+  }, { passive: true });
+
+  popupCardEl.addEventListener('touchend', (e) => {
+    if (e.changedTouches && e.changedTouches[0]) {
+      const touchEndY = e.changedTouches[0].clientY;
+      if (touchStartY - touchEndY > 24) {
+        // Swiped up -> dismiss immediately!
+        dismissChatNotificationPopup();
+        return;
+      }
+    }
+    // Resume auto-dismiss timer on mobile
+    const popupEl = chatNotificationPopup || document.getElementById('chat-notification-popup');
+    if (popupEl && popupEl.style.display !== 'none' && !popupEl.classList.contains('hidden')) {
+      chatPopupTimer = setTimeout(dismissChatNotificationPopup, 3500);
+    }
+  }, { passive: true });
 }
 
 function escapeHtml(str) {
