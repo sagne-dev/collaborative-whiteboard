@@ -169,6 +169,14 @@ const chatForm          = document.getElementById('chat-form');
 const chatInput         = document.getElementById('chat-input');
 const chatSendBtn       = document.getElementById('chat-send-btn');
 
+// Top In-App Chat Notification Pop-Up (Telegram / Instagram Style)
+const chatNotificationPopup = document.getElementById('chat-notification-popup');
+const chatPopupCard         = document.getElementById('chat-popup-card');
+const chatPopupAvatar       = document.getElementById('chat-popup-avatar');
+const chatPopupSender       = document.getElementById('chat-popup-sender');
+const chatPopupText         = document.getElementById('chat-popup-text');
+const chatPopupClose        = document.getElementById('chat-popup-close');
+
 // ─── App State ─────────────────────────────────────────────────────────────────
 const state = {
   ws            : null,
@@ -1688,6 +1696,13 @@ function appendChatMessage(item, isLive = true) {
   chatMessages.appendChild(entry);
   scrollToChatBottom();
 
+  if (isLive && !isMine && !item.isSystem) {
+    const isActivelyChatting = document.activeElement === chatInput && !state.isChatCollapsed && (state.currentMode === 'watchparty' || state.currentMode === 'videocall');
+    if (!isActivelyChatting) {
+      showChatNotificationPopup(item.name || 'User', item.text, item.color);
+    }
+  }
+
   if (isLive && !isMine && (state.isChatCollapsed || (state.currentMode !== 'watchparty' && state.currentMode !== 'videocall'))) {
     state.unreadMessages++;
     updateChatBadges();
@@ -1698,6 +1713,134 @@ function formatChatTimestamp(ts) {
   if (!ts) return '';
   const date = new Date(ts);
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+// ─── Telegram / Instagram Style In-App Chat Notification Pop-Up ───────────────
+let chatPopupTimer = null;
+let chatPopupAnimTimer = null;
+
+function playMessageNotificationSound() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const now = ctx.currentTime;
+
+    // Dual-tone chime (Instagram / Telegram style: 587Hz -> 880Hz)
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(587.33, now); // D5
+    osc1.frequency.exponentialRampToValueAtTime(880, now + 0.08); // A5
+
+    osc2.type = 'triangle';
+    osc2.frequency.setValueAtTime(880, now);
+    osc2.frequency.exponentialRampToValueAtTime(1174.66, now + 0.12); // D6
+
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.14, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+
+    osc1.connect(gain);
+    osc2.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + 0.23);
+    osc2.stop(now + 0.23);
+
+    setTimeout(() => {
+      try { ctx.close(); } catch (_) {}
+    }, 300);
+  } catch (_) {
+    // Autoplay restrictions or audio device unavailable
+  }
+}
+
+function showChatNotificationPopup(senderName, messageText, color) {
+  if (!chatNotificationPopup || !chatPopupSender || !chatPopupText) return;
+
+  // Sound chime
+  playMessageNotificationSound();
+
+  const safeName = senderName || 'Someone';
+  chatPopupSender.textContent = safeName;
+  chatPopupText.textContent = messageText || '';
+
+  if (chatPopupAvatar) {
+    const initial = safeName.trim().charAt(0).toUpperCase() || 'U';
+    chatPopupAvatar.textContent = initial;
+    if (color) {
+      chatPopupAvatar.style.background = color;
+    } else {
+      chatPopupAvatar.style.background = 'linear-gradient(135deg, #3b82f6, #8b5cf6)';
+    }
+  }
+
+  // Clear existing timers
+  if (chatPopupTimer) clearTimeout(chatPopupTimer);
+  if (chatPopupAnimTimer) clearTimeout(chatPopupAnimTimer);
+
+  // If already visible, bounce animation to acknowledge new message
+  if (!chatNotificationPopup.classList.contains('hidden')) {
+    chatNotificationPopup.classList.remove('animate-in', 'animate-out', 'animate-bounce');
+    void chatNotificationPopup.offsetWidth; // force reflow
+    chatNotificationPopup.classList.add('animate-bounce');
+  } else {
+    chatNotificationPopup.classList.remove('hidden', 'animate-out', 'animate-bounce');
+    chatNotificationPopup.classList.add('animate-in');
+  }
+
+  // Auto-dismiss after 4.5 seconds
+  chatPopupTimer = setTimeout(() => {
+    dismissChatNotificationPopup();
+  }, 4500);
+}
+
+function dismissChatNotificationPopup() {
+  if (!chatNotificationPopup || chatNotificationPopup.classList.contains('hidden')) return;
+  if (chatPopupTimer) clearTimeout(chatPopupTimer);
+
+  chatNotificationPopup.classList.remove('animate-in', 'animate-bounce');
+  chatNotificationPopup.classList.add('animate-out');
+
+  chatPopupAnimTimer = setTimeout(() => {
+    chatNotificationPopup.classList.add('hidden');
+    chatNotificationPopup.classList.remove('animate-out');
+  }, 280);
+}
+
+if (chatPopupClose) {
+  chatPopupClose.addEventListener('click', (e) => {
+    e.stopPropagation();
+    dismissChatNotificationPopup();
+  });
+}
+
+if (chatPopupCard) {
+  chatPopupCard.addEventListener('click', () => {
+    dismissChatNotificationPopup();
+    if (state.currentMode === 'whiteboard') {
+      setMode('watchparty');
+    }
+    toggleChatSidebar(false);
+    if (chatInput) {
+      chatInput.focus();
+    }
+  });
+
+  chatPopupCard.addEventListener('mouseenter', () => {
+    if (chatPopupTimer) clearTimeout(chatPopupTimer);
+  });
+
+  chatPopupCard.addEventListener('mouseleave', () => {
+    if (!chatNotificationPopup.classList.contains('hidden')) {
+      chatPopupTimer = setTimeout(dismissChatNotificationPopup, 3000);
+    }
+  });
 }
 
 function escapeHtml(str) {
