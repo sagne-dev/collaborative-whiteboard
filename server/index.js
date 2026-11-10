@@ -286,6 +286,10 @@ const MIME = {
   '.css' : 'text/css',
   '.ico' : 'image/x-icon',
   '.svg' : 'image/svg+xml',
+  '.png' : 'image/png',
+  '.jpg' : 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
   '.json': 'application/json',
   '.mp4' : 'video/mp4',
 };

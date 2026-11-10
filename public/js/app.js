@@ -2119,6 +2119,7 @@ function applyTheme(theme) {
   }
 
   try {
+    localStorage.setItem('collabspace-theme', isLight ? 'light' : 'dark');
     localStorage.setItem('cinetic-theme', isLight ? 'light' : 'dark');
   } catch (_) {}
 
@@ -2134,7 +2135,7 @@ function toggleTheme() {
 function initTheme() {
   let savedTheme = 'dark';
   try {
-    savedTheme = localStorage.getItem('cinetic-theme') || 'dark';
+    savedTheme = localStorage.getItem('collabspace-theme') || localStorage.getItem('cinetic-theme') || 'dark';
   } catch (_) {}
   applyTheme(savedTheme);
 }

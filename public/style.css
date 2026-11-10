@@ -110,6 +110,46 @@ h1, h2, h3, h4, .brand-title, .login-main-title, .cinetic-headline {
   font-family: var(--font-display);
 }
 
+/* ── CollabSpace Brand Logo ── */
+.collabspace-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  text-decoration: none;
+  user-select: none;
+  cursor: pointer;
+  line-height: 1;
+}
+.collabspace-icon {
+  width: 32px;
+  height: 32px;
+  display: block;
+  object-fit: contain;
+  filter: none;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+.collabspace-logo:hover .collabspace-icon {
+  transform: scale(1.06);
+}
+.collabspace-text {
+  font-family: var(--font-display, 'Space Grotesk', 'Syne', sans-serif);
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text, #ffffff);
+  line-height: 1;
+}
+.collabspace-logo.small {
+  gap: 0.5rem;
+}
+.collabspace-logo.small .collabspace-icon {
+  width: 26px;
+  height: 26px;
+}
+.collabspace-logo.small .collabspace-text {
+  font-size: 1.15rem;
+}
+
 /* ── Cinetic Brand Logo ── */
 .cinetic-logo {
   display: flex;
@@ -4941,6 +4981,15 @@ html, body,
 }
 
 /* ── Global Brand Logo in Light Mode ── */
+body.light-theme .collabspace-icon,
+[data-theme="light"] .collabspace-icon {
+  filter: invert(1);
+}
+body.light-theme .collabspace-text,
+[data-theme="light"] .collabspace-text {
+  color: #000000 !important;
+}
+
 body.light-theme .cinetic-logo,
 body.light-theme .cinetic-logo .cinetic-logo-main,
 body.light-theme .cinetic-logo .cinetic-logo-sub,
