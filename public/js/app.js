@@ -427,12 +427,12 @@ function handleMessage(msg) {
       state.color     = msg.color;
       state.userName  = msg.name || state.userName;
 
-      colorPicker.value   = msg.color;
-      colorPreview.style.background = msg.color;
-      navUserDot.style.background   = msg.color;
-      navUserName.textContent       = state.userName;
-      navRoomLabel.textContent      = 'Room: ' + msg.roomId;
-      roomLabel.textContent         = 'Room: ' + msg.roomId;
+      if (colorPicker) colorPicker.value = msg.color;
+      if (colorPreview) colorPreview.style.background = msg.color;
+      if (navUserDot) navUserDot.style.background = msg.color;
+      if (navUserName) navUserName.textContent = state.userName;
+      if (navRoomLabel) navRoomLabel.textContent = 'Room: ' + msg.roomId;
+      if (roomLabel) roomLabel.textContent = '';
 
       state.strokes.clear();
       state.deleted.clear();
@@ -1942,15 +1942,17 @@ chatForm.addEventListener('submit', (e) => {
 });
 
 // ─── Room Copy Link ────────────────────────────────────────────────────────────
-navRoomBadge.addEventListener('click', () => {
-  const url = window.location.href;
-  navigator.clipboard.writeText(url).then(() => {
-    copyHint.classList.add('show');
-    setTimeout(() => copyHint.classList.remove('show'), 2000);
-  }).catch(() => {
-    prompt('Share this URL to invite friends:', url);
+if (navRoomBadge) {
+  navRoomBadge.addEventListener('click', () => {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+      if (copyHint) copyHint.classList.add('show');
+      setTimeout(() => copyHint && copyHint.classList.remove('show'), 2000);
+    }).catch(() => {
+      prompt('Share this URL to invite friends:', url);
+    });
   });
-});
+}
 
 // ─── Join Flow ────────────────────────────────────────────────────────────────
 state.userId = sessionStorage.getItem('wb_uid') || ('u_' + Math.random().toString(36).slice(2, 8));
