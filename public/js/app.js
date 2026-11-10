@@ -325,15 +325,23 @@ window.addEventListener('orientationchange', () => {
 function renderStroke(stroke) {
   const pts = stroke.points;
   if (!pts || pts.length < 1) return;
+  const isLight = document.body.classList.contains('light-theme') || 
+                  document.documentElement.getAttribute('data-theme') === 'light';
+  let strokeColor = stroke.color;
+  if (isLight && (strokeColor === '#ffffff' || strokeColor === '#fff')) {
+    strokeColor = '#000000';
+  } else if (!isLight && (strokeColor === '#000000' || strokeColor === '#000')) {
+    strokeColor = '#ffffff';
+  }
   ctx.save();
-  ctx.strokeStyle = stroke.color;
+  ctx.strokeStyle = strokeColor;
   ctx.lineWidth   = stroke.width;
   ctx.lineCap     = 'round';
   ctx.lineJoin    = 'round';
   ctx.beginPath();
   if (pts.length === 1) {
     ctx.arc(pts[0][0], pts[0][1], stroke.width / 2, 0, Math.PI * 2);
-    ctx.fillStyle = stroke.color;
+    ctx.fillStyle = strokeColor;
     ctx.fill();
   } else {
     ctx.moveTo(pts[0][0], pts[0][1]);
@@ -2070,6 +2078,80 @@ if (menuLinkSignin) {
     returnToSignIn();
   });
 }
+
+// ── Dark / Light Mode Theme System ──
+const themeToggleLogin = document.getElementById('theme-toggle-login');
+const themeToggleIntro = document.getElementById('theme-toggle-intro');
+const themeToggleNav   = document.getElementById('theme-toggle-nav');
+const menuLinkTheme    = document.getElementById('menu-link-theme');
+const menuThemeText    = document.getElementById('menu-theme-text');
+
+function applyTheme(theme) {
+  const isLight = theme === 'light';
+  document.documentElement.setAttribute('data-theme', isLight ? 'light' : 'dark');
+  document.body.classList.toggle('light-theme', isLight);
+
+  const newTitle = isLight ? 'Switch to Dark Mode' : 'Switch to Light Mode';
+  document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
+    btn.setAttribute('title', newTitle);
+    btn.setAttribute('aria-label', newTitle);
+  });
+
+  if (menuThemeText) {
+    menuThemeText.textContent = isLight ? 'SWITCH TO DARK MODE' : 'SWITCH TO LIGHT MODE';
+  }
+
+  // Adjust whiteboard default pen stroke color to match theme contrast
+  if (isLight) {
+    if (state.color === '#ffffff' || state.color === '#fff') {
+      state.color = '#000000';
+      if (colorPicker) colorPicker.value = '#000000';
+      if (colorPreview) colorPreview.style.background = '#000000';
+    }
+  } else {
+    if (state.color === '#000000' || state.color === '#000') {
+      state.color = '#ffffff';
+      if (colorPicker) colorPicker.value = '#ffffff';
+      if (colorPreview) colorPreview.style.background = '#ffffff';
+    }
+  }
+
+  try {
+    localStorage.setItem('cinetic-theme', isLight ? 'light' : 'dark');
+  } catch (_) {}
+
+  scheduleRedraw();
+}
+
+function toggleTheme() {
+  const currentIsLight = document.body.classList.contains('light-theme') || 
+                         document.documentElement.getAttribute('data-theme') === 'light';
+  applyTheme(currentIsLight ? 'dark' : 'light');
+}
+
+function initTheme() {
+  let savedTheme = 'dark';
+  try {
+    savedTheme = localStorage.getItem('cinetic-theme') || 'dark';
+  } catch (_) {}
+  applyTheme(savedTheme);
+}
+
+[themeToggleLogin, themeToggleIntro, themeToggleNav, menuLinkTheme].forEach(btn => {
+  if (!btn) return;
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    toggleTheme();
+  });
+  btn.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      toggleTheme();
+    }
+  });
+});
+
+initTheme();
 
 // 2-Page Scroll Navigation (Page 1 <-> Page 2)
 if (introToPage2Btn) {

@@ -54,6 +54,44 @@
   --chat-width     : 350px;
 }
 
+/* ══════════════════════════════════════════════════════════════════════════════
+   LIGHT MODE TOKENS (Inverted Pure Black & White Editorial Theme)
+   ══════════════════════════════════════════════════════════════════════════════ */
+[data-theme="light"],
+body.light-theme {
+  --bg             : #ffffff;
+  --bg-subtle      : #f7f7f7;
+  --surface        : #f3f3f3;
+  --surface-solid  : #ededed;
+  --surface2       : #e5e5e5;
+  --surface2-solid : #dfdfdf;
+  --surface3       : #d5d5d5;
+  --surface-card   : #ffffff;
+  
+  --border         : rgba(0, 0, 0, 0.12);
+  --border-light   : rgba(0, 0, 0, 0.22);
+  --border-subtle  : rgba(0, 0, 0, 0.06);
+
+  --accent         : #000000;
+  --accent-hover   : #222222;
+  --accent-glow    : rgba(0, 0, 0, 0.12);
+  --accent-subtle  : rgba(0, 0, 0, 0.06);
+  --accent-gradient: #000000;
+  --accent2        : #000000;
+  --accent3        : #444444;
+  --success        : #000000;
+  --success-glow   : rgba(0, 0, 0, 0.15);
+
+  --text           : #000000;
+  --text-secondary : #262626;
+  --muted          : #666666;
+  --subtle         : #999999;
+
+  --glass-bg       : rgba(255, 255, 255, 0.94);
+  --glass-border   : 1px solid rgba(0, 0, 0, 0.12);
+  --glass-shadow   : 0 16px 40px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(0, 0, 0, 0.05);
+}
+
 html, body {
   height: 100%;
   height: 100dvh;
@@ -163,22 +201,66 @@ h1, h2, h3, h4, .brand-title, .login-main-title, .cinetic-headline {
   gap: 0.65rem;
 }
 
-.login-theme-icon {
-  width: 36px;
-  height: 36px;
+/* ── Universal Theme Toggle Buttons ── */
+.theme-toggle-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
   border-radius: 50%;
-  display: flex;
+  cursor: pointer;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #888888;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  transition: all 0.2s ease;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 0;
+  user-select: none;
+  outline: none;
 }
 
-.login-theme-icon:hover {
-  color: #ffffff;
+.theme-toggle-btn:hover {
+  background: #ffffff;
+  color: #000000;
   border-color: #ffffff;
-  background: #111111;
+  transform: scale(1.08);
+}
+
+.theme-toggle-btn:active {
+  transform: scale(0.94);
+}
+
+.theme-icon-svg {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.theme-half-fill {
+  fill: currentColor;
+  opacity: 0.9;
+}
+
+[data-theme="light"] .theme-icon-svg,
+body.light-theme .theme-icon-svg {
+  transform: rotate(180deg);
+}
+
+.login-theme-icon {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  min-height: 38px;
+}
+
+.intro-theme-btn {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  min-height: 38px;
+}
+
+.nav-theme-btn {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
 }
 
 /* Center Form Area */
@@ -4788,6 +4870,638 @@ kbd {
   color: #000000;
   border-color: #ffffff;
 }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   LIGHT MODE RULES (Inverted Monochrome Editorial — Pure Black & White)
+   ══════════════════════════════════════════════════════════════════════════════ */
+body.light-theme,
+[data-theme="light"] {
+  color-scheme: light;
+}
+
+/* Smooth Theme Transitions */
+html, body,
+.login-left-pane,
+#intro-screen,
+#top-nav,
+#whiteboard-view,
+#canvas,
+#toolbar,
+#chat-sidebar,
+.zoom-stage-topbar,
+.zoom-stage-bottombar,
+.video-toolbar,
+.room-sync-bar,
+.cinetic-menu-panel,
+.intro-col-card {
+  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+}
+
+/* ── 1. Sign In View (Light Mode) ── */
+body.light-theme #join-screen.login-split-container,
+[data-theme="light"] #join-screen.login-split-container {
+  background: #ffffff;
+}
+
+body.light-theme .login-left-pane,
+[data-theme="light"] .login-left-pane {
+  background: #ffffff;
+  border-right-color: rgba(0, 0, 0, 0.12);
+}
+
+body.light-theme .login-main-title,
+[data-theme="light"] .login-main-title {
+  color: #000000;
+}
+
+body.light-theme .login-sub-title,
+[data-theme="light"] .login-sub-title {
+  color: #666666;
+}
+
+body.light-theme .login-link-text,
+[data-theme="light"] .login-link-text {
+  color: #000000;
+  border-bottom-color: #000000;
+}
+
+body.light-theme .login-field-label,
+[data-theme="light"] .login-field-label {
+  color: #444444;
+}
+
+body.light-theme .login-field-group input,
+[data-theme="light"] .login-field-group input {
+  background: #f7f7f7;
+  color: #000000;
+  border-color: rgba(0, 0, 0, 0.18);
+}
+
+body.light-theme .login-field-group input:focus,
+[data-theme="light"] .login-field-group input:focus {
+  background: #ffffff;
+  border-color: #000000;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.15);
+}
+
+body.light-theme .login-field-group input::placeholder,
+[data-theme="light"] .login-field-group input::placeholder {
+  color: #888888;
+}
+
+body.light-theme .login-submit-button,
+[data-theme="light"] .login-submit-button {
+  background: #000000;
+  color: #ffffff;
+  border-color: #000000;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.18);
+}
+
+body.light-theme .login-submit-button:hover,
+[data-theme="light"] .login-submit-button:hover {
+  background: #222222;
+  border-color: #222222;
+}
+
+body.light-theme .login-theme-icon,
+[data-theme="light"] .login-theme-icon {
+  color: #000000;
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+body.light-theme .login-theme-icon:hover,
+[data-theme="light"] .login-theme-icon:hover {
+  background: #000000;
+  color: #ffffff;
+  border-color: #000000;
+}
+
+body.light-theme .login-bottom-note,
+[data-theme="light"] .login-bottom-note {
+  color: #888888;
+}
+
+/* ── 2. Intro Screen (Light Mode) ── */
+body.light-theme #intro-screen,
+[data-theme="light"] #intro-screen {
+  background: #ffffff;
+  color: #000000;
+}
+
+body.light-theme .intro-page-hero,
+[data-theme="light"] .intro-page-hero {
+  background: #ffffff;
+}
+
+body.light-theme .intro-main-headline,
+body.light-theme .cinetic-headline,
+[data-theme="light"] .intro-main-headline,
+[data-theme="light"] .cinetic-headline {
+  color: #000000;
+}
+
+body.light-theme .intro-hero-subtext,
+body.light-theme .cinetic-subtext,
+[data-theme="light"] .intro-hero-subtext,
+[data-theme="light"] .cinetic-subtext {
+  color: #555555;
+}
+
+body.light-theme .cinetic-menu-btn,
+[data-theme="light"] .cinetic-menu-btn {
+  color: #000000;
+  border-color: rgba(0, 0, 0, 0.22);
+}
+
+body.light-theme .cinetic-menu-btn:hover,
+[data-theme="light"] .cinetic-menu-btn:hover {
+  background: #000000;
+  color: #ffffff;
+  border-color: #000000;
+}
+
+body.light-theme .intro-launch-btn,
+[data-theme="light"] .intro-launch-btn {
+  background: #000000;
+  color: #ffffff;
+  border-color: #000000;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.15);
+}
+
+body.light-theme .intro-launch-btn:hover,
+[data-theme="light"] .intro-launch-btn:hover {
+  background: #222222;
+}
+
+body.light-theme .intro-nav-text-btn,
+[data-theme="light"] .intro-nav-text-btn {
+  color: #555555;
+}
+
+body.light-theme .intro-nav-text-btn:hover,
+[data-theme="light"] .intro-nav-text-btn:hover {
+  color: #000000;
+  border-color: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.05);
+}
+
+body.light-theme .intro-page-tools,
+[data-theme="light"] .intro-page-tools {
+  background: #ffffff;
+  border-top-color: rgba(0, 0, 0, 0.12);
+}
+
+body.light-theme .intro-page2-header,
+[data-theme="light"] .intro-page2-header {
+  border-bottom-color: rgba(0, 0, 0, 0.12);
+}
+
+body.light-theme .intro-page2-heading,
+[data-theme="light"] .intro-page2-heading {
+  color: #000000;
+}
+
+body.light-theme .intro-col-card,
+[data-theme="light"] .intro-col-card {
+  background: #f8f8f8;
+  border-color: rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+body.light-theme .intro-col-card:hover,
+body.light-theme .intro-col-card:focus-visible,
+body.light-theme .intro-col-card.active-revealed,
+[data-theme="light"] .intro-col-card:hover,
+[data-theme="light"] .intro-col-card:focus-visible,
+[data-theme="light"] .intro-col-card.active-revealed {
+  background: #ffffff;
+  border-color: #000000;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+}
+
+body.light-theme .intro-col-card:hover .intro-col-accent-bar,
+body.light-theme .intro-col-card:focus-visible .intro-col-accent-bar,
+body.light-theme .intro-col-card.active-revealed .intro-col-accent-bar,
+[data-theme="light"] .intro-col-card:hover .intro-col-accent-bar,
+[data-theme="light"] .intro-col-card:focus-visible .intro-col-accent-bar,
+[data-theme="light"] .intro-col-card.active-revealed .intro-col-accent-bar {
+  background: #000000;
+}
+
+body.light-theme .intro-col-num,
+[data-theme="light"] .intro-col-num {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+body.light-theme .intro-col-title,
+[data-theme="light"] .intro-col-title {
+  color: #000000;
+}
+
+body.light-theme .intro-col-subtitle,
+[data-theme="light"] .intro-col-subtitle {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+body.light-theme .intro-col-description,
+[data-theme="light"] .intro-col-description {
+  color: rgba(0, 0, 0, 0.75);
+}
+
+body.light-theme .intro-page2-footer,
+[data-theme="light"] .intro-page2-footer {
+  background: #ffffff;
+  border-top-color: rgba(0, 0, 0, 0.12);
+}
+
+body.light-theme .intro-p2-footer-note,
+[data-theme="light"] .intro-p2-footer-note {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+/* Slide-out Menu Drawer in Light Mode */
+body.light-theme .cinetic-menu-panel,
+[data-theme="light"] .cinetic-menu-panel {
+  background: #ffffff;
+  border-left-color: rgba(0, 0, 0, 0.14);
+  box-shadow: -16px 0 50px rgba(0, 0, 0, 0.15);
+}
+
+body.light-theme .cinetic-menu-close,
+[data-theme="light"] .cinetic-menu-close {
+  color: #000000;
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+body.light-theme .cinetic-menu-close:hover,
+[data-theme="light"] .cinetic-menu-close:hover {
+  background: #000000;
+  color: #ffffff;
+  border-color: #000000;
+}
+
+body.light-theme .cinetic-menu-link,
+[data-theme="light"] .cinetic-menu-link {
+  color: #000000;
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+body.light-theme .cinetic-menu-link:hover,
+[data-theme="light"] .cinetic-menu-link:hover {
+  background: #000000;
+  color: #ffffff;
+  border-color: #000000;
+}
+
+body.light-theme .cinetic-menu-link.highlight,
+[data-theme="light"] .cinetic-menu-link.highlight {
+  background: #000000;
+  color: #ffffff;
+  border-color: #000000;
+}
+
+body.light-theme .cinetic-menu-footer,
+[data-theme="light"] .cinetic-menu-footer {
+  border-top-color: rgba(0, 0, 0, 0.12);
+  color: rgba(0, 0, 0, 0.5);
+}
+
+/* ── 3. Workspace Top Bar (Light Mode) ── */
+body.light-theme #top-nav,
+[data-theme="light"] #top-nav {
+  background: rgba(255, 255, 255, 0.96);
+  border-bottom-color: rgba(0, 0, 0, 0.12);
+}
+
+body.light-theme .mode-switcher,
+[data-theme="light"] .mode-switcher {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+body.light-theme .mode-tab,
+[data-theme="light"] .mode-tab {
+  color: #555555;
+}
+
+body.light-theme .mode-tab:hover,
+[data-theme="light"] .mode-tab:hover {
+  color: #000000;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+body.light-theme .mode-tab.active,
+[data-theme="light"] .mode-tab.active {
+  background: #000000;
+  color: #ffffff;
+}
+
+body.light-theme .mode-tab.active svg,
+[data-theme="light"] .mode-tab.active svg {
+  stroke: #ffffff;
+}
+
+body.light-theme .status-dot,
+[data-theme="light"] .status-dot {
+  background: #000000;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.35);
+}
+
+body.light-theme #status,
+[data-theme="light"] #status {
+  color: #000000;
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+body.light-theme #nav-voice-btn,
+[data-theme="light"] #nav-voice-btn {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.12);
+  color: #000000;
+}
+
+body.light-theme #nav-room-badge,
+body.light-theme #nav-user-pill,
+[data-theme="light"] #nav-room-badge,
+[data-theme="light"] #nav-user-pill {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.12);
+  color: #000000;
+}
+
+/* ── 4. Whiteboard View (Light Mode) ── */
+body.light-theme #whiteboard-view,
+[data-theme="light"] #whiteboard-view {
+  background: #ffffff;
+}
+
+body.light-theme #canvas,
+[data-theme="light"] #canvas {
+  background: #ffffff;
+}
+
+body.light-theme #toolbar,
+[data-theme="light"] #toolbar {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(0, 0, 0, 0.12);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
+body.light-theme .tool-btn,
+body.light-theme .action-btn,
+[data-theme="light"] .tool-btn,
+[data-theme="light"] .action-btn {
+  color: #444444;
+}
+
+body.light-theme .tool-btn:hover,
+body.light-theme .action-btn:hover,
+[data-theme="light"] .tool-btn:hover,
+[data-theme="light"] .action-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #000000;
+}
+
+body.light-theme .tool-btn.active,
+[data-theme="light"] .tool-btn.active {
+  background: #000000;
+  color: #ffffff;
+  border-color: #000000;
+}
+
+body.light-theme .tool-btn.active svg,
+[data-theme="light"] .tool-btn.active svg {
+  stroke: #ffffff;
+}
+
+body.light-theme #presence-panel,
+[data-theme="light"] #presence-panel {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(0, 0, 0, 0.14);
+  color: #000000;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+/* ── 5. Watch Party View (Light Mode) ── */
+body.light-theme .video-toolbar,
+body.light-theme .room-sync-bar,
+body.light-theme .video-footer-bar,
+[data-theme="light"] .video-toolbar,
+[data-theme="light"] .room-sync-bar,
+[data-theme="light"] .video-footer-bar {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+body.light-theme #video-url-input,
+body.light-theme .sample-select,
+[data-theme="light"] #video-url-input,
+[data-theme="light"] .sample-select {
+  background: #f7f7f7;
+  color: #000000;
+  border-color: rgba(0, 0, 0, 0.18);
+}
+
+body.light-theme #video-load-btn,
+[data-theme="light"] #video-load-btn {
+  background: #000000;
+  color: #ffffff;
+  border-color: #000000;
+}
+
+body.light-theme .sync-ctrl-btn,
+[data-theme="light"] .sync-ctrl-btn {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.12);
+  color: #000000;
+}
+
+body.light-theme #room-play-pause-btn,
+[data-theme="light"] #room-play-pause-btn {
+  background: #000000;
+  color: #ffffff;
+}
+
+body.light-theme .theater-chat-toggle,
+[data-theme="light"] .theater-chat-toggle {
+  background: rgba(0, 0, 0, 0.06);
+  color: #000000;
+  border-color: rgba(0, 0, 0, 0.14);
+}
+
+/* ── 6. Video Call View (Light Mode) ── */
+body.light-theme .zoom-stage-topbar,
+body.light-theme .zoom-stage-bottombar,
+[data-theme="light"] .zoom-stage-topbar,
+[data-theme="light"] .zoom-stage-bottombar {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+body.light-theme .zoom-meeting-title-row strong,
+[data-theme="light"] .zoom-meeting-title-row strong {
+  color: #000000;
+}
+
+body.light-theme .zoom-participants-pill,
+body.light-theme .zoom-top-btn,
+[data-theme="light"] .zoom-participants-pill,
+[data-theme="light"] .zoom-top-btn {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.12);
+  color: #000000;
+}
+
+body.light-theme #zoom-chat-toggle-btn,
+[data-theme="light"] #zoom-chat-toggle-btn {
+  background: #000000;
+  color: #ffffff;
+}
+
+body.light-theme #zoom-chat-toggle-btn svg,
+[data-theme="light"] #zoom-chat-toggle-btn svg {
+  stroke: #ffffff;
+}
+
+body.light-theme .zoom-call-control-btn,
+[data-theme="light"] .zoom-call-control-btn {
+  color: #000000;
+}
+
+body.light-theme .zoom-call-control-btn:hover .btn-icon-wrap,
+[data-theme="light"] .zoom-call-control-btn:hover .btn-icon-wrap {
+  background: #f0f0f0;
+  border-color: #000000;
+}
+
+body.light-theme .zoom-btn-end-call,
+[data-theme="light"] .zoom-btn-end-call {
+  background: #000000;
+  color: #ffffff;
+  border-color: #000000;
+}
+
+body.light-theme .zoom-btn-end-call svg,
+[data-theme="light"] .zoom-btn-end-call svg {
+  stroke: #ffffff;
+}
+
+/* ── 7. Chat Sidebar (Light Mode) ── */
+body.light-theme #chat-sidebar,
+[data-theme="light"] #chat-sidebar {
+  background: #ffffff;
+  border-left-color: rgba(0, 0, 0, 0.12);
+}
+
+body.light-theme .chat-header,
+[data-theme="light"] .chat-header {
+  background: #ffffff;
+  border-bottom-color: rgba(0, 0, 0, 0.12);
+}
+
+body.light-theme .chat-title,
+[data-theme="light"] .chat-title {
+  color: #000000;
+}
+
+body.light-theme .chat-tab,
+[data-theme="light"] .chat-tab {
+  color: #666666;
+}
+
+body.light-theme .chat-tab.active,
+[data-theme="light"] .chat-tab.active {
+  color: #000000;
+  border-bottom-color: #000000;
+}
+
+body.light-theme .chat-entry.mine .chat-bubble,
+[data-theme="light"] .chat-entry.mine .chat-bubble {
+  background: #000000;
+  color: #ffffff;
+  border-color: #000000;
+}
+
+body.light-theme .chat-entry.theirs .chat-bubble,
+[data-theme="light"] .chat-entry.theirs .chat-bubble {
+  background: #f0f0f0;
+  color: #000000;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+body.light-theme .chat-input-form,
+[data-theme="light"] .chat-input-form {
+  background: #ffffff;
+  border-top-color: rgba(0, 0, 0, 0.12);
+}
+
+body.light-theme #chat-input,
+[data-theme="light"] #chat-input {
+  background: #f7f7f7;
+  color: #000000;
+  border-color: rgba(0, 0, 0, 0.18);
+}
+
+body.light-theme #chat-input:focus,
+[data-theme="light"] #chat-input:focus {
+  background: #ffffff;
+  border-color: #000000;
+}
+
+body.light-theme #chat-send-btn,
+[data-theme="light"] #chat-send-btn {
+  background: #000000;
+  color: #ffffff;
+  border-color: #000000;
+}
+
+body.light-theme #chat-send-btn svg,
+[data-theme="light"] #chat-send-btn svg {
+  stroke: #ffffff;
+}
+
+/* ── 8. Chat Popup Notification Banner (Light Mode) ── */
+body.light-theme .chat-popup-card,
+[data-theme="light"] .chat-popup-card {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.18);
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.15);
+}
+
+body.light-theme .chat-popup-title,
+body.light-theme .chat-popup-title strong,
+[data-theme="light"] .chat-popup-title,
+[data-theme="light"] .chat-popup-title strong {
+  color: #000000;
+}
+
+body.light-theme .chat-popup-body,
+[data-theme="light"] .chat-popup-body {
+  color: #444444;
+}
+
+body.light-theme .chat-popup-avatar,
+[data-theme="light"] .chat-popup-avatar {
+  background: #000000;
+  color: #ffffff;
+  border-color: #000000;
+}
+
+body.light-theme .chat-popup-badge-icon,
+[data-theme="light"] .chat-popup-badge-icon {
+  background: #ffffff;
+  color: #000000;
+  border-color: #000000;
+}
+
+body.light-theme .chat-popup-close-btn,
+[data-theme="light"] .chat-popup-close-btn {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.12);
+  color: #000000;
+}
+
 
 
 

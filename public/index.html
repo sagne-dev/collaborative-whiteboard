@@ -80,12 +80,13 @@
             <span class="cinetic-logo-sub">CREATIVES</span>
           </div>
         </div>
-        <div class="login-theme-icon" title="Monochrome Clean Design">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <button type="button" class="login-theme-icon theme-toggle-btn" id="theme-toggle-login" title="Switch to Light Mode" aria-label="Toggle Dark and Light Mode">
+          <svg class="theme-icon-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="9"></circle>
             <path d="M12 3v18"></path>
+            <path class="theme-half-fill" d="M12 3a9 9 0 0 0 0 18z"></path>
           </svg>
-        </div>
+        </button>
       </div>
 
       <!-- Center Form Content -->
@@ -168,6 +169,16 @@
             <span class="menu-link-num">04</span>
             <span class="menu-link-text">SIGN IN / CHANGE ROOM</span>
           </button>
+          <button type="button" class="cinetic-menu-link" id="menu-link-theme">
+            <span class="menu-link-num">
+              <svg class="theme-icon-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="9"></circle>
+                <path d="M12 3v18"></path>
+                <path class="theme-half-fill" d="M12 3a9 9 0 0 0 0 18z"></path>
+              </svg>
+            </span>
+            <span class="menu-link-text" id="menu-theme-text">SWITCH TO LIGHT MODE</span>
+          </button>
         </nav>
         <div class="cinetic-menu-footer">
           <span>COLLABORATIVE WHITEBOARD · WATCH PARTY · HD VIDEO CALL</span>
@@ -187,6 +198,13 @@
         </div>
 
         <div class="intro-nav-actions">
+          <button type="button" id="theme-toggle-intro" class="intro-theme-btn theme-toggle-btn" title="Switch to Light Mode" aria-label="Toggle Dark and Light Mode">
+            <svg class="theme-icon-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9"></circle>
+              <path d="M12 3v18"></path>
+              <path class="theme-half-fill" d="M12 3a9 9 0 0 0 0 18z"></path>
+            </svg>
+          </button>
           <button type="button" id="intro-back-btn" class="intro-nav-text-btn" title="Back to Sign In">
             BACK TO SIGN IN
           </button>
@@ -236,6 +254,7 @@
             <div class="intro-col-accent-bar"></div>
             <div class="intro-col-meta">
               <span class="intro-col-num">01</span>
+              <span class="intro-col-badge">Canvas</span>
             </div>
             <h3 class="intro-col-title">Interactive Whiteboard</h3>
             <div class="intro-col-subtitle">REAL-TIME MULTI-USER CANVAS</div>
@@ -244,6 +263,11 @@
               <p class="intro-col-description">
                 Draw, sketch, and brainstorm ideas together on an infinite canvas. Features pressure-sensitive pens, shapes, color swatches, laser pointer, undo/redo, and live multiplayer cursors.
               </p>
+              <div class="intro-col-chips">
+                <span class="intro-chip">Pressure Pens</span>
+                <span class="intro-chip">Live Cursors</span>
+                <span class="intro-chip">Infinite Canvas</span>
+              </div>
             </div>
             <div class="intro-col-tap-prompt">Hover or tap to reveal</div>
           </div>
@@ -253,6 +277,7 @@
             <div class="intro-col-accent-bar"></div>
             <div class="intro-col-meta">
               <span class="intro-col-num">02</span>
+              <span class="intro-col-badge">Media</span>
             </div>
             <h3 class="intro-col-title">Synchronized Watch Party</h3>
             <div class="intro-col-subtitle">UNIVERSAL VIDEO & YOUTUBE SYNC</div>
@@ -261,6 +286,11 @@
               <p class="intro-col-description">
                 Stream MP4 videos or YouTube links together with millisecond playback synchronization. Play, pause, and seek stay in sync for everyone in the room with built-in live chat.
               </p>
+              <div class="intro-col-chips">
+                <span class="intro-chip">YouTube & MP4</span>
+                <span class="intro-chip">Frame-Locked Sync</span>
+                <span class="intro-chip">Realtime Chat</span>
+              </div>
             </div>
             <div class="intro-col-tap-prompt">Hover or tap to reveal</div>
           </div>
@@ -270,6 +300,7 @@
             <div class="intro-col-accent-bar"></div>
             <div class="intro-col-meta">
               <span class="intro-col-num">03</span>
+              <span class="intro-col-badge">Meetings</span>
             </div>
             <h3 class="intro-col-title">HD Video & Voice Calling</h3>
             <div class="intro-col-subtitle">ZOOM-STYLE DYNAMIC SFU GRID</div>
@@ -278,6 +309,11 @@
               <p class="intro-col-description">
                 Call and talk face-to-face in crystal-clear audio and video. Features responsive auto-splitting video grids, screen sharing, active speaker detection, and instant mute/camera toggles.
               </p>
+              <div class="intro-col-chips">
+                <span class="intro-chip">Dynamic Split Grids</span>
+                <span class="intro-chip">Screen Share</span>
+                <span class="intro-chip">SFU Routing</span>
+              </div>
             </div>
             <div class="intro-col-tap-prompt">Hover or tap to reveal</div>
           </div>
@@ -362,6 +398,14 @@
           <span class="user-avatar-dot" id="nav-user-dot"></span>
           <span id="nav-user-name">Guest</span>
         </div>
+
+        <button id="theme-toggle-nav" class="nav-theme-btn theme-toggle-btn" title="Switch to Light Mode" aria-label="Toggle Dark and Light Mode">
+          <svg class="theme-icon-svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M12 3v18"></path>
+            <path class="theme-half-fill" d="M12 3a9 9 0 0 0 0 18z"></path>
+          </svg>
+        </button>
 
         <div id="status" class="status connected"><span class="status-dot"></span> CONNECTED</div>
       </div>
