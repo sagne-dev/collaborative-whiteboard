@@ -997,8 +997,8 @@ function loadYouTubeVideo(videoId, startTime = 0, autoPlay = false) {
   state.playerEngine = 'youtube';
 
   videoTypeTag.textContent = 'YOUTUBE';
-  videoTypeTag.style.background = 'rgba(255, 107, 107, 0.15)';
-  videoTypeTag.style.color = '#FF6B6B';
+  videoTypeTag.style.background = 'rgba(255, 255, 255, 0.08)';
+  videoTypeTag.style.color = '#ffffff';
 
   if (!state.isYTReady) {
     state.pendingYTLoad = { videoId, startTime, autoPlay };
@@ -1148,8 +1148,8 @@ function loadGoogleDriveVideo(driveId, rawUrl) {
   state.playerEngine = 'drive';
 
   videoTypeTag.textContent = 'GOOGLE DRIVE';
-  videoTypeTag.style.background = 'rgba(66, 133, 244, 0.15)';
-  videoTypeTag.style.color = '#4285F4';
+  videoTypeTag.style.background = 'rgba(255, 255, 255, 0.08)';
+  videoTypeTag.style.color = '#ffffff';
   videoTitleDisplay.textContent = 'Google Drive Video';
 
   const previewUrl = `https://drive.google.com/file/d/${driveId}/preview`;
@@ -1165,8 +1165,8 @@ function loadEmbedVideo(url, label = 'WEB VIDEO') {
   state.playerEngine = 'embed';
 
   videoTypeTag.textContent = label.toUpperCase();
-  videoTypeTag.style.background = 'rgba(255, 234, 167, 0.15)';
-  videoTypeTag.style.color = '#FFEAA7';
+  videoTypeTag.style.background = 'rgba(255, 255, 255, 0.08)';
+  videoTypeTag.style.color = '#ffffff';
   videoTitleDisplay.textContent = url.split('/').pop().split('?')[0] || 'Web Video';
 
   embedIframe.src = url;
@@ -1702,7 +1702,7 @@ function appendChatMessage(item, isLive = true) {
   } else {
     entry.className = `chat-entry ${isMine ? 'mine' : 'theirs'}`;
     const timeStr = formatChatTimestamp(item.ts);
-    const authorColor = item.color || '#4ECDC4';
+    const authorColor = item.color || '#ffffff';
 
     entry.innerHTML = `
       <div class="chat-meta">
@@ -1796,11 +1796,8 @@ function showChatNotificationPopup(senderName, messageText, color) {
   if (avatarEl) {
     const initial = safeName.trim().charAt(0).toUpperCase() || 'U';
     avatarEl.textContent = initial;
-    if (color) {
-      avatarEl.style.background = color;
-    } else {
-      avatarEl.style.background = 'linear-gradient(135deg, #3b82f6, #8b5cf6)';
-    }
+    avatarEl.style.background = '#ffffff';
+    avatarEl.style.color = '#000000';
   }
 
   // Clear existing timers
@@ -2028,6 +2025,50 @@ if (introLaunchMobileBtn) {
 }
 if (introBackBtn) {
   introBackBtn.addEventListener('click', returnToSignIn);
+}
+
+// ── Cinetic Menu Toggle & Navigation Links ──
+const introMenuBtn        = document.getElementById('intro-menu-btn');
+const cineticMenuOverlay  = document.getElementById('cinetic-menu-overlay');
+const cineticMenuCloseBtn = document.getElementById('cinetic-menu-close-btn');
+const menuLinkOverview    = document.getElementById('menu-link-overview');
+const menuLinkTools       = document.getElementById('menu-link-tools');
+const menuLinkLaunch      = document.getElementById('menu-link-launch');
+const menuLinkSignin      = document.getElementById('menu-link-signin');
+
+if (introMenuBtn && cineticMenuOverlay) {
+  introMenuBtn.addEventListener('click', () => {
+    cineticMenuOverlay.classList.toggle('hidden');
+  });
+}
+if (cineticMenuCloseBtn && cineticMenuOverlay) {
+  cineticMenuCloseBtn.addEventListener('click', () => {
+    cineticMenuOverlay.classList.add('hidden');
+  });
+}
+if (menuLinkOverview) {
+  menuLinkOverview.addEventListener('click', () => {
+    cineticMenuOverlay?.classList.add('hidden');
+    introPage1?.scrollIntoView({ behavior: 'smooth' });
+  });
+}
+if (menuLinkTools) {
+  menuLinkTools.addEventListener('click', () => {
+    cineticMenuOverlay?.classList.add('hidden');
+    introPage2?.scrollIntoView({ behavior: 'smooth' });
+  });
+}
+if (menuLinkLaunch) {
+  menuLinkLaunch.addEventListener('click', () => {
+    cineticMenuOverlay?.classList.add('hidden');
+    launchWorkspace();
+  });
+}
+if (menuLinkSignin) {
+  menuLinkSignin.addEventListener('click', () => {
+    cineticMenuOverlay?.classList.add('hidden');
+    returnToSignIn();
+  });
 }
 
 // 2-Page Scroll Navigation (Page 1 <-> Page 2)
@@ -2682,7 +2723,7 @@ function renderZoomGrid() {
       id: pid,
       session_id: pid,
       name: u?.name || 'Participant',
-      color: u?.color || '#4ECDC4',
+      color: u?.color || '#ffffff',
       isLocal: false,
       stream: remoteStream,
       videoTrack: vTrack,
@@ -2700,7 +2741,7 @@ function renderZoomGrid() {
     id: 'local',
     session_id: 'local',
     name: `${state.userName || 'You'} (You)`,
-    color: state.userColor || '#4ECDC4',
+    color: state.userColor || '#ffffff',
     isLocal: true,
     stream: state.localStream,
     videoTrack: localVTrack,
@@ -2739,7 +2780,7 @@ function renderZoomGrid() {
       isLocal: false,
       isMuted: false,
       isCamOff: false,
-      color: '#0e71eb',
+      color: '#ffffff',
       session_id: 'screen-' + screenSharingTile.session_id,
       id: screenSharingTile.id,
     });
@@ -2868,7 +2909,7 @@ async function joinRoomCall(targetUserId = null, peerName = null, peerColor = nu
     state.activeCall = {
       peerId: targetUserId,
       peerName: peerName || 'User',
-      peerColor: peerColor || '#4ECDC4',
+      peerColor: peerColor || '#ffffff',
       startTime: Date.now(),
       isCaller: isCaller,
     };
@@ -2970,7 +3011,8 @@ async function startCall(targetUserId) {
 
   if (zoomCallingAvatar) {
     zoomCallingAvatar.textContent = (target.name || 'U').charAt(0).toUpperCase();
-    zoomCallingAvatar.style.background = target.color || '#4ECDC4';
+    zoomCallingAvatar.style.background = '#ffffff';
+    zoomCallingAvatar.style.color = '#000000';
   }
   if (zoomCallingName) {
     zoomCallingName.textContent = `Calling ${target.name || 'User'}...`;
@@ -3006,12 +3048,13 @@ function handleIncomingCall(msg) {
   state.pendingIncomingCall = {
     fromUserId: msg.fromUserId,
     fromName: msg.fromName || 'User',
-    fromColor: msg.fromColor || '#4ECDC4',
+    fromColor: msg.fromColor || '#ffffff',
   };
 
   if (zoomIncomingAvatar) {
     zoomIncomingAvatar.textContent = (msg.fromName || 'U').charAt(0).toUpperCase();
-    zoomIncomingAvatar.style.background = msg.fromColor || '#4ECDC4';
+    zoomIncomingAvatar.style.background = '#ffffff';
+    zoomIncomingAvatar.style.color = '#000000';
   }
   if (zoomIncomingName) {
     zoomIncomingName.textContent = msg.fromName || 'User';
@@ -3065,7 +3108,7 @@ async function handleCallAccepted(msg) {
 
   const peer = state.userMap.get(msg.fromUserId);
   const peerName = msg.fromName || (peer ? peer.name : 'User');
-  const peerColor = peer ? peer.color : '#4ECDC4';
+  const peerColor = peer ? peer.color : '#ffffff';
 
   await joinRoomCall(msg.fromUserId, peerName, peerColor, true);
 }

@@ -530,7 +530,7 @@ function addSystemChatMessage(room, text) {
     id       : generateId(),
     userId   : 'system',
     name     : 'System',
-    color    : '#7a7a9a',
+    color    : '#888888',
     text     : text,
     ts       : Date.now(),
     isSystem : true,
@@ -837,7 +837,7 @@ wss.on('connection', (ws) => {
           id       : generateId(),
           userId,
           name     : user ? user.name : userId.slice(0, 6),
-          color    : user ? user.color : '#4ECDC4',
+          color    : user ? user.color : '#ffffff',
           text     : text.slice(0, 500),
           ts       : Date.now(),
           isSystem : false,
@@ -897,7 +897,7 @@ wss.on('connection', (ws) => {
             type       : 'incoming_call',
             fromUserId : userId,
             fromName   : caller ? caller.name : userId.slice(0, 6),
-            fromColor  : caller ? caller.color : '#4ECDC4',
+            fromColor  : caller ? caller.color : '#ffffff',
           }));
         }
         break;
@@ -979,8 +979,8 @@ function generateId() {
 
 function randomColor() {
   const colors = [
-    '#FF6B6B','#4ECDC4','#45B7D1','#96CEB4','#FFEAA7',
-    '#DDA0DD','#98D8C8','#F7DC6F','#BB8FCE','#85C1E9',
+    '#ffffff', '#f5f5f5', '#e5e5e5', '#d4d4d4', '#cccccc',
+    '#b5b5b5', '#a3a3a3', '#888888', '#737373', '#525252',
   ];
   return colors[Math.floor(Math.random() * colors.length)];
 }

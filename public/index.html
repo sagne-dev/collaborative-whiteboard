@@ -12,10 +12,10 @@
   </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>CollabSpace — Realtime Workspace & Video Calls</title>
+  <title>CINETIC CREATIVES — Collaborative Workspace</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&family=Syne:wght@700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
   <!-- YouTube IFrame Player API -->
   <script src="https://www.youtube.com/iframe_api"></script>
@@ -72,67 +72,64 @@
 
     <!-- LEFT COLUMN: Clean Sign In Form -->
     <div class="login-left-pane">
-      <!-- Top Bar: Brand Logo & Dark Mode Icon -->
+      <!-- Top Bar: Brand Logo & Minimal Theme Indicator -->
       <div class="login-top-bar">
         <div class="login-brand">
-          <div class="login-brand-icon">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="2" y1="12" x2="22" y2="12"></line>
-              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10z"></path>
-            </svg>
+          <div class="cinetic-logo">
+            <span class="cinetic-logo-main">CINETIC</span>
+            <span class="cinetic-logo-sub">CREATIVES</span>
           </div>
-          <span class="login-brand-name">CollabSpace</span>
         </div>
-        <div class="login-theme-icon" title="CollabSpace Dark Theme">
+        <div class="login-theme-icon" title="Monochrome Clean Design">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M12 3v18"></path>
           </svg>
         </div>
       </div>
 
       <!-- Center Form Content -->
       <div class="login-form-center">
-        <h1 class="login-main-title">Sign in</h1>
+        <h1 class="login-main-title">SIGN IN</h1>
         <p class="login-sub-title">
-          New here? <span id="explore-features-link" class="login-link-text" role="button" tabindex="0" title="Click to view tool intro">Enter any Room ID · Explore Tools</span>
+          New here? <span id="explore-features-link" class="login-link-text" role="button" tabindex="0" title="Click to view tool intro">Enter any Room ID · Explore Workspace</span>
         </p>
 
         <form class="login-fields-form" onsubmit="event.preventDefault();">
           <div class="login-field-group">
-            <label for="name-input" class="login-field-label">Your Name</label>
+            <label for="name-input" class="login-field-label">YOUR NAME</label>
             <input id="name-input" type="text" placeholder="e.g. Alex" maxlength="20" autocomplete="name" />
           </div>
 
           <div class="login-field-group">
-            <label for="room-input" class="login-field-label">Room ID</label>
-            <input id="room-input" type="text" placeholder="e.g. design-sync" maxlength="40" autocomplete="off" />
+            <label for="room-input" class="login-field-label">ROOM ID</label>
+            <input id="room-input" type="text" placeholder="e.g. creative-studio" maxlength="40" autocomplete="off" />
           </div>
 
           <button type="button" id="join-btn" class="login-submit-button">
-            Sign in
+            SIGN IN →
           </button>
         </form>
       </div>
 
       <!-- Bottom Note / Safety -->
       <div class="login-bottom-note">
-        <span>Protected by instant P2P WebRTC & Daily.co SFU encryption</span>
+        <span>PROTECTED BY INSTANT P2P WEBRTC & DAILY.CO SFU ENCRYPTION</span>
       </div>
     </div>
 
-    <!-- RIGHT COLUMN: People Talking Picture & Hero Typography (Matches Image Exactly) -->
+    <!-- RIGHT COLUMN: Editorial Visual & Bold Headline (Matches Image Exactly) -->
     <div class="login-right-pane">
-      <img class="login-hero-image" src="assets/people-talking.jpg" alt="Diverse people talking and collaborating" />
+      <img class="login-hero-image" src="assets/people-talking.jpg" alt="Collaborative creative session" />
       <div class="login-hero-overlay"></div>
 
       <div class="login-hero-text-block">
-        <h2 class="login-hero-headline">Every conversation sparks real progress.</h2>
+        <h2 class="login-hero-headline">EVERY CONVERSATION SPARKS REAL PROGRESS.</h2>
         <p class="login-hero-paragraph">
           Collaborate in crystal-clear HD video calls, sketch ideas on an infinite live whiteboard, and enjoy synchronized watch parties with your team in real time.
         </p>
         <p class="login-hero-footnote">
-          CollabSpace Realtime Suite · Zero-latency WebRTC & Daily.co SFU
+          CINETIC CREATIVES · ZERO-LATENCY REALTIME SUITE
         </p>
       </div>
     </div>
@@ -143,6 +140,40 @@
        INTRO / ONBOARDING SCREEN (Spacious 2-Page Presentation)
        ══════════════════════════════════════════════════════════════ -->
   <div id="intro-screen" class="intro-screen-container hidden">
+
+    <!-- Slide-out Menu Overlay for MENU Button -->
+    <div id="cinetic-menu-overlay" class="cinetic-menu-modal hidden" aria-modal="true" role="dialog">
+      <div class="cinetic-menu-panel">
+        <div class="cinetic-menu-header">
+          <div class="cinetic-logo">
+            <span class="cinetic-logo-main">CINETIC</span>
+            <span class="cinetic-logo-sub">CREATIVES</span>
+          </div>
+          <button type="button" id="cinetic-menu-close-btn" class="cinetic-menu-close" aria-label="Close Menu">✕</button>
+        </div>
+        <nav class="cinetic-menu-nav">
+          <button type="button" class="cinetic-menu-link" id="menu-link-overview">
+            <span class="menu-link-num">01</span>
+            <span class="menu-link-text">OVERVIEW</span>
+          </button>
+          <button type="button" class="cinetic-menu-link" id="menu-link-tools">
+            <span class="menu-link-num">02</span>
+            <span class="menu-link-text">THE 3 TOOLS</span>
+          </button>
+          <button type="button" class="cinetic-menu-link highlight" id="menu-link-launch">
+            <span class="menu-link-num">03</span>
+            <span class="menu-link-text">LAUNCH WORKSPACE →</span>
+          </button>
+          <button type="button" class="cinetic-menu-link" id="menu-link-signin">
+            <span class="menu-link-num">04</span>
+            <span class="menu-link-text">SIGN IN / CHANGE ROOM</span>
+          </button>
+        </nav>
+        <div class="cinetic-menu-footer">
+          <span>COLLABORATIVE WHITEBOARD · WATCH PARTY · HD VIDEO CALL</span>
+        </div>
+      </div>
+    </div>
 
     <!-- Floating 2-Page Pagination Dots (Right Side) -->
     <nav class="intro-page-dots" aria-label="Introduction Pages">
@@ -156,40 +187,50 @@
       </button>
     </nav>
 
-    <!-- ── PAGE 1: The Hero Introduction ── -->
+    <!-- ── PAGE 1: The Hero Introduction (Matches Image 1 Exactly) ── -->
     <section id="intro-page-1" class="intro-page-section intro-page-hero">
-      <!-- Top Navigation Bar -->
+      <!-- Top Navigation Bar (Matches Image 1: Logo Left, MENU Right) -->
       <header class="intro-nav-bar">
         <div class="intro-nav-brand">
-          <span class="intro-sparkle-icon" aria-hidden="true">✦</span>
-          <span class="intro-brand-name">CollabSpace</span>
+          <div class="cinetic-logo">
+            <span class="cinetic-logo-main">CINETIC</span>
+            <span class="cinetic-logo-sub">CREATIVES</span>
+          </div>
         </div>
 
         <div class="intro-nav-actions">
           <div id="intro-room-tag" class="intro-room-tag" title="Target Room">
             <span class="intro-tag-dot"></span>
-            <span id="intro-room-label">Room: lobby</span>
+            <span id="intro-room-label">ROOM: LOBBY</span>
           </div>
           <button type="button" id="intro-back-btn" class="intro-nav-text-btn" title="Back to Sign In">
-            Back to Sign In
+            BACK TO SIGN IN
           </button>
           <button type="button" id="intro-launch-btn" class="intro-launch-btn" title="Launch Collaborative Workspace">
-            Launch Workspace <span class="intro-btn-arrow">→</span>
+            LAUNCH WORKSPACE <span class="intro-btn-arrow">→</span>
+          </button>
+          <button type="button" id="intro-menu-btn" class="cinetic-menu-btn" aria-label="Toggle Menu" title="Menu">
+            <span class="cinetic-menu-text">MENU</span>
+            <span class="cinetic-menu-lines" aria-hidden="true">
+              <span class="cinetic-menu-line"></span>
+              <span class="cinetic-menu-line"></span>
+            </span>
           </button>
         </div>
       </header>
 
-      <!-- Main Hero Headline (Generous whitespace & typography) -->
+      <!-- Main Hero Headline (Matches Image 1 Exactly: Massive Bold Clean Uppercase) -->
       <main class="intro-hero-section">
         <div class="intro-hero-content">
-          <div class="intro-page-pill">Page 1 of 2 · Overview</div>
-          <h1 class="intro-main-headline">
-            We built <span class="intro-blue-highlight">a powerful tool</span><br>
-            for you to collaborate.<br>
-            Hover or tap to reveal their features
+          <div class="intro-page-pill">OVERVIEW · THE REALTIME WORKSPACE</div>
+          <h1 class="intro-main-headline cinetic-headline">
+            WE ARE A CREATIVE HOUSE<br>
+            SHAPING ADVERTISING,<br>
+            CINEMA AND EXPERIENCE<br>
+            DESIGN, THAT MOVE PEOPLE.
           </h1>
-          <p class="intro-hero-subtext">
-            Everything your remote team needs to brainstorm, communicate, and watch together — in one zero-friction workspace.
+          <p class="intro-hero-subtext cinetic-subtext">
+            We built a powerful tool for you to collaborate. Live interactive whiteboard, frame-accurate synchronized watch party, and HD video calling — in one zero-friction workspace.
           </p>
         </div>
       </main>
@@ -197,7 +238,7 @@
       <!-- Page 1 Bottom: Scroll / Next Prompt to Page 2 -->
       <div class="intro-page1-footer">
         <button type="button" id="intro-to-page2-btn" class="intro-explore-btn" title="Go to Page 2 to see the 3 tools">
-          <span>Explore the 3 tools</span>
+          <span>EXPLORE THE 3 TOOLS</span>
           <svg class="intro-down-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M7 13l5 5 5-5M7 6l5 5 5-5"/>
           </svg>
@@ -321,12 +362,10 @@
     <header id="top-nav">
       <div class="nav-left">
         <div class="nav-brand">
-          <div class="brand-icon-box small">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-            </svg>
+          <div class="cinetic-logo small">
+            <span class="cinetic-logo-main">CINETIC</span>
+            <span class="cinetic-logo-sub">CREATIVES</span>
           </div>
-          <span class="brand-title">CollabSpace</span>
         </div>
       </div>
 
@@ -379,7 +418,7 @@
           <span id="nav-user-name">Guest</span>
         </div>
 
-        <div id="status" class="status connected">🟢 Connected</div>
+        <div id="status" class="status connected"><span class="status-dot"></span> CONNECTED</div>
       </div>
     </header>
 
