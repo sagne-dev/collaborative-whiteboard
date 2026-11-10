@@ -123,7 +123,7 @@ h1, h2, h3, h4, .brand-title, .login-main-title, .cinetic-headline {
   font-size: 1.45rem;
   font-weight: 800;
   letter-spacing: 0.08em;
-  color: #ffffff;
+  color: var(--text, #ffffff);
   line-height: 1;
 }
 .cinetic-logo .cinetic-logo-sub {
@@ -131,7 +131,7 @@ h1, h2, h3, h4, .brand-title, .login-main-title, .cinetic-headline {
   font-size: 0.6rem;
   font-weight: 700;
   letter-spacing: 0.38em;
-  color: #ffffff;
+  color: var(--text, #ffffff);
   line-height: 1;
   margin-top: 4px;
 }
@@ -851,16 +851,59 @@ body.light-theme .theme-icon-svg {
 .slider-label { font-size: .65rem; color: #888888; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
 .vslider {
   -webkit-appearance: none;
+  appearance: none;
   width: 50px;
-  height: 4px;
-  background: rgba(255, 255, 255, 0.2);
+  height: 6px;
+  background: #333333;
   border-radius: 9999px;
   transform: rotate(-90deg);
-  margin: 20px 0;
+  margin: 22px 0;
   cursor: pointer;
   accent-color: #ffffff;
+  outline: none;
 }
-#width-label { font-size: .68rem; color: #ffffff; font-weight: 600; }
+.vslider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 9999px;
+  background: #333333;
+}
+.vslider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #000000;
+  margin-top: -4px;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+.vslider::-moz-range-track {
+  height: 6px;
+  border-radius: 9999px;
+  background: #333333;
+}
+.vslider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #000000;
+  cursor: pointer;
+}
+#width-label { 
+  font-size: .72rem; 
+  color: #ffffff; 
+  font-weight: 700;
+  background: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  padding: 1px 6px;
+  min-width: 20px;
+  text-align: center;
+  display: inline-block;
+}
 
 /* Action buttons */
 .action-btn {
@@ -4897,6 +4940,16 @@ html, body,
   transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
 }
 
+/* ── Global Brand Logo in Light Mode ── */
+body.light-theme .cinetic-logo,
+body.light-theme .cinetic-logo .cinetic-logo-main,
+body.light-theme .cinetic-logo .cinetic-logo-sub,
+[data-theme="light"] .cinetic-logo,
+[data-theme="light"] .cinetic-logo .cinetic-logo-main,
+[data-theme="light"] .cinetic-logo .cinetic-logo-sub {
+  color: #000000 !important;
+}
+
 /* ── 1. Sign In View (Light Mode) ── */
 body.light-theme #join-screen.login-split-container,
 [data-theme="light"] #join-screen.login-split-container {
@@ -5235,152 +5288,300 @@ body.light-theme .cinetic-menu-footer span,
 /* ── 3. Workspace Top Bar (Light Mode) ── */
 body.light-theme #top-nav,
 [data-theme="light"] #top-nav {
-  background: rgba(255, 255, 255, 0.96);
-  border-bottom-color: rgba(0, 0, 0, 0.12);
+  background: #ffffff !important;
+  border-bottom: 1.5px solid rgba(0, 0, 0, 0.16) !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important;
 }
 
 body.light-theme .mode-switcher,
 [data-theme="light"] .mode-switcher {
-  background: rgba(0, 0, 0, 0.05);
-  border-color: rgba(0, 0, 0, 0.1);
+  background: #f0f0f0 !important;
+  border: 1px solid rgba(0, 0, 0, 0.18) !important;
 }
 
 body.light-theme .mode-tab,
 [data-theme="light"] .mode-tab {
-  color: #555555;
+  color: #222222 !important;
+  font-weight: 700 !important;
+}
+
+body.light-theme .mode-tab svg,
+[data-theme="light"] .mode-tab svg {
+  stroke: #222222 !important;
 }
 
 body.light-theme .mode-tab:hover,
 [data-theme="light"] .mode-tab:hover {
-  color: #000000;
-  background: rgba(0, 0, 0, 0.05);
+  color: #000000 !important;
+  background: rgba(0, 0, 0, 0.08) !important;
 }
 
 body.light-theme .mode-tab.active,
 [data-theme="light"] .mode-tab.active {
-  background: #000000;
-  color: #ffffff;
+  background: #000000 !important;
+  color: #ffffff !important;
 }
 
 body.light-theme .mode-tab.active svg,
 [data-theme="light"] .mode-tab.active svg {
-  stroke: #ffffff;
+  stroke: #ffffff !important;
 }
 
 body.light-theme .status-dot,
 [data-theme="light"] .status-dot {
-  background: #000000;
-  box-shadow: 0 0 6px rgba(0, 0, 0, 0.35);
+  background: #000000 !important;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.4) !important;
 }
 
 body.light-theme #status,
 [data-theme="light"] #status {
-  color: #000000;
-  background: rgba(0, 0, 0, 0.05);
-  border-color: rgba(0, 0, 0, 0.12);
+  color: #000000 !important;
+  background: #f4f4f4 !important;
+  border: 1.5px solid rgba(0, 0, 0, 0.18) !important;
+  font-weight: 700 !important;
 }
 
 body.light-theme #nav-voice-btn,
 [data-theme="light"] #nav-voice-btn {
-  background: rgba(0, 0, 0, 0.05);
-  border-color: rgba(0, 0, 0, 0.12);
-  color: #000000;
+  background: #f4f4f4 !important;
+  border: 1.5px solid rgba(0, 0, 0, 0.18) !important;
+  color: #000000 !important;
+  font-weight: 600 !important;
 }
 
 body.light-theme #nav-room-badge,
 body.light-theme #nav-user-pill,
 [data-theme="light"] #nav-room-badge,
 [data-theme="light"] #nav-user-pill {
-  background: rgba(0, 0, 0, 0.05);
-  border-color: rgba(0, 0, 0, 0.12);
-  color: #000000;
+  background: #f4f4f4 !important;
+  border: 1.5px solid rgba(0, 0, 0, 0.18) !important;
+  color: #000000 !important;
+  font-weight: 600 !important;
+}
+
+body.light-theme #theme-toggle-nav,
+[data-theme="light"] #theme-toggle-nav {
+  background: #f4f4f4 !important;
+  border: 1.5px solid rgba(0, 0, 0, 0.18) !important;
+  color: #000000 !important;
+}
+
+body.light-theme #theme-toggle-nav:hover,
+[data-theme="light"] #theme-toggle-nav:hover {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border-color: #000000 !important;
 }
 
 /* ── 4. Whiteboard View (Light Mode) ── */
 body.light-theme #whiteboard-view,
 [data-theme="light"] #whiteboard-view {
-  background: #ffffff;
+  background: #ffffff !important;
 }
 
 body.light-theme #canvas,
 [data-theme="light"] #canvas {
-  background: #ffffff;
+  background: #ffffff !important;
 }
 
 body.light-theme #toolbar,
 [data-theme="light"] #toolbar {
-  background: rgba(255, 255, 255, 0.95);
-  border-color: rgba(0, 0, 0, 0.12);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  background: #ffffff !important;
+  border-right: 1.5px solid rgba(0, 0, 0, 0.18) !important;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.06) !important;
 }
 
+body.light-theme .toolbar-section,
+[data-theme="light"] .toolbar-section {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.14) !important;
+}
+
+/* Pen & Eraser Tool Buttons in Light Mode */
 body.light-theme .tool-btn,
-body.light-theme .action-btn,
-[data-theme="light"] .tool-btn,
-[data-theme="light"] .action-btn {
-  color: #444444;
+[data-theme="light"] .tool-btn {
+  background: #f4f4f4 !important;
+  border: 1.5px solid rgba(0, 0, 0, 0.22) !important;
+  color: #000000 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06) !important;
+}
+
+body.light-theme .tool-btn svg,
+[data-theme="light"] .tool-btn svg {
+  stroke: #000000 !important;
 }
 
 body.light-theme .tool-btn:hover,
-body.light-theme .action-btn:hover,
-[data-theme="light"] .tool-btn:hover,
-[data-theme="light"] .action-btn:hover {
-  background: rgba(0, 0, 0, 0.06);
-  color: #000000;
+[data-theme="light"] .tool-btn:hover {
+  background: #e8e8e8 !important;
+  border-color: #000000 !important;
+  color: #000000 !important;
+  transform: translateY(-1px);
 }
 
 body.light-theme .tool-btn.active,
 [data-theme="light"] .tool-btn.active {
-  background: #000000;
-  color: #ffffff;
-  border-color: #000000;
+  background: #000000 !important;
+  color: #ffffff !important;
+  border-color: #000000 !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3) !important;
 }
 
 body.light-theme .tool-btn.active svg,
 [data-theme="light"] .tool-btn.active svg {
-  stroke: #ffffff;
+  stroke: #ffffff !important;
 }
 
+/* Color Picker in Light Mode */
+body.light-theme .color-wrap,
+[data-theme="light"] .color-wrap {
+  border: 2.5px solid #000000 !important;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2), 0 2px 6px rgba(0, 0, 0, 0.12) !important;
+}
+
+body.light-theme .color-wrap:hover,
+[data-theme="light"] .color-wrap:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 0 2px #000000, 0 3px 8px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Pen/Eraser Size Slider Editing in Light Mode */
+body.light-theme .slider-label,
+[data-theme="light"] .slider-label {
+  color: #000000 !important;
+  font-weight: 800 !important;
+  font-size: 0.7rem !important;
+}
+
+body.light-theme .vslider,
+[data-theme="light"] .vslider {
+  background: #c8c8c8 !important;
+  border: 1px solid rgba(0, 0, 0, 0.2) !important;
+  accent-color: #000000 !important;
+}
+
+body.light-theme .vslider::-webkit-slider-runnable-track,
+[data-theme="light"] .vslider::-webkit-slider-runnable-track {
+  background: #c8c8c8 !important;
+}
+
+body.light-theme .vslider::-webkit-slider-thumb,
+[data-theme="light"] .vslider::-webkit-slider-thumb {
+  background: #000000 !important;
+  border: 2px solid #ffffff !important;
+  box-shadow: 0 0 0 1px #000000, 0 2px 5px rgba(0, 0, 0, 0.35) !important;
+}
+
+body.light-theme .vslider::-moz-range-track,
+[data-theme="light"] .vslider::-moz-range-track {
+  background: #c8c8c8 !important;
+}
+
+body.light-theme .vslider::-moz-range-thumb,
+[data-theme="light"] .vslider::-moz-range-thumb {
+  background: #000000 !important;
+  border: 2px solid #ffffff !important;
+  box-shadow: 0 0 0 1px #000000, 0 2px 5px rgba(0, 0, 0, 0.35) !important;
+}
+
+body.light-theme #width-label,
+[data-theme="light"] #width-label {
+  color: #000000 !important;
+  font-weight: 800 !important;
+  font-size: 0.72rem !important;
+  background: #f0f0f0 !important;
+  border: 1.5px solid rgba(0, 0, 0, 0.25) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Action Buttons (Undo, Redo, Clear) in Light Mode */
+body.light-theme .action-btn,
+[data-theme="light"] .action-btn {
+  background: #f4f4f4 !important;
+  border: 1.5px solid rgba(0, 0, 0, 0.22) !important;
+  color: #000000 !important;
+  font-weight: 700 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06) !important;
+}
+
+body.light-theme .action-btn:hover,
+[data-theme="light"] .action-btn:hover {
+  background: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+  transform: translateY(-1px);
+}
+
+body.light-theme .action-btn.danger,
+[data-theme="light"] .action-btn.danger {
+  background: #f4f4f4 !important;
+  border: 1.5px solid rgba(0, 0, 0, 0.3) !important;
+  color: #000000 !important;
+  font-weight: 800 !important;
+}
+
+body.light-theme .action-btn.danger:hover,
+[data-theme="light"] .action-btn.danger:hover {
+  background: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+body.light-theme .room-label,
+[data-theme="light"] .room-label {
+  color: #444444 !important;
+  font-weight: 700 !important;
+}
+
+/* Presence Panel in Light Mode */
 body.light-theme #presence-panel,
 [data-theme="light"] #presence-panel {
-  background: rgba(255, 255, 255, 0.95);
-  border-color: rgba(0, 0, 0, 0.14);
-  color: #000000;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  background: #ffffff !important;
+  border: 1.5px solid rgba(0, 0, 0, 0.2) !important;
+  color: #000000 !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
 }
 
 body.light-theme .presence-title,
 [data-theme="light"] .presence-title {
-  color: #444444 !important;
+  color: #000000 !important;
+  font-weight: 800 !important;
 }
 
 body.light-theme .user-chip,
 [data-theme="light"] .user-chip {
-  background: #f0f0f0 !important;
+  background: #f4f4f4 !important;
   color: #000000 !important;
-  border-color: rgba(0, 0, 0, 0.12) !important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
 }
 
+body.light-theme .user-chip .dot,
+[data-theme="light"] .user-chip .dot {
+  background: #000000 !important;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.4) !important;
+}
+
+body.light-theme .user-chip em,
+[data-theme="light"] .user-chip em {
+  color: #444444 !important;
+  font-weight: 600 !important;
+}
+
+/* Hint Bar in Light Mode */
 body.light-theme #hint-bar,
 [data-theme="light"] #hint-bar {
   background: #ffffff !important;
-  border: 1px solid rgba(0, 0, 0, 0.18) !important;
-  color: #222222 !important;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08) !important;
+  border: 1.5px solid rgba(0, 0, 0, 0.22) !important;
+  color: #111111 !important;
+  font-weight: 600 !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12) !important;
 }
 
 body.light-theme kbd,
 [data-theme="light"] kbd {
   background: #f0f0f0 !important;
-  border: 1px solid rgba(0, 0, 0, 0.22) !important;
+  border: 1.5px solid rgba(0, 0, 0, 0.3) !important;
   color: #000000 !important;
-}
-
-body.light-theme #width-label,
-body.light-theme .slider-label,
-[data-theme="light"] #width-label,
-[data-theme="light"] .slider-label {
-  color: #111111 !important;
+  font-weight: 800 !important;
 }
 
 body.light-theme .copy-hint,
@@ -5388,6 +5589,21 @@ body.light-theme .copy-hint,
   background: #000000 !important;
   color: #ffffff !important;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25) !important;
+}
+
+@media (max-width: 768px) {
+  body.light-theme #toolbar,
+  [data-theme="light"] #toolbar {
+    background: #ffffff !important;
+    border-top: 1.5px solid rgba(0, 0, 0, 0.18) !important;
+    border-right: none !important;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08) !important;
+  }
+  body.light-theme .toolbar-section,
+  [data-theme="light"] .toolbar-section {
+    border-right: 1px solid rgba(0, 0, 0, 0.14) !important;
+    border-bottom: none !important;
+  }
 }
 
 /* ── 5. Watch Party View (Light Mode) ── */
