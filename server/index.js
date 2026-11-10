@@ -13,7 +13,12 @@ const path      = require('path');
 const WebSocket = require('ws');
 
 // ─── Config ───────────────────────────────────────────────────────────────────
-const PORT        = process.env.PORT || 3000;
+const os        = require('os');
+let selfsigned  = null;
+try { selfsigned = require('selfsigned'); } catch (e) {}
+
+const PORT        = parseInt(process.env.PORT || '3000', 10);
+const HTTPS_PORT  = parseInt(process.env.HTTPS_PORT || '3443', 10);
 
 // Resolve paths relative to THIS file
 const ROOT_DIR    = path.join(__dirname, '..');
@@ -287,7 +292,67 @@ const MIME = {
 
 console.log(`📁 Serving static files from: ${PUBLIC_DIR}`);
 
-const httpServer = http.createServer((req, res) => {
+function getLanIps() {
+  const nets = os.networkInterfaces();
+  const results = [];
+  for (const name of Object.keys(nets)) {
+    for (const net of nets[name]) {
+      if (net.family === 'IPv4' && !net.internal) {
+        results.push(net.address);
+      }
+    }
+  }
+  return results;
+}
+
+async function getOrCreateSslCert() {
+  if (!selfsigned) return null;
+  const certPath = path.join(PERSIST_DIR, 'ssl-cert.json');
+  try {
+    if (fs.existsSync(certPath)) {
+      const data = JSON.parse(fs.readFileSync(certPath, 'utf8'));
+      if (data && data.key && data.cert) return data;
+    }
+  } catch (e) {}
+
+  const lanIps = getLanIps();
+  const attrs = [{ name: 'commonName', value: 'CollaborativeWhiteboard' }];
+  const altNames = [
+    { type: 2, value: 'localhost' },
+    { type: 7, ip: '127.0.0.1' },
+    ...lanIps.map(ip => ({ type: 7, ip })),
+  ];
+
+  try {
+    const pems = await selfsigned.generate(attrs, {
+      days: 365,
+      algorithm: 'sha256',
+      extensions: [{ name: 'subjectAltName', altNames }],
+    });
+    const certData = { key: pems.private, cert: pems.cert };
+    try {
+      fs.writeFileSync(certPath, JSON.stringify(certData, null, 2), 'utf8');
+    } catch (e) {}
+    return certData;
+  } catch (err) {
+    console.warn('⚠️ Could not generate self-signed cert:', err.message);
+    return null;
+  }
+}
+
+function handleHttpRequest(req, res) {
+  // Server discovery & network diagnostics for mobile / PC clients
+  if (req.url === '/api/server-info') {
+    res.writeHead(200, {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+    });
+    return res.end(JSON.stringify({
+      httpPort: PORT,
+      httpsPort: HTTPS_PORT,
+      lanIps: getLanIps(),
+    }));
+  }
   // Video Streaming Proxy route (supports Range byte headers & CORS for synchronized playback)
   if (req.url.startsWith('/api/stream?')) {
     let parsedUrl;
@@ -409,16 +474,12 @@ const httpServer = http.createServer((req, res) => {
       return;
     }
 
-    const defaultUrl = customDomain
-      ? `https://${customDomain}.daily.co/${cleanRoomName}`
-      : `https://collabspace.daily.co/${cleanRoomName}`;
-
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
-      roomUrl: defaultUrl,
+      roomUrl: null,
       configured: false,
       domain: customDomain || null,
-      message: 'Daily API key not configured. Using standard Daily room URL with fallback routing.'
+      message: 'Daily API key not configured. Using native high-performance WebRTC mesh calling.'
     }));
     return;
   }
@@ -441,10 +502,18 @@ const httpServer = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': MIME[ext] || 'text/plain' });
     res.end(data);
   });
-});
+}
 
-// ─── WebSocket server ─────────────────────────────────────────────────────────
-const wss = new WebSocket.Server({ server: httpServer });
+const httpServer = http.createServer(handleHttpRequest);
+let httpsServer  = null;
+const wss        = new WebSocket.Server({ noServer: true });
+
+function handleUpgrade(req, socket, head) {
+  wss.handleUpgrade(req, socket, head, (ws) => {
+    wss.emit('connection', ws, req);
+  });
+}
+httpServer.on('upgrade', handleUpgrade);
 
 function broadcast(room, message, excludeWs = null) {
   const raw = JSON.stringify(message);
@@ -916,8 +985,38 @@ function randomColor() {
   return colors[Math.floor(Math.random() * colors.length)];
 }
 
-// ─── Start ────────────────────────────────────────────────────────────────────
-httpServer.listen(PORT, () => {
-  console.log(`✅ Collaborative Whiteboard & Watch Party server running at http://localhost:${PORT}`);
-  console.log(`   Open multiple browser windows to test real-time collaboration & sync.`);
-});
+// ─── Start Servers (HTTP + HTTPS for Mobile Camera & Mic) ─────────────────────
+(async () => {
+  const sslCert = await getOrCreateSslCert();
+  if (sslCert) {
+    try {
+      httpsServer = https.createServer({ key: sslCert.key, cert: sslCert.cert }, handleHttpRequest);
+      httpsServer.on('error', (err) => {
+        console.warn('⚠️ HTTPS server could not bind or listen:', err.message);
+      });
+      httpsServer.on('upgrade', handleUpgrade);
+      httpsServer.listen(HTTPS_PORT, () => {
+        console.log(`🔒 HTTPS Server running at https://localhost:${HTTPS_PORT}`);
+      });
+    } catch (e) {
+      console.warn('⚠️ Could not start HTTPS server:', e.message);
+    }
+  }
+
+  httpServer.listen(PORT, () => {
+    const lanIps = getLanIps();
+    console.log(`\n==================================================================`);
+    console.log(`✅ Collaborative Whiteboard & Video Call Server Online!`);
+    console.log(`💻 Desktop / Laptop:`);
+    console.log(`   HTTP:   http://localhost:${PORT}`);
+    if (httpsServer) console.log(`   HTTPS:  https://localhost:${HTTPS_PORT}`);
+    if (lanIps.length > 0) {
+      console.log(`\n📱 Mobile Phones & LAN Devices (Microphone & Camera require HTTPS):`);
+      for (const ip of lanIps) {
+        if (httpsServer) console.log(`   👉 https://${ip}:${HTTPS_PORT}`);
+        console.log(`      http://${ip}:${PORT}`);
+      }
+    }
+    console.log(`==================================================================\n`);
+  });
+})();

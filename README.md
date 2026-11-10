@@ -35,8 +35,17 @@
 - **Works Across All Modes:** Voice chat remains active continuously whether you are collaborating on the whiteboard, enjoying a watch party, or in a call.
 - **Participant Status:** Presence panel displays microphone status (`🎙️` / `🔇`) for all members in real time.
 
-### 6.  Zoom-Style Video Call Mode (Daily.co Route 1 SFU & WebRTC Mesh)
-- **Daily.co Route 1 SFU Integration:** Powered by `@daily-co/daily-js` Call Object (`subscribeToTracksAutomatically: true`) handling multi-person SFU media routing with automatic fallback.
+### 6. ⚡ Zoom-Style Video Call Mode (High-Def WebRTC Mesh & Daily.co SFU)
+- **High-Definition WebRTC Mesh Engine:** Production-grade peer-to-peer audio/video mesh using W3C Perfect Negotiation to prevent offer/answer glare collisions.
+- **Lip-Sync & Glitch-Free Audio:** 
+  - Audio and video media tracks are bound to a unified `MediaStream` (single MSID), enabling the browser's hardware jitter buffer to keep voice perfectly synchronized with video lip movement.
+  - Custom SDP optimization injects Opus in-band Forward Error Correction (`useinbandfec=1`), 10ms packet times (`minptime=10`), and constant bitrate (`cbr=1`, 64 kbps) for crystal clear sound without robotic stuttering.
+- **Universal Multi-Device Compatibility (PC, Mac, Laptop, iPhone/iPad, Android):**
+  - Works on all modern desktop and mobile browsers (Chrome, Edge, Firefox, Safari on iOS/iPadOS, Chrome on Android).
+  - Native dual-server: **HTTP on port 3000** and **HTTPS on port 3443** with auto-generated SSL certificates.
+  - Essential for mobile devices (iOS Safari and Android Chrome require a Secure Context / HTTPS to access cameras and microphones across local Wi-Fi).
+  - Built-in one-tap HTTPS banner on mobile devices when joining via plain HTTP.
+- **Mobile Camera Flip:** Tap the **Flip Cam** button to seamlessly switch between front (selfie) and rear (environment) cameras without dropping the call.
 - **Dynamic Multi-Slot Video Grid:** Clean, responsive video grid using CSS Grid that dynamically adjusts layout slots based on how many participants join the room:
   - **1-on-1:** Expands to fill the screen symmetrically.
   - **3 Participants:** 2 tiles top, 1 centered below.
@@ -48,6 +57,7 @@
 - **Bottom Control Bar:** Intuitive Zoom-style floating controls bar:
   - **Toggle Microphone:** One-click mute/unmute with live status indicator.
   - **Toggle Camera:** Start or stop video with instant avatar fallback.
+  - **Flip Camera:** Instant toggle between front and rear cameras on mobile devices.
   - **Screen Share:** One-click toggle for sharing screen with browser-native stop detection.
   - **Leave Call:** Cleanly disconnect and return to the room lobby.
 - **Participant Badges:** Video tiles display participant names, microphone state, active speaker indicators, and screen share badges.
@@ -55,28 +65,49 @@
 
 ---
 
-##  Quick Start
+## 🚀 Quick Start
 
-### 1. Run it locally
+### 1. Install & Start Server
 
 ```bash
+cd collaborative-whiteboard
 npm install
 npm start
 ```
 
-Then open http://localhost:3000 in your browser.
+The server automatically starts **both HTTP and HTTPS**:
+- **HTTP Server:** `http://localhost:3000`
+- **HTTPS Server (Secure WebRTC for Mobile & LAN):** `https://localhost:3443`
 
-### 2. Share online (ngrok)
+When the server starts, it prints your local Wi-Fi / LAN IP addresses in the terminal:
+```
+[SERVER] 🚀 HTTP listening at http://localhost:3000
+[SERVER] 🔒 HTTPS listening at https://localhost:3443
+[SERVER] 📱 Connect phones/laptops over Wi-Fi via HTTPS:
+[SERVER]    👉 https://192.168.x.x:3443
+```
+
+### 2. Connecting from Devices
+
+- **From the Host PC / Desktop:**
+  - Open `http://localhost:3000` or `https://localhost:3443`
+- **From another PC or Laptop on the same Wi-Fi:**
+  - Open `https://<YOUR-LAN-IP>:3443` (e.g. `https://192.168.0.103:3443`)
+- **From iPhone, iPad, or Android phone:**
+  - Make sure your phone is connected to the same Wi-Fi network.
+  - Open `https://<YOUR-LAN-IP>:3443` in Safari (iOS) or Chrome (Android).
+  - *Note on Self-Signed SSL:* The browser will show a standard certificate warning on the first visit. Tap **"Advanced"** and tap **"Proceed to site"** (or **"Accept the Risk and Continue"**). This grants the browser camera and microphone permissions over LAN.
+
+### 3. Share Online Over the Internet (Optional: ngrok)
 
 ```bash
 ngrok http 3000
 ```
-
-Share the generated URL with your friends to draw and watch videos together!
+Share the generated `https://...ngrok-free.app` URL with anyone over the internet!
 
 ---
 
-##  How to Use
+## 🎮 How to Use
 
 | Mode | Action | How |
 |------|--------|-----|
@@ -93,6 +124,7 @@ Share the generated URL with your friends to draw and watch videos together!
 | **Video Call** | Join / Start Call | Click **Start / Join Room Video Call** or click **Video Call** next to any participant |
 | **Video Call** | Toggle Microphone | Click the **Mute / Unmute** button in the bottom control bar |
 | **Video Call** | Toggle Camera | Click the **Start / Stop Video** button in the bottom control bar |
+| **Video Call** | Flip Camera (Phone) | Click the **Flip Cam** button in the bottom control bar to toggle front/rear cameras |
 | **Video Call** | Screen Share | Click the **Share Screen** button in the bottom control bar |
 | **Video Call** | Leave Call | Click the red **Leave Call** button in the bottom control bar |
 | **Video Call** | Fullscreen Stage | Click the **Fullscreen** button in the top meeting bar |

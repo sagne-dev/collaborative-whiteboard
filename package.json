@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@daily-co/daily-js": "^0.94.0",
+    "selfsigned": "^5.5.0",
     "ws": "^8.17.0"
   },
   "license": "ISC"

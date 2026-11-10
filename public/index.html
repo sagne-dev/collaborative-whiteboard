@@ -22,6 +22,16 @@
 </head>
 <body>
 
+  <!-- Mobile / LAN Insecure Context Warning & One-Tap HTTPS Upgrade -->
+  <aside id="https-mobile-notice" class="https-mobile-notice hidden" aria-live="polite">
+    <div class="https-notice-content">
+      <span class="https-notice-icon">📱</span>
+      <span class="https-notice-text">Mobile camera & microphone require <strong>HTTPS</strong>.</span>
+      <a id="https-mobile-switch-link" href="#" class="https-notice-btn">Enable Camera & Mic (Switch to HTTPS)</a>
+    </div>
+    <button type="button" id="https-notice-close-btn" class="https-notice-close" title="Dismiss">✕</button>
+  </aside>
+
   <!-- ══════════════════════════════════════════════════════════════
        TOP IN-APP CHAT NOTIFICATION POP-UP (Telegram / Instagram Style)
        Placed at Root Body Level for 100% Reliable Mobile & Desktop View
@@ -575,7 +585,7 @@
                 <span class="meeting-status-dot"></span>
                 <span id="zoom-meeting-title">Video Call</span>
                 <span class="meeting-time-badge" id="zoom-call-duration">00:00</span>
-                <span class="sfu-badge" id="zoom-sfu-badge">⚡ Daily.co SFU</span>
+                <span class="sfu-badge" id="zoom-sfu-badge">⚡ High-Def WebRTC</span>
               </div>
               <div class="zoom-stage-top-actions">
                 <span id="zoom-grid-participants-badge" class="zoom-participants-pill">👥 1 in call</span>
@@ -607,6 +617,12 @@
                 <button id="zoom-call-cam-btn" class="zoom-call-control-btn cam-active" title="Start/Stop Video">
                   <div class="btn-icon-wrap" id="zoom-call-cam-icon">📹</div>
                   <span id="zoom-call-cam-label">Stop Video</span>
+                </button>
+
+                <!-- Mobile Camera Flip Toggle -->
+                <button id="zoom-flip-cam-btn" class="zoom-call-control-btn" title="Flip Camera (Front/Back)">
+                  <div class="btn-icon-wrap" id="zoom-flip-cam-icon">🔄</div>
+                  <span id="zoom-flip-cam-label">Flip Cam</span>
                 </button>
 
                 <!-- 3. Screen Share Toggle -->

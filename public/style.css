@@ -4547,3 +4547,76 @@ kbd {
   }
 }
 
+/* ── Mobile HTTPS Notice Banner ── */
+.https-mobile-notice {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 99999;
+  background: linear-gradient(90deg, #1e1b4b, #312e81, #1e1b4b);
+  border-bottom: 1px solid rgba(99, 102, 241, 0.4);
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+  animation: slideDownNotice 0.3s ease-out;
+}
+@keyframes slideDownNotice {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+.https-mobile-notice.hidden {
+  display: none !important;
+}
+.https-notice-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #e0e7ff;
+  font-size: 0.88rem;
+  flex-wrap: wrap;
+}
+.https-notice-btn {
+  background: #4f46e5;
+  color: #fff;
+  text-decoration: none;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.82rem;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+.https-notice-btn:hover {
+  background: #6366f1;
+}
+.https-notice-close {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+/* Direct Call Button in user chip */
+.direct-call-btn {
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  color: #818cf8;
+  border-radius: 5px;
+  padding: 2px 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  margin-left: auto;
+  transition: all 0.2s ease;
+}
+.direct-call-btn:hover {
+  background: #6366f1;
+  color: #fff;
+}
+
+
