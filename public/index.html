@@ -67,80 +67,11 @@
     </div>
   </div>
 
-  <!-- SPLIT SCREEN SIGN IN / JOIN (Matches Image Exactly) -->
-  <div id="join-screen" class="login-split-container">
-
-    <!-- LEFT COLUMN: Clean Sign In Form -->
-    <div class="login-left-pane">
-      <!-- Top Bar: Brand Logo & Minimal Theme Indicator -->
-      <div class="login-top-bar">
-        <div class="login-brand">
-          <div class="collabspace-logo">
-            <img src="assets/collabspace-logo.png" alt="CollabSpace" class="collabspace-icon" />
-            <span class="collabspace-text">CollabSpace</span>
-          </div>
-        </div>
-        <button type="button" class="login-theme-icon theme-toggle-btn" id="theme-toggle-login" title="Switch to Light Mode" aria-label="Toggle Dark and Light Mode">
-          <svg class="theme-icon-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="9"></circle>
-            <path d="M12 3v18"></path>
-            <path class="theme-half-fill" d="M12 3a9 9 0 0 0 0 18z"></path>
-          </svg>
-        </button>
-      </div>
-
-      <!-- Center Form Content -->
-      <div class="login-form-center">
-        <h1 class="login-main-title">SIGN IN</h1>
-        <p class="login-sub-title">
-          New here? <span id="explore-features-link" class="login-link-text" role="button" tabindex="0" title="Click to view tool intro">Enter any Room ID · Explore Workspace</span>
-        </p>
-
-        <form class="login-fields-form" onsubmit="event.preventDefault();">
-          <div class="login-field-group">
-            <label for="name-input" class="login-field-label">YOUR NAME</label>
-            <input id="name-input" type="text" placeholder="e.g. Alex" maxlength="20" autocomplete="name" />
-          </div>
-
-          <div class="login-field-group">
-            <label for="room-input" class="login-field-label">ROOM ID</label>
-            <input id="room-input" type="text" placeholder="e.g. creative-studio" maxlength="40" autocomplete="off" />
-          </div>
-
-          <button type="button" id="join-btn" class="login-submit-button">
-            SIGN IN →
-          </button>
-        </form>
-      </div>
-
-      <!-- Bottom Note / Safety -->
-      <div class="login-bottom-note">
-        <span>PROTECTED BY INSTANT P2P WEBRTC & DAILY.CO SFU ENCRYPTION</span>
-      </div>
-    </div>
-
-    <!-- RIGHT COLUMN: Editorial Visual & Bold Headline (Matches Image Exactly) -->
-    <div class="login-right-pane">
-      <img class="login-hero-image" src="assets/people-talking.jpg" alt="Group of people laughing and talking" />
-      <div class="login-hero-overlay"></div>
-
-      <div class="login-hero-text-block">
-        <h2 class="login-hero-headline">EVERY CONVERSATION SPARKS REAL PROGRESS.</h2>
-        <p class="login-hero-paragraph">
-          Collaborate in crystal-clear HD video calls, sketch ideas on an infinite live whiteboard, and enjoy synchronized watch parties with your team in real time.
-        </p>
-        <p class="login-hero-footnote">
-          COLLABSPACE · ZERO-LATENCY REALTIME SUITE
-        </p>
-      </div>
-    </div>
-
-  </div>
-
   <!-- ══════════════════════════════════════════════════════════════
        INTRO / ONBOARDING SCREEN (Spacious 2-Page Presentation)
+       Shows First When User Visits
        ══════════════════════════════════════════════════════════════ -->
-  <div id="intro-screen" class="intro-screen-container hidden">
+  <div id="intro-screen" class="intro-screen-container">
 
     <!-- Slide-out Menu Overlay for MENU Button -->
     <div id="cinetic-menu-overlay" class="cinetic-menu-modal hidden" aria-modal="true" role="dialog">
@@ -161,13 +92,9 @@
             <span class="menu-link-num">02</span>
             <span class="menu-link-text">THE 3 TOOLS</span>
           </button>
-          <button type="button" class="cinetic-menu-link highlight" id="menu-link-launch">
+          <button type="button" class="cinetic-menu-link highlight" id="menu-link-signin">
             <span class="menu-link-num">03</span>
-            <span class="menu-link-text">LAUNCH WORKSPACE →</span>
-          </button>
-          <button type="button" class="cinetic-menu-link" id="menu-link-signin">
-            <span class="menu-link-num">04</span>
-            <span class="menu-link-text">SIGN IN / CHANGE ROOM</span>
+            <span class="menu-link-text">SIGN IN / JOIN ROOM →</span>
           </button>
           <button type="button" class="cinetic-menu-link" id="menu-link-theme">
             <span class="menu-link-num">
@@ -205,11 +132,11 @@
               <path class="theme-half-fill" d="M12 3a9 9 0 0 0 0 18z"></path>
             </svg>
           </button>
-          <button type="button" id="intro-back-btn" class="intro-nav-text-btn" title="Back to Sign In">
-            BACK TO SIGN IN
+          <button type="button" id="intro-explore-btn" class="intro-nav-text-btn" title="Explore Features">
+            EXPLORE TOOLS
           </button>
-          <button type="button" id="intro-launch-btn" class="intro-launch-btn" title="Launch Collaborative Workspace">
-            LAUNCH WORKSPACE <span class="intro-btn-arrow">→</span>
+          <button type="button" id="intro-launch-btn" class="intro-launch-btn" title="Proceed to Sign In">
+            SIGN IN <span class="intro-btn-arrow">→</span>
           </button>
           <button type="button" id="intro-menu-btn" class="cinetic-menu-btn" aria-label="Toggle Menu" title="Menu">
             <span class="cinetic-menu-text">MENU</span>
@@ -307,14 +234,89 @@
       <footer class="intro-page2-footer">
         <div class="intro-p2-footer-inner">
           <div class="intro-p2-footer-note">
-            <span>Ready to start? All 3 tools will be active in your room.</span>
+            <span>Ready to start? Sign in to enter your collaborative room.</span>
           </div>
-          <button type="button" id="intro-launch-mobile-btn" class="intro-launch-btn">
-            Launch Workspace Now <span class="intro-btn-arrow">→</span>
+          <button type="button" id="intro-launch-mobile-btn" class="intro-launch-btn" title="Proceed to Sign In">
+            Continue to Sign In <span class="intro-btn-arrow">→</span>
           </button>
         </div>
       </footer>
     </section>
+
+  </div>
+
+  <!-- SPLIT SCREEN SIGN IN / JOIN (Matches Image Exactly) -->
+  <div id="join-screen" class="login-split-container hidden">
+
+    <!-- LEFT COLUMN: Clean Sign In Form -->
+    <div class="login-left-pane">
+      <!-- Top Bar: Brand Logo & Minimal Theme Indicator -->
+      <div class="login-top-bar">
+        <div class="login-brand">
+          <div class="collabspace-logo" id="login-brand-logo" role="button" tabindex="0" title="Back to Introduction" style="cursor: pointer;">
+            <img src="assets/collabspace-logo.png" alt="CollabSpace" class="collabspace-icon" />
+            <span class="collabspace-text">CollabSpace</span>
+          </div>
+        </div>
+        <div class="login-top-actions">
+          <button type="button" id="login-back-to-intro-btn" class="intro-nav-text-btn" title="Back to Introduction">
+            ← INTRO
+          </button>
+          <button type="button" class="login-theme-icon theme-toggle-btn" id="theme-toggle-login" title="Switch to Light Mode" aria-label="Toggle Dark and Light Mode">
+            <svg class="theme-icon-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9"></circle>
+              <path d="M12 3v18"></path>
+              <path class="theme-half-fill" d="M12 3a9 9 0 0 0 0 18z"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Center Form Content -->
+      <div class="login-form-center">
+        <h1 class="login-main-title">SIGN IN</h1>
+        <p class="login-sub-title">
+          Ready to join? <span id="explore-features-link" class="login-link-text" role="button" tabindex="0" title="Click to view tool intro">← Review Introduction & Tools</span>
+        </p>
+
+        <form class="login-fields-form" onsubmit="event.preventDefault();">
+          <div class="login-field-group">
+            <label for="name-input" class="login-field-label">YOUR NAME</label>
+            <input id="name-input" type="text" placeholder="e.g. Alex" maxlength="20" autocomplete="name" />
+          </div>
+
+          <div class="login-field-group">
+            <label for="room-input" class="login-field-label">ROOM ID</label>
+            <input id="room-input" type="text" placeholder="e.g. creative-studio" maxlength="40" autocomplete="off" />
+          </div>
+
+          <button type="button" id="join-btn" class="login-submit-button">
+            SIGN IN →
+          </button>
+        </form>
+      </div>
+
+      <!-- Bottom Note / Safety -->
+      <div class="login-bottom-note">
+        <span>PROTECTED BY INSTANT P2P WEBRTC & DAILY.CO SFU ENCRYPTION</span>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN: Editorial Visual & Bold Headline (Matches Image Exactly) -->
+    <div class="login-right-pane">
+      <img class="login-hero-image" src="assets/people-talking.jpg" alt="Group of people laughing and talking" />
+      <div class="login-hero-overlay"></div>
+
+      <div class="login-hero-text-block">
+        <h2 class="login-hero-headline">EVERY CONVERSATION SPARKS REAL PROGRESS.</h2>
+        <p class="login-hero-paragraph">
+          Collaborate in crystal-clear HD video calls, sketch ideas on an infinite live whiteboard, and enjoy synchronized watch parties with your team in real time.
+        </p>
+        <p class="login-hero-footnote">
+          COLLABSPACE · ZERO-LATENCY REALTIME SUITE
+        </p>
+      </div>
+    </div>
 
   </div>
 

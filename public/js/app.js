@@ -21,11 +21,14 @@ const nameInput         = document.getElementById('name-input');
 const roomInput         = document.getElementById('room-input');
 const joinBtn           = document.getElementById('join-btn');
 const exploreFeaturesLink = document.getElementById('explore-features-link');
+const loginBackToIntroBtn = document.getElementById('login-back-to-intro-btn');
+const loginBrandLogo    = document.getElementById('login-brand-logo');
 
-// Intro / Onboarding Screen (Between Login & Workspace)
+// Intro / Onboarding Screen (Shown First)
 const introScreen       = document.getElementById('intro-screen');
 const introRoomLabel    = document.getElementById('intro-room-label');
 const introBackBtn      = document.getElementById('intro-back-btn');
+const introExploreBtn   = document.getElementById('intro-explore-btn');
 const introLaunchBtn    = document.getElementById('intro-launch-btn');
 const introLaunchP2Btn  = document.getElementById('intro-launch-p2-btn');
 const introLaunchMobileBtn = document.getElementById('intro-launch-mobile-btn');
@@ -1961,33 +1964,39 @@ sessionStorage.setItem('wb_uid', state.userId);
 const urlRoom = new URLSearchParams(location.search).get('room');
 if (urlRoom) roomInput.value = urlRoom;
 
-function prepareAndShowIntro() {
+// ─── Screen Transition Functions (Intro First -> Sign In -> Workspace) ──────
+function showIntro() {
+  if (cineticMenuOverlay) cineticMenuOverlay.classList.add('hidden');
+  joinScreen.classList.add('hidden');
+  boardScreen.classList.add('hidden');
+  if (introScreen) {
+    introScreen.classList.remove('hidden');
+    introScreen.scrollTop = 0;
+  }
+}
+
+function showSignIn() {
+  if (cineticMenuOverlay) cineticMenuOverlay.classList.add('hidden');
+  if (introScreen) introScreen.classList.add('hidden');
+  boardScreen.classList.add('hidden');
+  joinScreen.classList.remove('hidden');
+
+  requestAnimationFrame(() => {
+    if (nameInput && !nameInput.value.trim()) {
+      nameInput.focus();
+    } else if (roomInput) {
+      roomInput.focus();
+    }
+  });
+}
+
+function launchWorkspace() {
   const room = roomInput.value.trim() || 'lobby';
   const name = nameInput.value.trim() || 'Guest';
   state.roomId = room;
   state.userName = name;
 
   history.replaceState(null, '', '?room=' + encodeURIComponent(room));
-
-  if (introRoomLabel) {
-    introRoomLabel.textContent = `Room: ${room} · ${name}`;
-  }
-
-  joinScreen.classList.add('hidden');
-  if (introScreen) {
-    introScreen.classList.remove('hidden');
-    introScreen.scrollTop = 0;
-    if (introLaunchBtn) introLaunchBtn.focus();
-  } else {
-    launchWorkspace();
-  }
-}
-
-function launchWorkspace() {
-  const room = state.roomId || roomInput.value.trim() || 'lobby';
-  const name = state.userName || nameInput.value.trim() || 'Guest';
-  state.roomId = room;
-  state.userName = name;
 
   if (introScreen) introScreen.classList.add('hidden');
   joinScreen.classList.add('hidden');
@@ -2002,39 +2011,63 @@ function launchWorkspace() {
   });
 }
 
+// Aliases for compatibility
 function returnToSignIn() {
-  if (introScreen) introScreen.classList.add('hidden');
-  boardScreen.classList.add('hidden');
-  joinScreen.classList.remove('hidden');
-  nameInput.focus();
+  showSignIn();
+}
+
+function prepareAndShowIntro() {
+  showIntro();
 }
 
 // Event Listeners for Sign In & Intro Navigation
-joinBtn.addEventListener('click', prepareAndShowIntro);
-nameInput.addEventListener('keydown', e => { if (e.key === 'Enter') prepareAndShowIntro(); });
-roomInput.addEventListener('keydown', e => { if (e.key === 'Enter') prepareAndShowIntro(); });
+// From Sign In Form -> Launch Workspace directly
+joinBtn.addEventListener('click', launchWorkspace);
+nameInput.addEventListener('keydown', e => { if (e.key === 'Enter') launchWorkspace(); });
+roomInput.addEventListener('keydown', e => { if (e.key === 'Enter') launchWorkspace(); });
 
+// Back to Intro from Sign In Form
 if (exploreFeaturesLink) {
-  exploreFeaturesLink.addEventListener('click', prepareAndShowIntro);
+  exploreFeaturesLink.addEventListener('click', showIntro);
   exploreFeaturesLink.addEventListener('keydown', e => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      prepareAndShowIntro();
+      showIntro();
     }
   });
 }
 
+if (loginBackToIntroBtn) {
+  loginBackToIntroBtn.addEventListener('click', showIntro);
+}
+
+if (loginBrandLogo) {
+  loginBrandLogo.addEventListener('click', showIntro);
+  loginBrandLogo.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      showIntro();
+    }
+  });
+}
+
+// From Intro Screen -> Proceed to Sign In Form
 if (introLaunchBtn) {
-  introLaunchBtn.addEventListener('click', launchWorkspace);
+  introLaunchBtn.addEventListener('click', showSignIn);
 }
 if (introLaunchP2Btn) {
-  introLaunchP2Btn.addEventListener('click', launchWorkspace);
+  introLaunchP2Btn.addEventListener('click', showSignIn);
 }
 if (introLaunchMobileBtn) {
-  introLaunchMobileBtn.addEventListener('click', launchWorkspace);
+  introLaunchMobileBtn.addEventListener('click', showSignIn);
 }
 if (introBackBtn) {
-  introBackBtn.addEventListener('click', returnToSignIn);
+  introBackBtn.addEventListener('click', showSignIn);
+}
+if (introExploreBtn) {
+  introExploreBtn.addEventListener('click', () => {
+    introPage2?.scrollIntoView({ behavior: 'smooth' });
+  });
 }
 
 // ── Cinetic Menu Toggle & Navigation Links ──
@@ -2071,13 +2104,13 @@ if (menuLinkTools) {
 if (menuLinkLaunch) {
   menuLinkLaunch.addEventListener('click', () => {
     cineticMenuOverlay?.classList.add('hidden');
-    launchWorkspace();
+    showSignIn();
   });
 }
 if (menuLinkSignin) {
   menuLinkSignin.addEventListener('click', () => {
     cineticMenuOverlay?.classList.add('hidden');
-    returnToSignIn();
+    showSignIn();
   });
 }
 
@@ -2189,11 +2222,11 @@ if (introScreen) {
   }, { passive: true });
 }
 
-// Keyboard on Intro Screen: pressing Enter launches workspace
+// Keyboard on Intro Screen: pressing Enter proceeds to sign in
 if (introScreen) {
   introScreen.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && document.activeElement !== introBackBtn && document.activeElement !== introBackToPage1Btn) {
-      launchWorkspace();
+    if (e.key === 'Enter' && document.activeElement !== introExploreBtn && document.activeElement !== introBackToPage1Btn && !document.activeElement?.classList?.contains('cinetic-menu-link')) {
+      showSignIn();
     }
   });
 }
