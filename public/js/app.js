@@ -229,7 +229,13 @@ const state = {
   localVideoTrack         : null,
   localScreenTrack        : null,
   isMicMuted              : false,
-  isCamOff                : false,
+  isCamOff                : true, // Camera starts off by default; starts and records when user touches "Start Video"
+  isRecording             : false,
+  mediaRecorder           : null,
+  recordedChunks          : [],
+  recordStartTime         : 0,
+  recordTimerInterval     : null,
+  currentVideoDeviceId    : null,
   voiceConnections        : new Map(), // remoteUserId -> { pc, audioEl, candidateQueue, hasRemoteDescription, remoteStream, ... }
   audioContext            : null,
   analyserNode            : null,
@@ -251,6 +257,11 @@ const state = {
 // ─── Seamless Mode Switcher ────────────────────────────────────────────────────
 function setMode(newMode) {
   if (state.currentMode === newMode) return;
+  if (state.currentMode === 'videocall' && newMode !== 'videocall') {
+    if (state.isRecording) {
+      stopCallRecording();
+    }
+  }
   state.currentMode = newMode;
 
   modeWhiteboardBtn.classList.toggle('active', newMode === 'whiteboard');
@@ -2734,7 +2745,271 @@ const httpsMobileNotice     = document.getElementById('https-mobile-notice');
 const httpsMobileSwitchLink = document.getElementById('https-mobile-switch-link');
 const httpsNoticeCloseBtn   = document.getElementById('https-notice-close-btn');
 
-async function ensureMediaForCall(withVideo = true) {
+// ─── Video Recording Manager ──────────────────────────────────────────────────
+let recordCanvas = null;
+let recordCtx = null;
+let recordAnimFrame = null;
+
+function setupRecordCanvas() {
+  if (!recordCanvas) {
+    recordCanvas = document.createElement('canvas');
+    recordCanvas.width = 1280;
+    recordCanvas.height = 720;
+    recordCtx = recordCanvas.getContext('2d');
+  }
+}
+
+function startRecordingRenderLoop() {
+  setupRecordCanvas();
+  function draw() {
+    if (!state.isRecording) return;
+    const localVideo = document.querySelector('.zoom-tile.is-local video');
+    if (localVideo && localVideo.videoWidth > 0 && !localVideo.paused && !localVideo.ended) {
+      if (state.currentFacingMode === 'user') {
+        // Front camera: mirrored
+        recordCtx.save();
+        recordCtx.translate(recordCanvas.width, 0);
+        recordCtx.scale(-1, 1);
+        recordCtx.drawImage(localVideo, 0, 0, recordCanvas.width, recordCanvas.height);
+        recordCtx.restore();
+      } else {
+        // Rear camera: unmirrored
+        recordCtx.drawImage(localVideo, 0, 0, recordCanvas.width, recordCanvas.height);
+      }
+    } else {
+      recordCtx.fillStyle = '#0a0a0c';
+      recordCtx.fillRect(0, 0, recordCanvas.width, recordCanvas.height);
+    }
+    recordAnimFrame = requestAnimationFrame(draw);
+  }
+  recordAnimFrame = requestAnimationFrame(draw);
+}
+
+function getBestRecordingMimeType() {
+  if (typeof MediaRecorder === 'undefined') return '';
+  const candidates = [
+    'video/webm;codecs=vp9,opus',
+    'video/webm;codecs=vp8,opus',
+    'video/webm;codecs=h264,opus',
+    'video/webm',
+    'video/mp4;codecs=avc1,mp4a.40.2',
+    'video/mp4'
+  ];
+  for (const t of candidates) {
+    if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) {
+      return t;
+    }
+  }
+  return '';
+}
+
+function startCallRecording() {
+  if (state.isRecording) return;
+  if (typeof MediaRecorder === 'undefined') {
+    console.warn('MediaRecorder is not supported in this browser environment');
+    return;
+  }
+  if (!state.localVideoTrack || state.localVideoTrack.readyState !== 'live') {
+    console.warn('Cannot record: no active camera track');
+    return;
+  }
+
+  try {
+    setupRecordCanvas();
+    startRecordingRenderLoop();
+
+    let streamToRecord = null;
+    try {
+      if (recordCanvas && typeof recordCanvas.captureStream === 'function') {
+        streamToRecord = recordCanvas.captureStream(30);
+      }
+    } catch (e) {
+      console.warn('recordCanvas.captureStream failed, using direct stream:', e);
+    }
+
+    if (!streamToRecord) {
+      const tracks = [state.localVideoTrack];
+      if (state.localAudioTrack && state.localAudioTrack.readyState === 'live') {
+        tracks.push(state.localAudioTrack);
+      }
+      streamToRecord = new MediaStream(tracks);
+    } else {
+      if (state.localAudioTrack && state.localAudioTrack.readyState === 'live') {
+        streamToRecord.addTrack(state.localAudioTrack);
+      }
+    }
+
+    const mimeType = getBestRecordingMimeType();
+    const options = mimeType ? { mimeType } : {};
+    const recorder = new MediaRecorder(streamToRecord, options);
+    state.recordedChunks = [];
+
+    recorder.ondataavailable = (event) => {
+      if (event.data && event.data.size > 0) {
+        state.recordedChunks.push(event.data);
+      }
+    };
+
+    recorder.onstop = () => {
+      saveAndDownloadRecording(mimeType);
+    };
+
+    recorder.start(1000);
+    state.mediaRecorder = recorder;
+    state.isRecording = true;
+    state.recordStartTime = Date.now();
+
+    const zoomRecBadge = document.getElementById('zoom-rec-badge');
+    const zoomRecTime  = document.getElementById('zoom-rec-time');
+    if (zoomRecBadge) zoomRecBadge.classList.remove('hidden');
+    if (zoomRecTime) zoomRecTime.textContent = '00:00';
+
+    if (state.recordTimerInterval) clearInterval(state.recordTimerInterval);
+    state.recordTimerInterval = setInterval(() => {
+      if (!state.isRecording) return;
+      const elapsed = Math.floor((Date.now() - state.recordStartTime) / 1000);
+      const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
+      const s = String(elapsed % 60).padStart(2, '0');
+      if (zoomRecTime) zoomRecTime.textContent = `${m}:${s}`;
+    }, 1000);
+
+    renderZoomGrid();
+    showVideoToast('🔴 Video call recording started');
+  } catch (err) {
+    console.error('Failed to start MediaRecorder:', err);
+    state.isRecording = false;
+  }
+}
+
+function stopCallRecording() {
+  if (!state.isRecording) return;
+  state.isRecording = false;
+
+  if (recordAnimFrame) {
+    cancelAnimationFrame(recordAnimFrame);
+    recordAnimFrame = null;
+  }
+
+  if (state.recordTimerInterval) {
+    clearInterval(state.recordTimerInterval);
+    state.recordTimerInterval = null;
+  }
+
+  const zoomRecBadge = document.getElementById('zoom-rec-badge');
+  if (zoomRecBadge) zoomRecBadge.classList.add('hidden');
+
+  if (state.mediaRecorder && state.mediaRecorder.state !== 'inactive') {
+    try {
+      state.mediaRecorder.stop();
+    } catch (e) {
+      console.warn('Error while stopping MediaRecorder:', e);
+    }
+  }
+  state.mediaRecorder = null;
+  renderZoomGrid();
+}
+
+function saveAndDownloadRecording(mimeType = '') {
+  if (!state.recordedChunks || state.recordedChunks.length === 0) {
+    console.warn('No recorded data chunks found to export');
+    return;
+  }
+
+  const type = mimeType || 'video/webm';
+  const isMp4 = type.includes('mp4');
+  const ext = isMp4 ? 'mp4' : 'webm';
+  const blob = new Blob(state.recordedChunks, { type });
+  state.recordedChunks = [];
+
+  const now = new Date();
+  const timeStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}-${String(now.getMinutes()).padStart(2, '0')}-${String(now.getSeconds()).padStart(2, '0')}`;
+  const filename = `meeting-recording-${timeStr}.${ext}`;
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.style.display = 'none';
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 3000);
+
+  const sizeMb = (blob.size / (1024 * 1024)).toFixed(2);
+  showVideoToast(`💾 Recording saved (${sizeMb} MB) & downloaded: ${filename}`);
+}
+
+async function startCameraWithPermission() {
+  if (!state.voiceSupported) {
+    showVideoToast('⚠️ WebRTC or mediaDevices not supported in this browser');
+    return false;
+  }
+
+  let videoStream = null;
+  // Step A: Ideal resolution & requested facingMode (user or environment)
+  try {
+    videoStream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: { ideal: state.currentFacingMode || 'user' },
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+        frameRate: { ideal: 30 },
+      },
+      audio: false,
+    });
+  } catch (e1) {
+    // Step B: Facing mode only (mobile phone camera constraint)
+    try {
+      videoStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: state.currentFacingMode || 'user' },
+        audio: false,
+      });
+    } catch (e2) {
+      // Step C: Basic video fallback (low-end or virtual webcams)
+      try {
+        videoStream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false,
+        });
+      } catch (e3) {
+        console.warn('Camera access unavailable or denied:', e3);
+        showVideoToast('⚠️ Camera permission denied or camera unavailable');
+        return false;
+      }
+    }
+  }
+
+  if (videoStream) {
+    const videoTrack = videoStream.getVideoTracks()[0];
+    if (videoTrack) {
+      state.localVideoTrack = videoTrack;
+      state.localVideoStream = videoStream;
+      state.currentVideoDeviceId = videoTrack.getSettings()?.deviceId || null;
+      state.localStream.getVideoTracks().forEach(t => state.localStream.removeTrack(t));
+      state.localStream.addTrack(videoTrack);
+      state.isCamOff = false;
+      videoTrack.enabled = true;
+
+      if (zoomPreviewVideo) {
+        zoomPreviewVideo.srcObject = state.localVideoStream;
+        zoomPreviewVideo.play().catch(() => {});
+      }
+
+      syncAllPeerConnections();
+      return true;
+    }
+  }
+
+  state.isCamOff = true;
+  state.localVideoTrack = null;
+  state.localVideoStream = null;
+  showVideoToast('⚠️ Could not open camera');
+  return false;
+}
+
+async function ensureMediaForCall(withVideo = false) {
   if (!state.voiceSupported) {
     showVideoToast('⚠️ WebRTC or mediaDevices not supported in this browser');
     return false;
@@ -2772,56 +3047,9 @@ async function ensureMediaForCall(withVideo = true) {
     }
   }
 
-  // 2. Ensure Video track (if withVideo requested)
+  // 2. Ensure Video track if requested
   if (withVideo && (!state.localVideoTrack || state.localVideoTrack.readyState !== 'live')) {
-    let videoStream = null;
-    // Step A: Ideal resolution & preferred facing mode (Laptop / Desktop / Phone)
-    try {
-      videoStream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: state.currentFacingMode || 'user',
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          frameRate: { ideal: 30 },
-        },
-      });
-    } catch (e1) {
-      // Step B: Facing mode only (mobile phone cameras)
-      try {
-        videoStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: state.currentFacingMode || 'user' },
-        });
-      } catch (e2) {
-        // Step C: Basic video fallback (low-end or virtual webcams)
-        try {
-          videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
-        } catch (e3) {
-          console.warn('Camera access unavailable:', e3);
-        }
-      }
-    }
-
-    if (videoStream) {
-      const videoTrack = videoStream.getVideoTracks()[0];
-      if (videoTrack) {
-        state.localVideoTrack = videoTrack;
-        state.localVideoStream = videoStream;
-        state.localStream.getVideoTracks().forEach(t => state.localStream.removeTrack(t));
-        state.localStream.addTrack(videoTrack);
-        state.isCamOff = false;
-        videoTrack.enabled = true;
-
-        if (zoomPreviewVideo) {
-          zoomPreviewVideo.srcObject = state.localVideoStream;
-          zoomPreviewVideo.play().catch(() => {});
-        }
-      }
-    } else {
-      state.isCamOff = true;
-      state.localVideoTrack = null;
-      state.localVideoStream = null;
-      showVideoToast('📷 Camera unavailable (Joining as Audio only)');
-    }
+    await startCameraWithPermission();
   }
 
   syncAllPeerConnections();
@@ -2832,73 +3060,168 @@ async function ensureMediaForCall(withVideo = true) {
 }
 
 async function flipCamera() {
-  if (!state.localVideoTrack) {
-    showVideoToast('📷 Turn on camera first to flip');
+  const flipIcon = document.getElementById('zoom-flip-cam-icon');
+  if (flipIcon) {
+    flipIcon.classList.remove('rotating');
+    void flipIcon.offsetWidth; // Trigger reflow to restart CSS rotation animation
+    flipIcon.classList.add('rotating');
+  }
+
+  // If camera is currently off, switch preference and notify
+  if (state.isCamOff || !state.localVideoTrack || state.localVideoTrack.readyState !== 'live') {
+    state.currentFacingMode = (state.currentFacingMode === 'user') ? 'environment' : 'user';
+    const label = state.currentFacingMode === 'user' ? 'Front' : 'Rear / Back';
+    showVideoToast(`🔄 Set camera to ${label}. Touch "Start Video" to begin with ${label} camera.`);
     return;
   }
-  state.currentFacingMode = (state.currentFacingMode === 'user') ? 'environment' : 'user';
-  const label = state.currentFacingMode === 'user' ? 'Front' : 'Back';
-  showVideoToast(`🔄 Switching to ${label} Camera...`);
+
+  const targetFacingMode = (state.currentFacingMode === 'user') ? 'environment' : 'user';
+  const targetLabel = (targetFacingMode === 'user') ? 'Front' : 'Rear';
+  showVideoToast(`🔄 Switching to ${targetLabel} Camera...`);
+
+  // STEP 1: Stop existing video track to release mobile camera hardware lock
+  const oldTrack = state.localVideoTrack;
+  if (oldTrack) {
+    try {
+      oldTrack.stop();
+    } catch (e) {
+      console.warn('Error stopping previous track:', e);
+    }
+  }
 
   let newStream = null;
+
+  // STEP 2: Request new camera with ideal facing mode
   try {
     newStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { exact: state.currentFacingMode } },
+      video: {
+        facingMode: { ideal: targetFacingMode },
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+        frameRate: { ideal: 30 },
+      },
+      audio: false,
     });
-  } catch (e1) {
+  } catch (err1) {
+    console.warn('Ideal facing mode failed:', err1);
     try {
       newStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: state.currentFacingMode },
+        video: { facingMode: targetFacingMode },
+        audio: false,
       });
-    } catch (e2) {
-      console.warn('Could not flip camera:', e2);
-      showVideoToast('⚠️ Could not switch camera (device has only 1 camera)');
+    } catch (err2) {
+      console.warn('Plain facing mode failed:', err2);
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoInputs = devices.filter(d => d.kind === 'videoinput');
+        if (videoInputs.length > 1) {
+          let chosen = videoInputs.find(d => {
+            const lbl = (d.label || '').toLowerCase();
+            return targetFacingMode === 'environment'
+              ? (lbl.includes('back') || lbl.includes('rear') || lbl.includes('environment') || lbl.includes('outward'))
+              : (lbl.includes('front') || lbl.includes('user') || lbl.includes('face') || lbl.includes('inward'));
+          });
+          if (!chosen) {
+            chosen = videoInputs.find(d => d.deviceId !== state.currentVideoDeviceId) || videoInputs[1];
+          }
+          if (chosen && chosen.deviceId) {
+            newStream = await navigator.mediaDevices.getUserMedia({
+              video: { deviceId: { exact: chosen.deviceId } },
+              audio: false,
+            });
+          }
+        }
+      } catch (err3) {
+        console.warn('Device enumeration fallback failed:', err3);
+      }
+    }
+  }
+
+  // Fallback to recover original camera if flipping failed
+  if (!newStream) {
+    try {
+      newStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: state.currentFacingMode } },
+        audio: false,
+      });
+    } catch (recoverErr) {
+      console.warn('Failed to recover camera:', recoverErr);
+    }
+
+    if (!newStream) {
+      state.isCamOff = true;
+      state.localVideoTrack = null;
+      updateCameraUI();
+      renderZoomGrid();
+      showVideoToast('⚠️ Could not switch camera (device may only have 1 camera)');
       return;
     }
   }
 
-  if (newStream) {
-    const newTrack = newStream.getVideoTracks()[0];
-    if (newTrack) {
-      if (state.localVideoTrack) {
-        try { state.localVideoTrack.stop(); } catch (e) {}
-      }
-      state.localVideoTrack = newTrack;
-      state.localVideoStream = newStream;
-      state.localStream.getVideoTracks().forEach(t => state.localStream.removeTrack(t));
-      state.localStream.addTrack(newTrack);
-      newTrack.enabled = !state.isCamOff;
+  // STEP 3: Successfully acquired new camera track
+  state.currentFacingMode = targetFacingMode;
+  const newTrack = newStream.getVideoTracks()[0];
+  state.currentVideoDeviceId = newTrack.getSettings()?.deviceId || null;
+  state.localVideoTrack = newTrack;
+  state.localVideoStream = newStream;
 
-      if (zoomPreviewVideo) {
-        zoomPreviewVideo.srcObject = newStream;
-        zoomPreviewVideo.play().catch(() => {});
-      }
+  state.localStream.getVideoTracks().forEach(t => state.localStream.removeTrack(t));
+  state.localStream.addTrack(newTrack);
+  newTrack.enabled = !state.isCamOff;
 
-      syncAllPeerConnections();
-      renderZoomGrid();
-      showVideoToast(`📹 Switched to ${label} Camera`);
-    }
+  if (zoomPreviewVideo) {
+    zoomPreviewVideo.srcObject = newStream;
+    zoomPreviewVideo.play().catch(() => {});
   }
+
+  // STEP 4: Replace track in all WebRTC peer connections
+  syncAllPeerConnections();
+
+  // STEP 5: Render zoom grid with orientation / mirroring update
+  renderZoomGrid();
+  showVideoToast(`📹 Switched to ${targetLabel} Camera`);
 }
 
 async function toggleCamera() {
-  if (!state.localVideoTrack || state.localVideoTrack.readyState !== 'live') {
-    state.isCamOff = false;
-    await ensureMediaForCall(true);
+  if (state.isCamOff || !state.localVideoTrack || state.localVideoTrack.readyState !== 'live') {
+    // 1. Ask permission for camera
+    showVideoToast('📷 Requesting camera permission...');
+    const ok = await startCameraWithPermission();
+    if (ok) {
+      state.isCamOff = false;
+      updateCameraUI();
+      renderZoomGrid();
+
+      wsSend({
+        type: 'video_cam_status',
+        isCamOff: false,
+      });
+
+      // 2. Start recording
+      startCallRecording();
+      showVideoToast('📹 Camera active & recording started');
+    }
   } else {
-    state.isCamOff = !state.isCamOff;
-    state.localVideoTrack.enabled = !state.isCamOff;
+    // Stop recording and save/download video file
+    stopCallRecording();
+
+    state.isCamOff = true;
+    if (state.localVideoTrack) {
+      state.localVideoTrack.enabled = false;
+      try { state.localVideoTrack.stop(); } catch (e) {}
+      state.localVideoTrack = null;
+    }
+
+    updateCameraUI();
+    renderZoomGrid();
+
+    wsSend({
+      type: 'video_cam_status',
+      isCamOff: true,
+    });
+
+    showVideoToast('📷 Camera turned off & recording saved');
   }
-
-  updateCameraUI();
-  renderZoomGrid();
-
-  wsSend({
-    type: 'video_cam_status',
-    isCamOff: state.isCamOff,
-  });
-
-  showVideoToast(state.isCamOff ? '📷 Camera turned off' : '📹 Camera active');
 }
 
 function updateCameraUI() {
@@ -3201,6 +3524,23 @@ function renderZoomGrid() {
       }
     } else if (item.isLocal) {
       videoEl.muted = true;
+
+      // Handle unmirroring for rear mobile camera vs mirroring for front camera
+      if (state.currentFacingMode === 'environment') {
+        videoEl.classList.add('facing-environment');
+        tileEl.classList.add('facing-environment');
+      } else {
+        videoEl.classList.remove('facing-environment');
+        tileEl.classList.remove('facing-environment');
+      }
+
+      // Display live recording badge on local tile when actively recording
+      if (badgeStrip) {
+        badgeStrip.innerHTML = state.isRecording
+          ? '<span class="zoom-tile-badge rec"><span class="rec-dot-tiny"></span> REC</span>'
+          : '';
+      }
+
       if (item.isCamOff || !item.track || item.track.readyState !== 'live') {
         if (avatarBox) avatarBox.classList.remove('hidden');
         videoEl.srcObject = null;
@@ -3243,7 +3583,8 @@ function renderZoomGrid() {
 // ─── Start / Join Video Call ──────────────────────────────────────────────────
 async function joinRoomCall(targetUserId = null, peerName = null, peerColor = null, isCaller = false) {
   setMode('videocall');
-  await ensureMediaForCall(true);
+  // Connect audio first; camera starts when user touches "Start Video"
+  await ensureMediaForCall(false);
 
   state.isCallActive = true;
   if (targetUserId) {
@@ -3297,6 +3638,11 @@ async function joinRoomCall(targetUserId = null, peerName = null, peerColor = nu
 }
 
 async function leaveActiveCall(reason = 'Call Ended') {
+  // If recording is running, stop and download video
+  if (state.isRecording) {
+    stopCallRecording();
+  }
+
   if (state.callTimerInterval) {
     clearInterval(state.callTimerInterval);
     state.callTimerInterval = null;
@@ -3339,7 +3685,7 @@ async function startCall(targetUserId) {
   const target = state.userMap.get(targetUserId);
   if (!target) return;
 
-  await ensureMediaForCall(true);
+  await ensureMediaForCall(false);
 
   state.pendingOutgoingCall = {
     targetUserId,
@@ -3506,28 +3852,45 @@ if (zoomEndCallBtn) {
   });
 }
 
+// Mobile-friendly instant touch & click helper
+function bindTouchAndClick(element, handler) {
+  if (!element) return;
+  let lastActionTime = 0;
+  const dispatch = (e) => {
+    const now = Date.now();
+    if (now - lastActionTime < 350) return;
+    lastActionTime = now;
+    handler(e);
+  };
+  element.addEventListener('click', dispatch);
+  element.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    dispatch(e);
+  }, { passive: false });
+}
+
 if (zoomScreenShareBtn) {
-  zoomScreenShareBtn.addEventListener('click', toggleScreenShare);
+  bindTouchAndClick(zoomScreenShareBtn, toggleScreenShare);
 }
 
 if (zoomPreviewCamToggle) {
-  zoomPreviewCamToggle.addEventListener('click', toggleCamera);
+  bindTouchAndClick(zoomPreviewCamToggle, toggleCamera);
 }
 
 if (zoomCallCamBtn) {
-  zoomCallCamBtn.addEventListener('click', toggleCamera);
+  bindTouchAndClick(zoomCallCamBtn, toggleCamera);
 }
 
 if (zoomFlipCamBtn) {
-  zoomFlipCamBtn.addEventListener('click', flipCamera);
+  bindTouchAndClick(zoomFlipCamBtn, flipCamera);
 }
 
 if (zoomPreviewMicToggle) {
-  zoomPreviewMicToggle.addEventListener('click', toggleMicrophone);
+  bindTouchAndClick(zoomPreviewMicToggle, toggleMicrophone);
 }
 
 if (zoomCallMicBtn) {
-  zoomCallMicBtn.addEventListener('click', toggleMicrophone);
+  bindTouchAndClick(zoomCallMicBtn, toggleMicrophone);
 }
 
 if (zoomCopyLinkBtn) {
