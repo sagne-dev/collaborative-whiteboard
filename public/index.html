@@ -115,11 +115,16 @@
 
     <!-- ── PAGE 1: Immersive Full-Width Hero Viewport (Modeled directly after The North Face reference) ── -->
     <section id="intro-page-1" class="intro-page-section intro-page-hero">
-      <!-- Full-Width Background Video (Muted, Looping, Autoplay, Object-Fit Cover) -->
-      <video class="hero-bg-video" autoplay muted loop playsinline preload="auto" disablepictureinpicture aria-hidden="true">
-        <source src="assets/children_laughing.mp4" type="video/mp4" />
-      </video>
-      <div class="hero-video-overlay" aria-hidden="true"></div>
+      <!-- Seamless Dual-Buffer Background Video (Zero-Glitch, Gapless Loop) -->
+      <div class="hero-video-container" aria-hidden="true">
+        <video id="hero-bg-video-a" class="hero-bg-video active" autoplay muted loop playsinline webkit-playsinline x5-playsinline preload="auto" disablepictureinpicture disableremoteplayback>
+          <source src="assets/children_laughing.mp4" type="video/mp4" />
+        </video>
+        <video id="hero-bg-video-b" class="hero-bg-video" muted loop playsinline webkit-playsinline x5-playsinline preload="auto" disablepictureinpicture disableremoteplayback>
+          <source src="assets/children_laughing.mp4" type="video/mp4" />
+        </video>
+        <div class="hero-video-overlay"></div>
+      </div>
 
       <!-- Top Navigation Bar (Matches Reference: Hamburger + Category Links Left, Icons & Sign In Right) -->
       <header class="intro-nav-bar nf-nav-bar">

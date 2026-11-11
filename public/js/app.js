@@ -2138,20 +2138,160 @@ if (nfHeroBrand) {
   });
 }
 
-// Background video autoplay assurance
-if (heroBgVideo) {
-  heroBgVideo.muted = true;
-  heroBgVideo.play().catch(() => {
-    // If autoplay blocked, retry on first user interaction
-    const unlockVideo = () => {
-      heroBgVideo.play().catch(() => {});
-      window.removeEventListener('pointerdown', unlockVideo);
-      window.removeEventListener('keydown', unlockVideo);
-    };
-    window.addEventListener('pointerdown', unlockVideo, { once: true });
-    window.addEventListener('keydown', unlockVideo, { once: true });
+// ── Seamless Dual-Buffer Looping Video Controller with Anti-Stutter Watchdog ──
+function initSeamlessVideoLoop() {
+  const videoA = document.getElementById('hero-bg-video-a');
+  const videoB = document.getElementById('hero-bg-video-b');
+  const introScreen = document.getElementById('intro-screen');
+
+  if (!videoA) return;
+
+  // Single video fallback if videoB is absent
+  if (!videoB) {
+    videoA.muted = true;
+    videoA.defaultMuted = true;
+    videoA.playsInline = true;
+    videoA.loop = true;
+    const playSingle = () => videoA.play().catch(() => {});
+    playSingle();
+    ['pointerdown', 'touchstart', 'keydown'].forEach(evt => {
+      window.addEventListener(evt, playSingle, { once: true, passive: true });
+    });
+    return;
+  }
+
+  // Dual-buffered gapless crossfade configuration
+  [videoA, videoB].forEach(v => {
+    v.muted = true;
+    v.defaultMuted = true;
+    v.playsInline = true;
+    v.loop = false; // Seamlessly transitioned via script
   });
+
+  let currentVideo = videoA;
+  let nextVideo = videoB;
+  let isTransitioning = false;
+
+  // Begin next video 450ms before current track ends to completely eliminate hardware seek latency
+  const leadTime = 0.45;
+
+  const performCrossfade = () => {
+    if (isTransitioning) return;
+    isTransitioning = true;
+
+    try {
+      nextVideo.currentTime = 0;
+    } catch (_) {}
+
+    const playPromise = nextVideo.play();
+    if (playPromise !== undefined) {
+      playPromise.then(() => {
+        // Swap active classes for smooth CSS crossfade
+        nextVideo.classList.add('active');
+        currentVideo.classList.remove('active');
+
+        // Allow 420ms for the 400ms opacity transition to finish, then pause and reset the old video
+        setTimeout(() => {
+          try {
+            currentVideo.pause();
+            currentVideo.currentTime = 0;
+          } catch (_) {}
+          const temp = currentVideo;
+          currentVideo = nextVideo;
+          nextVideo = temp;
+          isTransitioning = false;
+        }, 420);
+      }).catch(() => {
+        // Fallback: if next video play failed, rewind current video to 0 and continue
+        try {
+          currentVideo.currentTime = 0;
+          currentVideo.play().catch(() => {});
+        } catch (_) {}
+        isTransitioning = false;
+      });
+    } else {
+      nextVideo.classList.add('active');
+      currentVideo.classList.remove('active');
+      setTimeout(() => {
+        try {
+          currentVideo.pause();
+          currentVideo.currentTime = 0;
+        } catch (_) {}
+        const temp = currentVideo;
+        currentVideo = nextVideo;
+        nextVideo = temp;
+        isTransitioning = false;
+      }, 420);
+    }
+  };
+
+  const onTimeUpdate = (e) => {
+    const vid = e.target;
+    if (vid !== currentVideo) return;
+    if (vid.duration && vid.duration > 1) {
+      if (vid.currentTime >= vid.duration - leadTime) {
+        performCrossfade();
+      }
+    }
+  };
+
+  const onEnded = (e) => {
+    const vid = e.target;
+    if (vid === currentVideo) {
+      performCrossfade();
+    }
+  };
+
+  videoA.addEventListener('timeupdate', onTimeUpdate);
+  videoB.addEventListener('timeupdate', onTimeUpdate);
+  videoA.addEventListener('ended', onEnded);
+  videoB.addEventListener('ended', onEnded);
+
+  // Watchdog: Ensure video never stays paused/stalled while intro screen is visible
+  const isIntroVisible = () => {
+    return introScreen && !introScreen.classList.contains('hidden');
+  };
+
+  const ensurePlaying = () => {
+    if (!isIntroVisible()) return;
+    const active = currentVideo.classList.contains('active') ? currentVideo : (nextVideo.classList.contains('active') ? nextVideo : currentVideo);
+    if (active.paused || active.ended) {
+      active.play().catch(() => {});
+    }
+  };
+
+  // Start initial playback
+  currentVideo.classList.add('active');
+  nextVideo.classList.remove('active');
+  currentVideo.play().catch(() => {
+    // Retry on user interaction if browser blocked autoplay policy
+    const userUnlock = () => {
+      ensurePlaying();
+      window.removeEventListener('pointerdown', userUnlock);
+      window.removeEventListener('touchstart', userUnlock);
+      window.removeEventListener('keydown', userUnlock);
+    };
+    window.addEventListener('pointerdown', userUnlock, { once: true, passive: true });
+    window.addEventListener('touchstart', userUnlock, { once: true, passive: true });
+    window.addEventListener('keydown', userUnlock, { once: true, passive: true });
+  });
+
+  // Watchdog event listeners for tab focus, visibility change, low-power unfreezes, touch/scroll events
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) ensurePlaying();
+  });
+  window.addEventListener('focus', ensurePlaying);
+  window.addEventListener('pageshow', ensurePlaying);
+  ['pointerdown', 'touchstart', 'scroll'].forEach(evt => {
+    window.addEventListener(evt, ensurePlaying, { passive: true });
+  });
+
+  // Periodic watchdog interval (every 400ms) to revive video if browser throttles or freezes playback
+  setInterval(ensurePlaying, 400);
 }
+
+// Initialize continuous seamless loop
+initSeamlessVideoLoop();
 
 // ── Cinetic Menu Toggle & Navigation Links ──
 const introMenuBtn        = document.getElementById('intro-menu-btn');

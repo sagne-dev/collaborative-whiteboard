@@ -497,14 +497,53 @@ function handleHttpRequest(req, res) {
     res.writeHead(403); res.end('Forbidden'); return;
   }
 
-  const ext = path.extname(filePath);
-  fs.readFile(filePath, (err, data) => {
-    if (err) {
+  const ext = path.extname(filePath).toLowerCase();
+
+  fs.stat(filePath, (err, stats) => {
+    if (err || !stats.isFile()) {
       console.error(`❌ 404 – file not found: ${filePath}`);
       res.writeHead(404); res.end('Not found'); return;
     }
-    res.writeHead(200, { 'Content-Type': MIME[ext] || 'text/plain' });
-    res.end(data);
+
+    const fileSize = stats.size;
+    const range = req.headers.range;
+
+    // Support HTTP 206 Partial Content (critical for seamless, gapless MP4 streaming and looping across Chrome, Safari & iOS)
+    if (range && ext === '.mp4') {
+      const parts = range.replace(/bytes=/, '').split('-');
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+
+      if (start >= fileSize || end >= fileSize) {
+        res.writeHead(416, {
+          'Content-Range': `bytes */${fileSize}`,
+          'Accept-Ranges': 'bytes'
+        });
+        return res.end();
+      }
+
+      const chunkSize = (end - start) + 1;
+      const fileStream = fs.createReadStream(filePath, { start, end });
+      res.writeHead(206, {
+        'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+        'Accept-Ranges': 'bytes',
+        'Content-Length': chunkSize,
+        'Content-Type': MIME[ext] || 'video/mp4',
+        'Cache-Control': 'public, max-age=31536000, immutable'
+      });
+      fileStream.pipe(res);
+      req.on('close', () => fileStream.destroy());
+    } else {
+      res.writeHead(200, {
+        'Content-Length': fileSize,
+        'Content-Type': MIME[ext] || 'text/plain',
+        'Accept-Ranges': 'bytes',
+        'Cache-Control': ext === '.mp4' ? 'public, max-age=31536000, immutable' : 'public, max-age=3600'
+      });
+      const fileStream = fs.createReadStream(filePath);
+      fileStream.pipe(res);
+      req.on('close', () => fileStream.destroy());
+    }
   });
 }
 

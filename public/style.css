@@ -4189,7 +4189,24 @@ kbd {
   box-sizing: border-box;
 }
 
-/* Background video */
+/* Dual-Buffer Video Container & Elements */
+.hero-video-container {
+  position: absolute;
+  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 1;
+  pointer-events: none;
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
 .hero-bg-video {
   position: absolute;
   top: 0;
@@ -4205,10 +4222,17 @@ kbd {
   z-index: 1;
   pointer-events: none;
   filter: brightness(0.92) contrast(1.05);
-  will-change: transform;
+  will-change: opacity, transform;
   border: none;
   margin: 0;
   padding: 0;
+  opacity: 0;
+  transition: opacity 0.4s ease-in-out;
+}
+
+.hero-bg-video.active {
+  opacity: 1;
+  z-index: 2;
 }
 
 /* Subtle dark gradient overlay & vignette for supreme text contrast */
@@ -4221,7 +4245,7 @@ kbd {
   bottom: 0;
   width: 100%;
   height: 100%;
-  z-index: 2;
+  z-index: 3;
   pointer-events: none;
   border: none;
   margin: 0;
