@@ -113,54 +113,131 @@
       </div>
     </div>
 
-    <!-- ── PAGE 1: The Hero Introduction (Matches Image 1 Exactly) ── -->
+    <!-- ── PAGE 1: Immersive Full-Width Hero Viewport (Modeled directly after The North Face reference) ── -->
     <section id="intro-page-1" class="intro-page-section intro-page-hero">
-      <!-- Top Navigation Bar (Matches Image 1: Logo Left, MENU Right) -->
-      <header class="intro-nav-bar">
-        <div class="intro-nav-brand">
-          <div class="collabspace-logo">
-            <img src="assets/collabspace-logo.png" alt="CollabSpace" class="collabspace-icon" />
-            <span class="collabspace-text">CollabSpace</span>
-          </div>
+      <!-- Full-Width Background Video (Muted, Looping, Autoplay, Object-Fit Cover) -->
+      <video class="hero-bg-video" autoplay muted loop playsinline preload="auto" disablepictureinpicture aria-hidden="true">
+        <source src="assets/children_laughing.mp4" type="video/mp4" />
+      </video>
+      <div class="hero-video-overlay" aria-hidden="true"></div>
+
+      <!-- Top Navigation Bar (Matches Reference: Hamburger + Category Links Left, Icons & Sign In Right) -->
+      <header class="intro-nav-bar nf-nav-bar">
+        <div class="nf-nav-left">
+          <!-- Hamburger Menu button matching reference '=' icon -->
+          <button type="button" id="intro-menu-btn" class="nf-menu-trigger" aria-label="Toggle Menu" title="Open Menu">
+            <span class="nf-hamburger-icon" aria-hidden="true">
+              <span></span>
+              <span></span>
+            </span>
+          </button>
+          
+          <!-- Category Links matching reference navigation -->
+          <nav class="nf-nav-links" aria-label="Primary Categories">
+            <button type="button" class="nf-nav-link" id="nav-link-whiteboard">Whiteboard</button>
+            <button type="button" class="nf-nav-link" id="nav-link-watchparty">Watch Party</button>
+            <button type="button" class="nf-nav-link" id="nav-link-videocall">Video Call</button>
+            <button type="button" class="nf-nav-link" id="nav-link-features">The 3 Tools</button>
+            <button type="button" class="nf-nav-link" id="nav-link-join">Sign In</button>
+          </nav>
         </div>
 
-        <div class="intro-nav-actions">
-          <button type="button" id="theme-toggle-intro" class="intro-theme-btn theme-toggle-btn" title="Switch to Light Mode" aria-label="Toggle Dark and Light Mode">
-            <svg class="theme-icon-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <div class="nf-nav-right">
+          <!-- Theme Toggle matching reference header icons -->
+          <button type="button" id="theme-toggle-intro" class="nf-icon-btn theme-toggle-btn" title="Switch to Light Mode" aria-label="Toggle Dark and Light Mode">
+            <svg class="theme-icon-svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="9"></circle>
               <path d="M12 3v18"></path>
               <path class="theme-half-fill" d="M12 3a9 9 0 0 0 0 18z"></path>
             </svg>
           </button>
-          <button type="button" id="intro-explore-btn" class="intro-nav-text-btn" title="Explore Features">
-            EXPLORE TOOLS
+
+          <!-- Search / Room Icon -->
+          <button type="button" id="nf-room-btn" class="nf-icon-btn" title="Search or Join Room" aria-label="Search or Join Room">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
           </button>
-          <button type="button" id="intro-launch-btn" class="intro-launch-btn" title="Proceed to Sign In">
-            SIGN IN <span class="intro-btn-arrow">→</span>
-          </button>
-          <button type="button" id="intro-menu-btn" class="cinetic-menu-btn" aria-label="Toggle Menu" title="Menu">
-            <span class="cinetic-menu-text">MENU</span>
-            <span class="cinetic-menu-lines" aria-hidden="true">
-              <span class="cinetic-menu-line"></span>
-              <span class="cinetic-menu-line"></span>
-            </span>
+
+          <!-- User / Profile / Sign In Pill Button -->
+          <button type="button" id="intro-launch-btn" class="nf-icon-btn nf-profile-btn" title="Sign In to Workspace" aria-label="Sign In">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <span class="nf-profile-text">SIGN IN</span>
           </button>
         </div>
       </header>
 
-      <!-- Main Hero Headline -->
-      <main class="intro-hero-section">
-        <div class="intro-hero-content">
-          <h1 class="intro-main-headline cinetic-headline">
-            We built a powerful tool<br>
-            for you to collaborate.<br>
-            Hover or tap to reveal their features.
+      <!-- Main Hero Content: Left Brand + Right Action Block (Matches Reference Visual Hierarchy) -->
+      <main class="nf-hero-body">
+        <!-- LEFT: Giant North Face Inspired Brand Block -->
+        <div class="nf-brand-hero-block" id="nf-hero-brand">
+          <div class="nf-brand-lockup">
+            <div class="nf-brand-typography">
+              <span class="nf-brand-line">COLLAB</span>
+              <span class="nf-brand-line">SPACE</span>
+              <span class="nf-brand-sub"><span class="nf-reg">®</span> WORKSPACE</span>
+            </div>
+            <div class="nf-brand-dome" aria-hidden="true">
+              <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Three concentric quarter-circle arcs matching The North Face Half Dome aesthetic -->
+                <path d="M 12,90 L 12,62 A 28,28 0 0,1 40,90 Z" fill="currentColor"/>
+                <path d="M 12,50 A 40,40 0 0,1 52,90 L 64,90 A 52,52 0 0,0 12,38 Z" fill="currentColor"/>
+                <path d="M 12,26 A 64,64 0 0,1 76,90 L 88,90 A 76,76 0 0,0 12,14 Z" fill="currentColor"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Bold Headline & Two Frosted Interactive Cards -->
+        <div class="nf-action-hero-block">
+          <h1 class="nf-hero-headline">
+            DISCOVER<br>YOUR SPACE.
           </h1>
-          <p class="intro-hero-subtext cinetic-subtext">
-            Everything your remote team needs to brainstorm, communicate, and watch together — in one zero-friction workspace.
-          </p>
+
+          <div class="nf-cards-stack">
+            <!-- Card 1: Sign In -->
+            <button type="button" class="nf-action-card" id="hero-card-signin" aria-label="Enter Workspace, Sign In">
+              <div class="nf-card-content">
+                <span class="nf-card-kicker">EXPLORE</span>
+                <span class="nf-card-title">Enter Workspace · Sign In</span>
+              </div>
+              <span class="nf-card-arrow" aria-hidden="true">→</span>
+            </button>
+
+            <!-- Card 2: Discover Tools -->
+            <button type="button" class="nf-action-card" id="hero-card-tools" aria-label="Explore The 3 Live Tools">
+              <div class="nf-card-content">
+                <span class="nf-card-kicker">DISCOVER</span>
+                <span class="nf-card-title">Explore The 3 Live Tools</span>
+              </div>
+              <span class="nf-card-arrow" aria-hidden="true">→</span>
+            </button>
+          </div>
         </div>
       </main>
+
+      <!-- Bottom Ticker Bar (Exact match to reference bottom banner) -->
+      <footer class="nf-bottom-ticker" aria-label="Workspace Highlights">
+        <div class="nf-ticker-track">
+          <span class="nf-ticker-item">→ REAL-TIME MULTI-USER WHITEBOARD</span>
+          <span class="nf-ticker-item">→ SYNCHRONIZED MP4 & YOUTUBE WATCH PARTY</span>
+          <span class="nf-ticker-item">→ HD SFU VIDEO & VOICE CALLING</span>
+          <span class="nf-ticker-item">→ ZERO-LATENCY WEBRTC CANVAS</span>
+          <span class="nf-ticker-item">→ END-TO-END P2P ENCRYPTION</span>
+          <span class="nf-ticker-item">→ INSTANT ACCESS NO ACCOUNT NEEDED</span>
+          <!-- Duplicate for seamless continuous marquee loop -->
+          <span class="nf-ticker-item" aria-hidden="true">→ REAL-TIME MULTI-USER WHITEBOARD</span>
+          <span class="nf-ticker-item" aria-hidden="true">→ SYNCHRONIZED MP4 & YOUTUBE WATCH PARTY</span>
+          <span class="nf-ticker-item" aria-hidden="true">→ HD SFU VIDEO & VOICE CALLING</span>
+          <span class="nf-ticker-item" aria-hidden="true">→ ZERO-LATENCY WEBRTC CANVAS</span>
+          <span class="nf-ticker-item" aria-hidden="true">→ END-TO-END P2P ENCRYPTION</span>
+          <span class="nf-ticker-item" aria-hidden="true">→ INSTANT ACCESS NO ACCOUNT NEEDED</span>
+        </div>
+      </footer>
     </section>
 
     <!-- ── PAGE 2: The 3 Tools (Spacious Notes & Interactive Cards) ── -->

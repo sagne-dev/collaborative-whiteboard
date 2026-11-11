@@ -2070,6 +2070,96 @@ if (introExploreBtn) {
   });
 }
 
+// ── The North Face Style Hero Section Interactive Handlers ──
+const heroCardSignin    = document.getElementById('hero-card-signin');
+const heroCardTools     = document.getElementById('hero-card-tools');
+const navLinkWhiteboard = document.getElementById('nav-link-whiteboard');
+const navLinkWatchParty = document.getElementById('nav-link-watchparty');
+const navLinkVideoCall  = document.getElementById('nav-link-videocall');
+const navLinkFeatures   = document.getElementById('nav-link-features');
+const navLinkJoin       = document.getElementById('nav-link-join');
+const nfRoomBtn         = document.getElementById('nf-room-btn');
+const nfHeroBrand       = document.getElementById('nf-hero-brand');
+const heroBgVideo       = document.querySelector('.hero-bg-video');
+
+if (heroCardSignin) {
+  heroCardSignin.addEventListener('click', showSignIn);
+}
+
+if (heroCardTools) {
+  heroCardTools.addEventListener('click', () => {
+    introPage2?.scrollIntoView({ behavior: 'smooth' });
+  });
+}
+
+if (navLinkWhiteboard) {
+  navLinkWhiteboard.addEventListener('click', () => {
+    introPage2?.scrollIntoView({ behavior: 'smooth' });
+    const card = document.querySelector('.intro-col-card[data-card="whiteboard"]');
+    if (card) {
+      document.querySelectorAll('.intro-col-card').forEach(c => c.classList.remove('active-revealed'));
+      card.classList.add('active-revealed');
+    }
+  });
+}
+
+if (navLinkWatchParty) {
+  navLinkWatchParty.addEventListener('click', () => {
+    introPage2?.scrollIntoView({ behavior: 'smooth' });
+    const card = document.querySelector('.intro-col-card[data-card="watchparty"]');
+    if (card) {
+      document.querySelectorAll('.intro-col-card').forEach(c => c.classList.remove('active-revealed'));
+      card.classList.add('active-revealed');
+    }
+  });
+}
+
+if (navLinkVideoCall) {
+  navLinkVideoCall.addEventListener('click', () => {
+    introPage2?.scrollIntoView({ behavior: 'smooth' });
+    const card = document.querySelector('.intro-col-card[data-card="videocall"]');
+    if (card) {
+      document.querySelectorAll('.intro-col-card').forEach(c => c.classList.remove('active-revealed'));
+      card.classList.add('active-revealed');
+    }
+  });
+}
+
+if (navLinkFeatures) {
+  navLinkFeatures.addEventListener('click', () => {
+    introPage2?.scrollIntoView({ behavior: 'smooth' });
+  });
+}
+
+if (navLinkJoin) {
+  navLinkJoin.addEventListener('click', showSignIn);
+}
+
+if (nfRoomBtn) {
+  nfRoomBtn.addEventListener('click', showSignIn);
+}
+
+if (nfHeroBrand) {
+  nfHeroBrand.addEventListener('click', () => {
+    introPage1?.scrollIntoView({ behavior: 'smooth' });
+  });
+}
+
+// Background video autoplay assurance
+if (heroBgVideo) {
+  heroBgVideo.muted = true;
+  heroBgVideo.play().catch(() => {
+    // If autoplay blocked, retry on first user interaction
+    const unlockVideo = () => {
+      heroBgVideo.play().catch(() => {});
+      window.removeEventListener('pointerdown', unlockVideo);
+      window.removeEventListener('keydown', unlockVideo);
+    };
+    window.addEventListener('pointerdown', unlockVideo, { once: true });
+    window.addEventListener('keydown', unlockVideo, { once: true });
+  });
+}
+
 // ── Cinetic Menu Toggle & Navigation Links ──
 const introMenuBtn        = document.getElementById('intro-menu-btn');
 const cineticMenuOverlay  = document.getElementById('cinetic-menu-overlay');
