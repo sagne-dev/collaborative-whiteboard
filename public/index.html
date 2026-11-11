@@ -170,68 +170,31 @@
         </div>
       </header>
 
-      <!-- Main Hero Content: Left Brand + Right Action Cards -->
+      <!-- Main Hero Content: Bottom Left-Hand Side Brand & Action Bars -->
       <main class="nf-hero-body">
-        <!-- LEFT: Clean Brand Lockup with Descriptor -->
-        <div class="nf-brand-hero-block" id="nf-hero-brand">
-          <div class="nf-brand-lockup">
-            <div class="nf-brand-dome" aria-hidden="true">
-              <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <!-- Concentric quarter-circle dome arcs -->
-                <path d="M 12,90 L 12,62 A 28,28 0 0,1 40,90 Z" fill="currentColor"/>
-                <path d="M 12,50 A 40,40 0 0,1 52,90 L 64,90 A 52,52 0 0,0 12,38 Z" fill="currentColor"/>
-                <path d="M 12,26 A 64,64 0 0,1 76,90 L 88,90 A 76,76 0 0,0 12,14 Z" fill="currentColor"/>
-              </svg>
-            </div>
-            <div class="nf-brand-typography">
-              <h1 class="nf-brand-title">collabSpace</h1>
-              <p class="nf-brand-descriptor">Place you collaborate, hang out, and connect</p>
-            </div>
+        <div class="nf-hero-bottom-left">
+          <!-- Brand Lockup (Clean, without wifi sign) -->
+          <div class="nf-brand-lockup" id="nf-hero-brand">
+            <h1 class="nf-brand-title">collabSpace</h1>
+            <p class="nf-brand-descriptor">Place you collaborate, hang out, and connect</p>
           </div>
-        </div>
 
-        <!-- RIGHT: Frosted Interactive Cards -->
-        <div class="nf-action-hero-block">
-          <div class="nf-cards-stack">
-            <!-- Card 1: Sign In -->
-            <button type="button" class="nf-action-card" id="hero-card-signin" aria-label="Enter Workspace, Sign In">
-              <div class="nf-card-content">
-                <span class="nf-card-kicker">EXPLORE</span>
-                <span class="nf-card-title">Enter Workspace · Sign In</span>
-              </div>
+          <!-- Action Bars moved to bottom left-hand side -->
+          <div class="nf-cards-stack bottom-left">
+            <!-- Bar 1: Enter your workspace -->
+            <button type="button" class="nf-action-card" id="hero-card-signin" aria-label="Enter your workspace">
+              <span class="nf-card-title">Enter your workspace</span>
               <span class="nf-card-arrow" aria-hidden="true">→</span>
             </button>
 
-            <!-- Card 2: Discover Tools -->
-            <button type="button" class="nf-action-card" id="hero-card-tools" aria-label="Explore Workspace Tools">
-              <div class="nf-card-content">
-                <span class="nf-card-kicker">DISCOVER</span>
-                <span class="nf-card-title">Explore Workspace Tools</span>
-              </div>
+            <!-- Bar 2: Explore the tools -->
+            <button type="button" class="nf-action-card" id="hero-card-tools" aria-label="Explore the tools">
+              <span class="nf-card-title">Explore the tools</span>
               <span class="nf-card-arrow" aria-hidden="true">→</span>
             </button>
           </div>
         </div>
       </main>
-
-      <!-- Bottom Ticker Bar (Exact match to reference bottom banner) -->
-      <footer class="nf-bottom-ticker" aria-label="Workspace Highlights">
-        <div class="nf-ticker-track">
-          <span class="nf-ticker-item">→ REAL-TIME MULTI-USER WHITEBOARD</span>
-          <span class="nf-ticker-item">→ SYNCHRONIZED MP4 & YOUTUBE WATCH PARTY</span>
-          <span class="nf-ticker-item">→ HD SFU VIDEO & VOICE CALLING</span>
-          <span class="nf-ticker-item">→ ZERO-LATENCY WEBRTC CANVAS</span>
-          <span class="nf-ticker-item">→ END-TO-END P2P ENCRYPTION</span>
-          <span class="nf-ticker-item">→ INSTANT ACCESS NO ACCOUNT NEEDED</span>
-          <!-- Duplicate for seamless continuous marquee loop -->
-          <span class="nf-ticker-item" aria-hidden="true">→ REAL-TIME MULTI-USER WHITEBOARD</span>
-          <span class="nf-ticker-item" aria-hidden="true">→ SYNCHRONIZED MP4 & YOUTUBE WATCH PARTY</span>
-          <span class="nf-ticker-item" aria-hidden="true">→ HD SFU VIDEO & VOICE CALLING</span>
-          <span class="nf-ticker-item" aria-hidden="true">→ ZERO-LATENCY WEBRTC CANVAS</span>
-          <span class="nf-ticker-item" aria-hidden="true">→ END-TO-END P2P ENCRYPTION</span>
-          <span class="nf-ticker-item" aria-hidden="true">→ INSTANT ACCESS NO ACCOUNT NEEDED</span>
-        </div>
-      </footer>
     </section>
 
     <!-- ── PAGE 2: The 3 Tools (Spacious Notes & Interactive Cards) ── -->

@@ -4168,19 +4168,24 @@ kbd {
 /* ── Page 1: Hero Section (Modelled directly after The North Face Immersive Viewport) ── */
 .intro-page-hero {
   position: relative;
+  width: 100vw;
   width: 100%;
   height: 100vh;
   height: 100dvh;
   min-height: 100vh;
   min-height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  background: #060608;
+  background: #000000;
   color: #ffffff;
   padding: 0;
   margin: 0;
+  border: none;
+  outline: none;
   box-sizing: border-box;
 }
 
@@ -4189,27 +4194,41 @@ kbd {
   position: absolute;
   top: 0;
   left: 0;
+  right: 0;
+  bottom: 0;
   width: 100%;
   height: 100%;
+  min-width: 100%;
+  min-height: 100%;
   object-fit: cover;
   object-position: center center;
   z-index: 1;
   pointer-events: none;
   filter: brightness(0.92) contrast(1.05);
   will-change: transform;
+  border: none;
+  margin: 0;
+  padding: 0;
 }
 
 /* Subtle dark gradient overlay & vignette for supreme text contrast */
 .hero-video-overlay {
   position: absolute;
   inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   width: 100%;
   height: 100%;
   z-index: 2;
   pointer-events: none;
+  border: none;
+  margin: 0;
+  padding: 0;
   background: 
-    linear-gradient(180deg, rgba(0, 0, 0, 0.62) 0%, rgba(0, 0, 0, 0.2) 30%, rgba(0, 0, 0, 0.28) 60%, rgba(0, 0, 0, 0.75) 100%),
-    radial-gradient(ellipse at 75% 50%, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.65) 100%);
+    linear-gradient(180deg, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.1) 30%, rgba(0, 0, 0, 0.25) 60%, rgba(0, 0, 0, 0.78) 100%),
+    radial-gradient(circle at center, transparent 35%, rgba(0, 0, 0, 0.45) 100%);
 }
 
 /* ── Top Navigation Bar (The North Face Style) ── */
@@ -4361,202 +4380,117 @@ kbd {
   letter-spacing: 0.08em;
 }
 
-/* ── Hero Main Section: Split Layout ── */
+/* ── Hero Main Section: Bottom Left Layout ── */
 .nf-hero-body {
   position: relative;
   z-index: 10;
   flex: 1;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem 4.5rem 2.5rem;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 2rem 4rem 3.5rem;
   width: 100%;
   max-width: 1680px;
   margin: 0 auto;
   box-sizing: border-box;
 }
 
-/* Left Brand Lockup (Clean & Minimal) */
-.nf-brand-hero-block {
-  flex: 1;
+.nf-hero-bottom-left {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1.6rem;
+  max-width: 460px;
+  width: 100%;
 }
 
 .nf-brand-lockup {
   display: flex;
-  align-items: center;
-  gap: 1.35rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
   user-select: none;
   cursor: default;
 }
 
-.nf-brand-dome {
-  width: 56px;
-  height: 56px;
-  color: #ffffff;
-  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.65));
-  flex-shrink: 0;
-}
-
-.nf-brand-dome svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
-.nf-brand-typography {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
 .nf-brand-title {
   font-family: var(--font-display, 'Space Grotesk', 'Syne', sans-serif);
-  font-size: clamp(2.2rem, 3.6vw, 3rem);
+  font-size: clamp(2.4rem, 4.2vw, 3.4rem);
   font-weight: 800;
   letter-spacing: -0.03em;
   color: #ffffff;
   line-height: 1.05;
   margin: 0;
-  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.65);
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.75);
 }
 
 .nf-brand-descriptor {
   font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: clamp(0.9rem, 1.2vw, 1.05rem);
+  font-size: clamp(0.95rem, 1.25vw, 1.12rem);
   font-weight: 400;
   letter-spacing: 0.01em;
-  color: rgba(255, 255, 255, 0.82);
+  color: rgba(255, 255, 255, 0.88);
   margin: 0;
-  line-height: 1.4;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+  line-height: 1.45;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
 }
 
-/* Right Action Block */
-.nf-action-hero-block {
-  width: 100%;
-  max-width: 440px;
+/* Stacked Frosted Action Bars at Bottom Left */
+.nf-cards-stack.bottom-left {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-}
-
-/* Stacked Frosted Cards (Exact North Face Style) */
-.nf-cards-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 1.15rem;
+  gap: 0.95rem;
   width: 100%;
+  max-width: 400px;
 }
 
 .nf-action-card {
   width: 100%;
-  background: rgba(0, 0, 0, 0.68);
+  background: rgba(0, 0, 0, 0.65);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 16px;
-  padding: 1.15rem 1.6rem;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 14px;
+  padding: 1.05rem 1.45rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
   cursor: pointer;
   outline: none;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   text-align: left;
 }
 
 .nf-action-card:hover {
-  background: rgba(0, 0, 0, 0.88);
-  border-color: rgba(255, 255, 255, 0.38);
+  background: rgba(0, 0, 0, 0.85);
+  border-color: rgba(255, 255, 255, 0.45);
   transform: translateY(-2px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.65);
 }
 
 .nf-action-card:active {
   transform: translateY(1px);
 }
 
-.nf-card-content {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.nf-card-kicker {
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.55);
-}
-
 .nf-card-title {
   font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 1.12rem;
+  font-size: 1.05rem;
   font-weight: 600;
   color: #ffffff;
   letter-spacing: 0.01em;
 }
 
 .nf-card-arrow {
-  font-size: 1.35rem;
+  font-size: 1.25rem;
   color: #ffffff;
   font-weight: 400;
   transition: transform 0.25s ease;
-  margin-left: 1rem;
+  margin-left: 0.75rem;
 }
 
 .nf-action-card:hover .nf-card-arrow {
   transform: translateX(6px);
-}
-
-/* ── Bottom Marquee / Ticker Bar (Exact North Face Style) ── */
-.nf-bottom-ticker {
-  position: relative;
-  z-index: 10;
-  width: 100%;
-  background: #ffffff;
-  color: #000000;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  height: 44px;
-  flex-shrink: 0;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
-}
-
-.nf-ticker-track {
-  display: flex;
-  align-items: center;
-  gap: 3.5rem;
-  white-space: nowrap;
-  animation: nfTickerScroll 35s linear infinite;
-  will-change: transform;
-}
-
-.nf-bottom-ticker:hover .nf-ticker-track {
-  animation-play-state: paused;
-}
-
-.nf-ticker-item {
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.74rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #0b0b0e;
-}
-
-@keyframes nfTickerScroll {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
 }
 
 /* ── Responsive Mobile Rules for North Face Hero ── */
@@ -4570,25 +4504,24 @@ kbd {
   }
 
   .nf-hero-body {
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
-    padding: 1rem 1.5rem 2rem;
-    gap: 2rem;
+    padding: 1rem 1.5rem 2.5rem;
   }
 
-  .nf-brand-hero-block {
-    padding-bottom: 0;
-  }
-
-  .nf-action-hero-block {
+  .nf-hero-bottom-left {
     max-width: 100%;
-    align-items: flex-start;
-    padding-bottom: 1rem;
+    gap: 1.4rem;
+  }
+
+  .nf-cards-stack.bottom-left {
+    max-width: 100%;
   }
 }
 
 @media (max-width: 580px) {
+  .nf-nav-bar {
+    padding: 0.75rem 1rem 0.5rem;
+  }
+
   .nf-profile-text {
     display: none;
   }
@@ -4598,16 +4531,25 @@ kbd {
     border-radius: 50%;
   }
 
-  .nf-brand-lockup {
-    gap: 1rem;
+  .nf-hero-body {
+    padding: 0.75rem 1rem 2rem;
+  }
+
+  .nf-brand-title {
+    font-size: clamp(2rem, 7.5vw, 2.6rem);
+  }
+
+  .nf-brand-descriptor {
+    font-size: 0.92rem;
   }
 
   .nf-action-card {
-    padding: 0.95rem 1.25rem;
+    padding: 0.95rem 1.2rem;
+    border-radius: 12px;
   }
 
   .nf-card-title {
-    font-size: 1rem;
+    font-size: 0.98rem;
   }
 }
 
@@ -4873,9 +4815,13 @@ kbd {
   }
 
   .intro-page-hero {
-    min-height: 100vh;
-    min-height: 100dvh;
-    height: auto !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    max-height: 100vh !important;
+    max-height: 100dvh !important;
+    overflow: hidden !important;
   }
 
   .intro-nav-bar,
@@ -5475,7 +5421,19 @@ body.light-theme #intro-screen,
 
 body.light-theme .intro-page-hero,
 [data-theme="light"] .intro-page-hero {
-  background: #f4f4f6;
+  background: #000000 !important;
+  color: #ffffff !important;
+}
+
+body.light-theme .nf-brand-title,
+[data-theme="light"] .nf-brand-title,
+body.light-theme .nf-brand-descriptor,
+[data-theme="light"] .nf-brand-descriptor,
+body.light-theme .nf-action-card .nf-card-title,
+[data-theme="light"] .nf-action-card .nf-card-title,
+body.light-theme .nf-nav-link,
+[data-theme="light"] .nf-nav-link {
+  color: #ffffff !important;
 }
 
 body.light-theme .intro-main-headline,
