@@ -15,7 +15,7 @@
   <title>CollabSpace — Collaborative Workspace</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&family=Syne:wght@700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@600;700;800;900&family=Space+Grotesk:wght@500;600;700&family=Syne:wght@700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
   <!-- YouTube IFrame Player API -->
   <script src="https://www.youtube.com/iframe_api"></script>
@@ -88,12 +88,20 @@
             <span class="menu-link-num">01</span>
             <span class="menu-link-text">OVERVIEW</span>
           </button>
-          <button type="button" class="cinetic-menu-link" id="menu-link-tools">
+          <button type="button" class="cinetic-menu-link" id="menu-link-whiteboard">
             <span class="menu-link-num">02</span>
-            <span class="menu-link-text">WORKSPACE TOOLS</span>
+            <span class="menu-link-text">INTERACTIVE WHITEBOARD</span>
+          </button>
+          <button type="button" class="cinetic-menu-link" id="menu-link-watchparty">
+            <span class="menu-link-num">03</span>
+            <span class="menu-link-text">SYNCHRONIZED WATCH PARTY</span>
+          </button>
+          <button type="button" class="cinetic-menu-link" id="menu-link-videocall">
+            <span class="menu-link-num">04</span>
+            <span class="menu-link-text">HD VIDEO &amp; VOICE</span>
           </button>
           <button type="button" class="cinetic-menu-link highlight" id="menu-link-signin">
-            <span class="menu-link-num">03</span>
+            <span class="menu-link-num">05</span>
             <span class="menu-link-text">SIGN IN / JOIN ROOM →</span>
           </button>
           <button type="button" class="cinetic-menu-link" id="menu-link-theme">
@@ -113,6 +121,76 @@
       </div>
     </div>
 
+    <!-- Fixed Top Navigation Bar (Across all full-bleed screens) -->
+    <header class="intro-nav-bar nf-nav-bar" id="intro-fixed-nav">
+      <div class="nf-nav-left">
+        <!-- Hamburger Menu button matching reference '=' icon -->
+        <button type="button" id="intro-menu-btn" class="nf-menu-trigger" aria-label="Toggle Menu" title="Open Menu">
+          <span class="nf-hamburger-icon" aria-hidden="true">
+            <span></span>
+            <span></span>
+          </span>
+        </button>
+        
+        <!-- Category Links matching reference navigation -->
+        <nav class="nf-nav-links" aria-label="Primary Categories">
+          <button type="button" class="nf-nav-link" id="nav-link-overview" data-target="intro-page-1">Overview</button>
+          <button type="button" class="nf-nav-link" id="nav-link-whiteboard" data-target="intro-page-whiteboard">Whiteboard</button>
+          <button type="button" class="nf-nav-link" id="nav-link-watchparty" data-target="intro-page-watchparty">Watch Party</button>
+          <button type="button" class="nf-nav-link" id="nav-link-videocall" data-target="intro-page-videocall">Video Call</button>
+          <button type="button" class="nf-nav-link highlight" id="nav-link-join">Sign In</button>
+        </nav>
+      </div>
+
+      <div class="nf-nav-right">
+        <!-- Theme Toggle matching reference header icons -->
+        <button type="button" id="theme-toggle-intro" class="nf-icon-btn theme-toggle-btn" title="Switch to Light Mode" aria-label="Toggle Dark and Light Mode">
+          <svg class="theme-icon-svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M12 3v18"></path>
+            <path class="theme-half-fill" d="M12 3a9 9 0 0 0 0 18z"></path>
+          </svg>
+        </button>
+
+        <!-- Search / Room Icon -->
+        <button type="button" id="nf-room-btn" class="nf-icon-btn" title="Search or Join Room" aria-label="Search or Join Room">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </button>
+
+        <!-- User / Profile / Sign In Pill Button -->
+        <button type="button" id="intro-launch-btn" class="nf-icon-btn nf-profile-btn" title="Sign In to Workspace" aria-label="Sign In">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <span class="nf-profile-text">SIGN IN</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Floating 4-Page Indicator Dots (Right Edge) -->
+    <nav class="intro-page-dots" aria-label="Section navigation">
+      <button type="button" class="intro-dot active" data-page="1" data-target="intro-page-1" aria-label="Section 1: Overview" title="Overview">
+        <span class="dot-circle"></span>
+        <span class="dot-label">Overview</span>
+      </button>
+      <button type="button" class="intro-dot" data-page="2" data-target="intro-page-whiteboard" aria-label="Section 2: Interactive Whiteboard" title="Whiteboard">
+        <span class="dot-circle"></span>
+        <span class="dot-label">Whiteboard</span>
+      </button>
+      <button type="button" class="intro-dot" data-page="3" data-target="intro-page-watchparty" aria-label="Section 3: Synchronized Watch Party" title="Watch Party">
+        <span class="dot-circle"></span>
+        <span class="dot-label">Watch Party</span>
+      </button>
+      <button type="button" class="intro-dot" data-page="4" data-target="intro-page-videocall" aria-label="Section 4: HD Video &amp; Voice Calling" title="Video Calling">
+        <span class="dot-circle"></span>
+        <span class="dot-label">Video Calling</span>
+      </button>
+    </nav>
+
     <!-- ── PAGE 1: Immersive Full-Width Hero Viewport (Modeled directly after The North Face reference) ── -->
     <section id="intro-page-1" class="intro-page-section intro-page-hero">
       <!-- Seamless Dual-Buffer Background Video (Zero-Glitch, Gapless Loop) -->
@@ -125,55 +203,6 @@
         </video>
         <div class="hero-video-overlay"></div>
       </div>
-
-      <!-- Top Navigation Bar (Matches Reference: Hamburger + Category Links Left, Icons & Sign In Right) -->
-      <header class="intro-nav-bar nf-nav-bar">
-        <div class="nf-nav-left">
-          <!-- Hamburger Menu button matching reference '=' icon -->
-          <button type="button" id="intro-menu-btn" class="nf-menu-trigger" aria-label="Toggle Menu" title="Open Menu">
-            <span class="nf-hamburger-icon" aria-hidden="true">
-              <span></span>
-              <span></span>
-            </span>
-          </button>
-          
-          <!-- Category Links matching reference navigation -->
-          <nav class="nf-nav-links" aria-label="Primary Categories">
-            <button type="button" class="nf-nav-link" id="nav-link-whiteboard">Whiteboard</button>
-            <button type="button" class="nf-nav-link" id="nav-link-watchparty">Watch Party</button>
-            <button type="button" class="nf-nav-link" id="nav-link-videocall">Video Call</button>
-            <button type="button" class="nf-nav-link highlight" id="nav-link-join">Sign In</button>
-          </nav>
-        </div>
-
-        <div class="nf-nav-right">
-          <!-- Theme Toggle matching reference header icons -->
-          <button type="button" id="theme-toggle-intro" class="nf-icon-btn theme-toggle-btn" title="Switch to Light Mode" aria-label="Toggle Dark and Light Mode">
-            <svg class="theme-icon-svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="9"></circle>
-              <path d="M12 3v18"></path>
-              <path class="theme-half-fill" d="M12 3a9 9 0 0 0 0 18z"></path>
-            </svg>
-          </button>
-
-          <!-- Search / Room Icon -->
-          <button type="button" id="nf-room-btn" class="nf-icon-btn" title="Search or Join Room" aria-label="Search or Join Room">
-            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-          </button>
-
-          <!-- User / Profile / Sign In Pill Button -->
-          <button type="button" id="intro-launch-btn" class="nf-icon-btn nf-profile-btn" title="Sign In to Workspace" aria-label="Sign In">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-              <circle cx="12" cy="7" r="4"></circle>
-            </svg>
-            <span class="nf-profile-text">SIGN IN</span>
-          </button>
-        </div>
-      </header>
 
       <!-- Main Hero Content: Bottom Left-Hand Side Brand & Action Bars -->
       <main class="nf-hero-body">
@@ -202,84 +231,115 @@
       </main>
     </section>
 
-    <!-- ── PAGE 2: The 3 Tools (Spacious Notes & Interactive Cards) ── -->
-    <section id="intro-page-2" class="intro-page-section intro-page-tools">
-      <!-- Page 2 Header -->
-      <header class="intro-page2-header">
-        <div class="intro-page2-title-wrap">
-          <h2 class="intro-page2-heading">Everything included in your workspace</h2>
-        </div>
-      </header>
+    <!-- ── FEATURE 1: Interactive Whiteboard (Dedicated 100vh Viewport) ── -->
+    <section id="intro-page-whiteboard" class="intro-page-section feature-snap-screen" data-feature="whiteboard">
+      <!-- Full-bleed background image -->
+      <div class="feature-screen-media">
+        <img src="assets/whiteboard.jpg" alt="Interactive Whiteboard Preview" class="feature-screen-bg-img" loading="eager" />
+        <div class="feature-screen-scrim" aria-hidden="true"></div>
+      </div>
 
-      <!-- Spacious 3-Column Grid for Existing Notes -->
-      <div class="intro-page2-body">
-        <div class="intro-columns-grid">
-
-          <!-- Column 01: Interactive Whiteboard -->
-          <div class="intro-col-card" data-card="whiteboard" tabindex="0" role="region" aria-label="Interactive Whiteboard Tool">
-            <div class="intro-col-accent-bar"></div>
-            <div class="intro-col-meta">
-              <span class="intro-col-num">01</span>
-            </div>
-            <h3 class="intro-col-title">Interactive Whiteboard</h3>
-            <div class="intro-col-subtitle">REAL-TIME MULTI-USER CANVAS</div>
-            
-            <div class="intro-col-reveal-body">
-              <p class="intro-col-description">
-                Draw, sketch, and brainstorm ideas together on an infinite canvas. Features pressure-sensitive pens, shapes, color swatches, laser pointer, undo/redo, and live multiplayer cursors.
-              </p>
-            </div>
-            <div class="intro-col-tap-prompt">Hover or tap to reveal</div>
+      <!-- Editorial Typography & Content Block (Matching User's Reference Design) -->
+      <div class="feature-screen-container">
+        <div class="feature-screen-lockup">
+          <div class="feature-screen-category">01 &nbsp;·&nbsp; REAL-TIME CANVAS</div>
+          <h2 class="feature-screen-headline">
+            Interactive<br>Whiteboard
+          </h2>
+          <div class="feature-screen-meta-wrap">
+            <p class="feature-screen-desc">
+              Draw, sketch, and brainstorm ideas together on an infinite canvas. Features pressure-sensitive pens, shapes, color swatches, laser pointer, undo/redo, and live multiplayer cursors.
+            </p>
+            <button type="button" class="feature-screen-action-link" data-action="signin" data-feature="whiteboard" aria-label="Start Drawing Now">
+              <span>Start Drawing Now</span>
+              <span class="action-arrow" aria-hidden="true">→</span>
+            </button>
           </div>
-
-          <!-- Column 02: Synchronized Watch Party -->
-          <div class="intro-col-card" data-card="watchparty" tabindex="0" role="region" aria-label="Synchronized Watch Party Tool">
-            <div class="intro-col-accent-bar"></div>
-            <div class="intro-col-meta">
-              <span class="intro-col-num">02</span>
-            </div>
-            <h3 class="intro-col-title">Synchronized Watch Party</h3>
-            <div class="intro-col-subtitle">UNIVERSAL VIDEO & YOUTUBE SYNC</div>
-            
-            <div class="intro-col-reveal-body">
-              <p class="intro-col-description">
-                Stream MP4 videos or YouTube links together with millisecond playback synchronization. Play, pause, and seek stay in sync for everyone in the room with built-in live chat.
-              </p>
-            </div>
-            <div class="intro-col-tap-prompt">Hover or tap to reveal</div>
-          </div>
-
-          <!-- Column 03: Direct Video & Voice Calling -->
-          <div class="intro-col-card" data-card="videocall" tabindex="0" role="region" aria-label="HD Video & Voice Calling Tool">
-            <div class="intro-col-accent-bar"></div>
-            <div class="intro-col-meta">
-              <span class="intro-col-num">03</span>
-            </div>
-            <h3 class="intro-col-title">HD Video & Voice Calling</h3>
-            <div class="intro-col-subtitle">ZOOM-STYLE DYNAMIC SFU GRID</div>
-            
-            <div class="intro-col-reveal-body">
-              <p class="intro-col-description">
-                Call and talk face-to-face in crystal-clear audio and video. Features responsive auto-splitting video grids, screen sharing, active speaker detection, and instant mute/camera toggles.
-              </p>
-            </div>
-            <div class="intro-col-tap-prompt">Hover or tap to reveal</div>
-          </div>
-
         </div>
       </div>
 
-      <!-- Page 2 Footer Actions -->
-      <footer class="intro-page2-footer">
-        <div class="intro-p2-footer-inner">
-          <div class="intro-p2-footer-note">
-            <span>Ready to start? Sign in to enter your collaborative room.</span>
+      <!-- Bottom Scroll Cue to Next Feature -->
+      <div class="feature-screen-footer-cue">
+        <button type="button" class="feature-scroll-cue-btn" data-target="intro-page-watchparty" aria-label="Scroll to Synchronized Watch Party">
+          <span class="scroll-cue-text">Next: Synchronized Watch Party</span>
+          <span class="scroll-cue-arrow" aria-hidden="true">↓</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ── FEATURE 2: Synchronized Watch Party (Dedicated 100vh Viewport) ── -->
+    <section id="intro-page-watchparty" class="intro-page-section feature-snap-screen" data-feature="watchparty">
+      <!-- Full-bleed background image -->
+      <div class="feature-screen-media">
+        <img src="assets/movieparty.jpg" alt="Synchronized Watch Party Preview" class="feature-screen-bg-img" loading="eager" />
+        <div class="feature-screen-scrim" aria-hidden="true"></div>
+      </div>
+
+      <!-- Editorial Typography & Content Block (Matching User's Reference Design) -->
+      <div class="feature-screen-container">
+        <div class="feature-screen-lockup">
+          <div class="feature-screen-category">02 &nbsp;·&nbsp; UNIVERSAL SYNC</div>
+          <h2 class="feature-screen-headline">
+            Synchronized<br>Watch Party
+          </h2>
+          <div class="feature-screen-meta-wrap">
+            <p class="feature-screen-desc">
+              Stream MP4 videos or YouTube links together with millisecond playback synchronization. Play, pause, and seek stay in sync for everyone in the room with built-in live chat.
+            </p>
+            <button type="button" class="feature-screen-action-link" data-action="signin" data-feature="watchparty" aria-label="Host a Watch Party">
+              <span>Host a Watch Party</span>
+              <span class="action-arrow" aria-hidden="true">→</span>
+            </button>
           </div>
-          <button type="button" id="intro-launch-mobile-btn" class="intro-launch-btn" title="Proceed to Sign In">
-            Continue to Sign In <span class="intro-btn-arrow">→</span>
+        </div>
+      </div>
+
+      <!-- Bottom Scroll Cue to Next Feature -->
+      <div class="feature-screen-footer-cue">
+        <button type="button" class="feature-scroll-cue-btn" data-target="intro-page-videocall" aria-label="Scroll to HD Video Calling">
+          <span class="scroll-cue-text">Next: HD Video &amp; Voice</span>
+          <span class="scroll-cue-arrow" aria-hidden="true">↓</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ── FEATURE 3: HD Video & Voice Calling (Dedicated 100vh Viewport) ── -->
+    <section id="intro-page-videocall" class="intro-page-section feature-snap-screen" data-feature="videocall">
+      <!-- Full-bleed background image -->
+      <div class="feature-screen-media">
+        <img src="assets/videocalling.jpg" alt="HD Video Calling Preview" class="feature-screen-bg-img" loading="eager" />
+        <div class="feature-screen-scrim" aria-hidden="true"></div>
+      </div>
+
+      <!-- Editorial Typography & Content Block (Matching User's Reference Design) -->
+      <div class="feature-screen-container">
+        <div class="feature-screen-lockup">
+          <div class="feature-screen-category">03 &nbsp;·&nbsp; DYNAMIC SFU GRID</div>
+          <h2 class="feature-screen-headline">
+            HD Video &amp;<br>Voice Calling
+          </h2>
+          <div class="feature-screen-meta-wrap">
+            <p class="feature-screen-desc">
+              Call and talk face-to-face in crystal-clear audio and video. Features responsive auto-splitting video grids, screen sharing, active speaker detection, and instant mute/camera toggles.
+            </p>
+            <button type="button" class="feature-screen-action-link" data-action="signin" data-feature="videocall" aria-label="Enter Workspace">
+              <span>Enter Workspace</span>
+              <span class="action-arrow" aria-hidden="true">→</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Sign-In Bar on Final Viewport -->
+      <div class="feature-final-launch-bar">
+        <div class="feature-final-launch-inner">
+          <span class="final-launch-note">Ready to collaborate? Sign in to enter your shared room.</span>
+          <button type="button" id="intro-launch-mobile-btn" class="feature-final-btn" title="Proceed to Sign In">
+            <span>Enter Workspace</span>
+            <span class="action-arrow" aria-hidden="true">→</span>
           </button>
         </div>
-      </footer>
+      </div>
     </section>
 
   </div>

@@ -35,7 +35,10 @@ const introLaunchMobileBtn = document.getElementById('intro-launch-mobile-btn');
 const introToPage2Btn   = document.getElementById('intro-to-page2-btn');
 const introBackToPage1Btn = document.getElementById('intro-back-to-page1-btn');
 const introPage1        = document.getElementById('intro-page-1');
-const introPage2        = document.getElementById('intro-page-2');
+const introPageWhiteboard = document.getElementById('intro-page-whiteboard');
+const introPageWatchParty = document.getElementById('intro-page-watchparty');
+const introPageVideoCall  = document.getElementById('intro-page-videocall');
+const introPage2        = introPageWhiteboard || document.getElementById('intro-page-2');
 const introDots         = document.querySelectorAll('.intro-dot');
 const introColCards     = document.querySelectorAll('.intro-col-card');
 
@@ -2070,15 +2073,17 @@ if (introExploreBtn) {
   });
 }
 
-// ── The North Face Style Hero Section Interactive Handlers ──
+// ── Full-Page Scrolling Layout & Feature Interactive Handlers ──
 const heroCardSignin    = document.getElementById('hero-card-signin');
 const heroCardTools     = document.getElementById('hero-card-tools');
+const navLinkOverview   = document.getElementById('nav-link-overview');
 const navLinkWhiteboard = document.getElementById('nav-link-whiteboard');
 const navLinkWatchParty = document.getElementById('nav-link-watchparty');
 const navLinkVideoCall  = document.getElementById('nav-link-videocall');
 const navLinkJoin       = document.getElementById('nav-link-join');
 const nfRoomBtn         = document.getElementById('nf-room-btn');
 const nfHeroBrand       = document.getElementById('nf-hero-brand');
+const introFixedNav     = document.getElementById('intro-fixed-nav') || document.querySelector('.nf-nav-bar');
 const heroBgVideo       = document.querySelector('.hero-bg-video');
 
 if (heroCardSignin) {
@@ -2087,40 +2092,31 @@ if (heroCardSignin) {
 
 if (heroCardTools) {
   heroCardTools.addEventListener('click', () => {
-    introPage2?.scrollIntoView({ behavior: 'smooth' });
+    (introPageWhiteboard || introPage2)?.scrollIntoView({ behavior: 'smooth' });
+  });
+}
+
+if (navLinkOverview) {
+  navLinkOverview.addEventListener('click', () => {
+    introPage1?.scrollIntoView({ behavior: 'smooth' });
   });
 }
 
 if (navLinkWhiteboard) {
   navLinkWhiteboard.addEventListener('click', () => {
-    introPage2?.scrollIntoView({ behavior: 'smooth' });
-    const card = document.querySelector('.intro-col-card[data-card="whiteboard"]');
-    if (card) {
-      document.querySelectorAll('.intro-col-card').forEach(c => c.classList.remove('active-revealed'));
-      card.classList.add('active-revealed');
-    }
+    (introPageWhiteboard || introPage2)?.scrollIntoView({ behavior: 'smooth' });
   });
 }
 
 if (navLinkWatchParty) {
   navLinkWatchParty.addEventListener('click', () => {
-    introPage2?.scrollIntoView({ behavior: 'smooth' });
-    const card = document.querySelector('.intro-col-card[data-card="watchparty"]');
-    if (card) {
-      document.querySelectorAll('.intro-col-card').forEach(c => c.classList.remove('active-revealed'));
-      card.classList.add('active-revealed');
-    }
+    introPageWatchParty?.scrollIntoView({ behavior: 'smooth' });
   });
 }
 
 if (navLinkVideoCall) {
   navLinkVideoCall.addEventListener('click', () => {
-    introPage2?.scrollIntoView({ behavior: 'smooth' });
-    const card = document.querySelector('.intro-col-card[data-card="videocall"]');
-    if (card) {
-      document.querySelectorAll('.intro-col-card').forEach(c => c.classList.remove('active-revealed'));
-      card.classList.add('active-revealed');
-    }
+    introPageVideoCall?.scrollIntoView({ behavior: 'smooth' });
   });
 }
 
@@ -2137,6 +2133,23 @@ if (nfHeroBrand) {
     introPage1?.scrollIntoView({ behavior: 'smooth' });
   });
 }
+
+// Action links on each feature screen -> launch sign-in / enter workspace
+document.querySelectorAll('.feature-screen-action-link').forEach(link => {
+  link.addEventListener('click', (e) => {
+    e.preventDefault();
+    showSignIn();
+  });
+});
+
+// Scroll Cue buttons -> smooth scroll to targeted feature screen
+document.querySelectorAll('.feature-scroll-cue-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const targetId = btn.getAttribute('data-target');
+    const targetEl = document.getElementById(targetId);
+    targetEl?.scrollIntoView({ behavior: 'smooth' });
+  });
+});
 
 // ── Seamless Dual-Buffer Looping Video Controller with Anti-Stutter Watchdog ──
 function initSeamlessVideoLoop() {
@@ -2298,6 +2311,9 @@ const introMenuBtn        = document.getElementById('intro-menu-btn');
 const cineticMenuOverlay  = document.getElementById('cinetic-menu-overlay');
 const cineticMenuCloseBtn = document.getElementById('cinetic-menu-close-btn');
 const menuLinkOverview    = document.getElementById('menu-link-overview');
+const menuLinkWhiteboard  = document.getElementById('menu-link-whiteboard');
+const menuLinkWatchParty  = document.getElementById('menu-link-watchparty');
+const menuLinkVideoCall   = document.getElementById('menu-link-videocall');
 const menuLinkTools       = document.getElementById('menu-link-tools');
 const menuLinkLaunch      = document.getElementById('menu-link-launch');
 const menuLinkSignin      = document.getElementById('menu-link-signin');
@@ -2318,10 +2334,28 @@ if (menuLinkOverview) {
     introPage1?.scrollIntoView({ behavior: 'smooth' });
   });
 }
+if (menuLinkWhiteboard) {
+  menuLinkWhiteboard.addEventListener('click', () => {
+    cineticMenuOverlay?.classList.add('hidden');
+    (introPageWhiteboard || introPage2)?.scrollIntoView({ behavior: 'smooth' });
+  });
+}
+if (menuLinkWatchParty) {
+  menuLinkWatchParty.addEventListener('click', () => {
+    cineticMenuOverlay?.classList.add('hidden');
+    introPageWatchParty?.scrollIntoView({ behavior: 'smooth' });
+  });
+}
+if (menuLinkVideoCall) {
+  menuLinkVideoCall.addEventListener('click', () => {
+    cineticMenuOverlay?.classList.add('hidden');
+    introPageVideoCall?.scrollIntoView({ behavior: 'smooth' });
+  });
+}
 if (menuLinkTools) {
   menuLinkTools.addEventListener('click', () => {
     cineticMenuOverlay?.classList.add('hidden');
-    introPage2?.scrollIntoView({ behavior: 'smooth' });
+    (introPageWhiteboard || introPage2)?.scrollIntoView({ behavior: 'smooth' });
   });
 }
 if (menuLinkLaunch) {
@@ -2412,10 +2446,10 @@ function initTheme() {
 
 initTheme();
 
-// 2-Page Scroll Navigation (Page 1 <-> Page 2)
+// ── Multi-Step Scroll Navigation (Overview -> Whiteboard -> Watch Party -> Video Call) ──
 if (introToPage2Btn) {
   introToPage2Btn.addEventListener('click', () => {
-    introPage2?.scrollIntoView({ behavior: 'smooth' });
+    (introPageWhiteboard || introPage2)?.scrollIntoView({ behavior: 'smooth' });
   });
 }
 if (introBackToPage1Btn) {
@@ -2424,23 +2458,68 @@ if (introBackToPage1Btn) {
   });
 }
 
-// Floating Page Dot Indicators
+// Floating Page Dot Indicators (Direct Jump on Click)
 introDots.forEach(dot => {
   dot.addEventListener('click', () => {
     const pageNum = dot.getAttribute('data-page');
-    const target = pageNum === '2' ? introPage2 : introPage1;
+    const targetId = dot.getAttribute('data-target');
+    let target = targetId ? document.getElementById(targetId) : null;
+    if (!target) {
+      if (pageNum === '1') target = introPage1;
+      else if (pageNum === '2') target = introPageWhiteboard || introPage2;
+      else if (pageNum === '3') target = introPageWatchParty;
+      else if (pageNum === '4') target = introPageVideoCall;
+    }
     target?.scrollIntoView({ behavior: 'smooth' });
   });
 });
 
-// Sync active dot on scroll
+// Sync active dot, header glass blur state, and top category links on scroll
 if (introScreen) {
   introScreen.addEventListener('scroll', () => {
-    const halfHeight = introScreen.clientHeight / 2;
-    const isPage2 = introPage2 && introPage2.getBoundingClientRect().top <= halfHeight;
+    const scrollPos = introScreen.scrollTop;
+
+    // Toggle frosted glass header state when scrolled
+    if (introFixedNav) {
+      if (scrollPos > 30) {
+        introFixedNav.classList.add('is-scrolled');
+      } else {
+        introFixedNav.classList.remove('is-scrolled');
+      }
+    }
+
+    // Determine currently visible viewport section
+    const secList = [
+      { page: '1', el: introPage1, nav: navLinkOverview },
+      { page: '2', el: introPageWhiteboard || introPage2, nav: navLinkWhiteboard },
+      { page: '3', el: introPageWatchParty, nav: navLinkWatchParty },
+      { page: '4', el: introPageVideoCall, nav: navLinkVideoCall }
+    ];
+
+    const centerLine = scrollPos + (introScreen.clientHeight / 2);
+    let currentIdx = 0;
+
+    secList.forEach((sec, idx) => {
+      if (sec.el) {
+        const top = sec.el.offsetTop;
+        const height = sec.el.offsetHeight;
+        if (centerLine >= top && centerLine < top + height) {
+          currentIdx = idx;
+        }
+      }
+    });
+
+    // Update active dot
     introDots.forEach(dot => {
       const pageNum = dot.getAttribute('data-page');
-      dot.classList.toggle('active', (isPage2 && pageNum === '2') || (!isPage2 && pageNum === '1'));
+      dot.classList.toggle('active', pageNum === secList[currentIdx].page);
+    });
+
+    // Update active top category nav link
+    secList.forEach((sec, idx) => {
+      if (sec.nav) {
+        sec.nav.classList.toggle('active-section', idx === currentIdx);
+      }
     });
   }, { passive: true });
 }
