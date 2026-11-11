@@ -2076,7 +2076,6 @@ const heroCardTools     = document.getElementById('hero-card-tools');
 const navLinkWhiteboard = document.getElementById('nav-link-whiteboard');
 const navLinkWatchParty = document.getElementById('nav-link-watchparty');
 const navLinkVideoCall  = document.getElementById('nav-link-videocall');
-const navLinkFeatures   = document.getElementById('nav-link-features');
 const navLinkJoin       = document.getElementById('nav-link-join');
 const nfRoomBtn         = document.getElementById('nf-room-btn');
 const nfHeroBrand       = document.getElementById('nf-hero-brand');
@@ -2122,12 +2121,6 @@ if (navLinkVideoCall) {
       document.querySelectorAll('.intro-col-card').forEach(c => c.classList.remove('active-revealed'));
       card.classList.add('active-revealed');
     }
-  });
-}
-
-if (navLinkFeatures) {
-  navLinkFeatures.addEventListener('click', () => {
-    introPage2?.scrollIntoView({ behavior: 'smooth' });
   });
 }
 

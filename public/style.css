@@ -4376,57 +4376,26 @@ kbd {
   box-sizing: border-box;
 }
 
-/* Left Brand Lockup (The North Face Style) */
+/* Left Brand Lockup (Clean & Minimal) */
 .nf-brand-hero-block {
   flex: 1;
   display: flex;
-  align-items: flex-start;
-  padding-bottom: 3.5rem;
+  align-items: center;
 }
 
 .nf-brand-lockup {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1.35rem;
   user-select: none;
   cursor: default;
 }
 
-.nf-brand-typography {
-  display: flex;
-  flex-direction: column;
-  line-height: 0.86;
-}
-
-.nf-brand-line {
-  font-family: var(--font-display, 'Space Grotesk', 'Syne', sans-serif);
-  font-size: clamp(3rem, 6.2vw, 6.2rem);
-  font-weight: 900;
-  letter-spacing: -0.04em;
-  color: #ffffff;
-  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.7);
-}
-
-.nf-brand-sub {
-  font-size: clamp(0.72rem, 1vw, 0.88rem);
-  font-weight: 700;
-  letter-spacing: 0.22em;
-  color: rgba(255, 255, 255, 0.85);
-  margin-top: 0.65rem;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
-}
-
-.nf-reg {
-  font-size: 0.85em;
-  vertical-align: super;
-  margin-right: 2px;
-}
-
 .nf-brand-dome {
-  width: clamp(75px, 9vw, 130px);
-  height: clamp(75px, 9vw, 130px);
+  width: 56px;
+  height: 56px;
   color: #ffffff;
-  filter: drop-shadow(0 4px 18px rgba(0, 0, 0, 0.7));
+  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.65));
   flex-shrink: 0;
 }
 
@@ -4436,26 +4405,41 @@ kbd {
   display: block;
 }
 
+.nf-brand-typography {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.nf-brand-title {
+  font-family: var(--font-display, 'Space Grotesk', 'Syne', sans-serif);
+  font-size: clamp(2.2rem, 3.6vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #ffffff;
+  line-height: 1.05;
+  margin: 0;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.65);
+}
+
+.nf-brand-descriptor {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: clamp(0.9rem, 1.2vw, 1.05rem);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  color: rgba(255, 255, 255, 0.82);
+  margin: 0;
+  line-height: 1.4;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+}
+
 /* Right Action Block */
 .nf-action-hero-block {
   width: 100%;
-  max-width: 520px;
+  max-width: 440px;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  padding-bottom: 2rem;
-}
-
-.nf-hero-headline {
-  font-family: var(--font-display, 'Space Grotesk', 'Inter', sans-serif);
-  font-size: clamp(2.8rem, 5.2vw, 4.6rem);
-  font-weight: 800;
-  line-height: 1.04;
-  letter-spacing: -0.025em;
-  text-transform: uppercase;
-  color: #ffffff;
-  margin: 0 0 2.25rem 0;
-  text-shadow: 0 6px 30px rgba(0, 0, 0, 0.75);
+  align-items: flex-end;
 }
 
 /* Stacked Frosted Cards (Exact North Face Style) */
@@ -4599,11 +4583,8 @@ kbd {
 
   .nf-action-hero-block {
     max-width: 100%;
+    align-items: flex-start;
     padding-bottom: 1rem;
-  }
-
-  .nf-hero-headline {
-    margin-bottom: 1.5rem;
   }
 }
 
