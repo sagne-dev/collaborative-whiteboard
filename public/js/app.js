@@ -279,7 +279,11 @@ function setMode(newMode) {
     scrollToChatBottom();
 
     if (zoomActiveMeetingView) zoomActiveMeetingView.classList.remove('hidden');
-    joinRoomCall();
+    if (!state.isCallActive) {
+      joinRoomCall();
+    } else {
+      renderZoomGrid();
+    }
   }
 
   // Route remote audio: In 'videocall' mode, the tile's <video> plays audio for native lip-sync.
@@ -459,7 +463,6 @@ function handleMessage(msg) {
         }
       }
       renderUserList();
-      renderZoomLobby();
       renderZoomGrid();
       scheduleRedraw();
 
@@ -537,7 +540,6 @@ function handleMessage(msg) {
       });
       addCursorEl(msg.userId, msg.color, msg.name);
       renderUserList();
-      renderZoomLobby();
       if (state.voiceSupported && msg.userId !== state.userId) {
         getOrCreatePeerConnection(msg.userId);
         if (state.userId > msg.userId) {
@@ -554,11 +556,10 @@ function handleMessage(msg) {
       removeCursor(msg.userId);
       closePeerConnection(msg.userId);
       renderUserList();
-      renderZoomLobby();
       renderZoomGrid();
 
       if (state.activeCall && state.activeCall.peerId === msg.userId) {
-        terminateActiveCall(`${leavingName} left the room`);
+        leaveActiveCall(`${leavingName} left the room`);
       }
       if (state.pendingOutgoingCall && state.pendingOutgoingCall.targetUserId === msg.userId) {
         cancelOutgoingCall();
@@ -2736,23 +2737,31 @@ const httpsNoticeCloseBtn   = document.getElementById('https-notice-close-btn');
 
 async function ensureMediaForCall(withVideo = true) {
   if (!state.voiceSupported) {
-    showVideoToast('⚠️ WebRTC or mediaDevices not supported in this browser');
+    showVideoToast('⚠️ WebRTC or mediaDevices not supported (HTTPS required for mobile/LAN)');
     return false;
   }
 
   // 1. Ensure Microphone track
   if (!state.localAudioTrack || state.localAudioTrack.readyState !== 'live') {
+    let audioStream = null;
     try {
-      const audioStream = await navigator.mediaDevices.getUserMedia({
+      audioStream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
-          channelCount: 1,
-          sampleRate: 48000,
         },
         video: false,
       });
+    } catch (err1) {
+      try {
+        audioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      } catch (err2) {
+        console.warn('Microphone access unavailable or denied:', err2);
+      }
+    }
+
+    if (audioStream) {
       const audioTrack = audioStream.getAudioTracks()[0];
       if (audioTrack) {
         state.localAudioTrack = audioTrack;
@@ -2763,8 +2772,7 @@ async function ensureMediaForCall(withVideo = true) {
         setupAudioActivityMeter(audioStream);
         updateVoiceUI('active', 'Voice Active');
       }
-    } catch (err) {
-      console.warn('Microphone access unavailable or denied:', err);
+    } else {
       state.localAudioTrack = null;
       state.localAudioStream = null;
       state.isMicMuted = true;
@@ -2823,6 +2831,16 @@ async function ensureMediaForCall(withVideo = true) {
       showVideoToast('📷 Camera unavailable (Joining as Audio only)');
     }
   }
+
+  // Broadcast camera and microphone status to other peers
+  wsSend({
+    type: 'video_cam_status',
+    isCamOff: state.isCamOff,
+  });
+  wsSend({
+    type: 'voice_mute_status',
+    isMuted: state.isMicMuted,
+  });
 
   syncAllPeerConnections();
   updateCameraUI();
@@ -3058,7 +3076,7 @@ function renderZoomGrid() {
     const conn = state.voiceConnections.get(pid);
     const remoteStream = conn?.remoteStream || null;
     const vTracks = remoteStream ? remoteStream.getVideoTracks() : [];
-    const vTrack = (vTracks.length > 0 && vTracks[0].readyState === 'live') ? vTracks[0] : null;
+    const vTrack = (vTracks.length > 0 && vTracks[0].readyState === 'live' && !vTracks[0].muted) ? vTracks[0] : null;
 
     tiles.push({
       id: pid,
@@ -3219,14 +3237,28 @@ function renderZoomGrid() {
 
       const conn = state.voiceConnections.get(item.id);
       if (conn && conn.audioEl) {
-        conn.audioEl.muted = true; // Mute background audioEl to prevent double audio / echo!
+        conn.audioEl.muted = (state.currentMode === 'videocall');
       }
 
-      if (item.stream) {
-        if (videoEl.srcObject !== item.stream) {
-          videoEl.srcObject = item.stream;
-          videoEl.play().catch(e => console.warn('Remote video playback error:', e));
+      if (item.track && item.track.readyState === 'live') {
+        const currentTrack = videoEl.srcObject ? videoEl.srcObject.getVideoTracks()[0] : null;
+        if (currentTrack !== item.track) {
+          videoEl.srcObject = item.stream || new MediaStream([item.track]);
+          videoEl.play().catch(e => {
+            console.warn('Remote video playback error:', e);
+            if (e.name === 'NotAllowedError') {
+              videoEl.muted = true;
+              videoEl.play().catch(() => {});
+              if (conn && conn.audioEl) {
+                conn.audioEl.muted = false;
+                conn.audioEl.play().catch(() => {});
+              }
+            }
+          });
         }
+      } else if (item.stream && !videoEl.srcObject) {
+        videoEl.srcObject = item.stream;
+        videoEl.play().catch(() => {});
       }
 
       if (item.isCamOff || !item.track || item.track.readyState !== 'live') {
@@ -3242,7 +3274,10 @@ function renderZoomGrid() {
 
 // ─── Start / Join Video Call ──────────────────────────────────────────────────
 async function joinRoomCall(targetUserId = null, peerName = null, peerColor = null, isCaller = false) {
-  setMode('videocall');
+  state.isCallActive = true;
+  if (state.currentMode !== 'videocall') {
+    setMode('videocall');
+  }
   await ensureMediaForCall(true);
 
   state.isCallActive = true;
@@ -3562,30 +3597,55 @@ if (zoomStageFullscreenBtn) {
 // ─── WebRTC Peer Connection & W3C Perfect Negotiation ────────────────────────
 function syncTracksToPeerConnection(conn) {
   if (!conn || !conn.pc) return;
-  const senders = conn.pc.getSenders();
 
-  // 1. Audio track
-  const audioTrack = state.localAudioTrack;
-  if (audioTrack && audioTrack.readyState === 'live') {
-    const audioSender = senders.find(s => s.track && s.track.kind === 'audio');
-    if (audioSender) {
-      if (audioSender.track !== audioTrack) audioSender.replaceTrack(audioTrack);
-    } else {
-      try { conn.pc.addTrack(audioTrack, state.localStream); } catch (e) {}
-    }
-  }
-
-  // 2. Video track (screen share if active, otherwise camera)
+  const audioTrack = (state.localAudioTrack && state.localAudioTrack.readyState === 'live') ? state.localAudioTrack : null;
   const videoTrack = (state.isScreenSharing && state.localScreenTrack && state.localScreenTrack.readyState === 'live')
     ? state.localScreenTrack
     : (state.localVideoTrack && state.localVideoTrack.readyState === 'live' ? state.localVideoTrack : null);
 
-  if (videoTrack) {
-    const videoSender = senders.find(s => (s.track && s.track.kind === 'video') || (s.track === null && s.dtlsTransport));
-    if (videoSender) {
-      if (videoSender.track !== videoTrack) videoSender.replaceTrack(videoTrack);
-    } else {
-      try { conn.pc.addTrack(videoTrack, state.localStream); } catch (e) {}
+  const transceivers = conn.pc.getTransceivers ? conn.pc.getTransceivers() : [];
+
+  // Find audio transceiver
+  const audioTransceiver = transceivers.find(t => 
+    (t.sender && t.sender.track && t.sender.track.kind === 'audio') ||
+    (t.receiver && t.receiver.track && t.receiver.track.kind === 'audio')
+  );
+
+  // Find video transceiver
+  const videoTransceiver = transceivers.find(t => 
+    (t.sender && t.sender.track && t.sender.track.kind === 'video') ||
+    (t.receiver && t.receiver.track && t.receiver.track.kind === 'video')
+  );
+
+  // Handle Audio
+  if (audioTransceiver && audioTransceiver.sender) {
+    if (audioTransceiver.sender.track !== audioTrack) {
+      audioTransceiver.sender.replaceTrack(audioTrack).catch(e => console.warn('Audio replaceTrack error:', e));
+    }
+    if (audioTrack && audioTransceiver.direction === 'recvonly') {
+      audioTransceiver.direction = 'sendrecv';
+    }
+  } else if (audioTrack) {
+    try {
+      conn.pc.addTrack(audioTrack, state.localStream);
+    } catch (e) {
+      console.warn('Audio addTrack error:', e);
+    }
+  }
+
+  // Handle Video
+  if (videoTransceiver && videoTransceiver.sender) {
+    if (videoTransceiver.sender.track !== videoTrack) {
+      videoTransceiver.sender.replaceTrack(videoTrack).catch(e => console.warn('Video replaceTrack error:', e));
+    }
+    if (videoTrack && videoTransceiver.direction === 'recvonly') {
+      videoTransceiver.direction = 'sendrecv';
+    }
+  } else if (videoTrack) {
+    try {
+      conn.pc.addTrack(videoTrack, state.localStream);
+    } catch (e) {
+      console.warn('Video addTrack error:', e);
     }
   }
 }
@@ -3603,6 +3663,16 @@ function getOrCreatePeerConnection(targetUserId) {
 
   const isPolite = state.userId < targetUserId;
   const pc = new RTCPeerConnection(RTC_CONFIG);
+
+  // Pre-add audio and video transceivers with direction 'sendrecv'
+  // This guarantees that the initial offer/answer has both audio and video m-lines,
+  // allowing instant camera/mic streaming via replaceTrack with zero negotiation latency.
+  try {
+    pc.addTransceiver('audio', { direction: 'sendrecv' });
+    pc.addTransceiver('video', { direction: 'sendrecv' });
+  } catch (e) {
+    console.warn('addTransceiver error:', e);
+  }
 
   const audioEl = new Audio();
   audioEl.autoplay = true;
@@ -3711,10 +3781,9 @@ async function initiatePeerConnection(targetUserId) {
   if (!state.voiceSupported || targetUserId === state.userId) return;
   const conn = getOrCreatePeerConnection(targetUserId);
   try {
-    const offer = await conn.pc.createOffer({
-      offerToReceiveAudio: true,
-      offerToReceiveVideo: true,
-    });
+    conn.makingOffer = true;
+    const offer = await conn.pc.createOffer();
+    if (conn.pc.signalingState !== 'stable') return;
     const tunedSdp = optimizeSdpForAudioSync(offer.sdp);
     await conn.pc.setLocalDescription({ type: offer.type, sdp: tunedSdp });
     wsSend({
@@ -3727,6 +3796,8 @@ async function initiatePeerConnection(targetUserId) {
     });
   } catch (err) {
     console.warn(`[WebRTC] Failed to create offer for ${targetUserId}:`, err);
+  } finally {
+    conn.makingOffer = false;
   }
 }
 
