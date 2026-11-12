@@ -2745,23 +2745,6 @@ const httpsMobileNotice     = document.getElementById('https-mobile-notice');
 const httpsMobileSwitchLink = document.getElementById('https-mobile-switch-link');
 const httpsNoticeCloseBtn   = document.getElementById('https-notice-close-btn');
 
-// Universal WebRTC & mediaDevices polyfill across mobile & legacy browsers
-if (typeof navigator !== 'undefined') {
-  if (!navigator.mediaDevices) {
-    navigator.mediaDevices = {};
-  }
-  if (!navigator.mediaDevices.getUserMedia) {
-    const legacyGUM = navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia || navigator.getUserMedia;
-    if (legacyGUM) {
-      navigator.mediaDevices.getUserMedia = function(constraints) {
-        return new Promise((resolve, reject) => {
-          legacyGUM.call(navigator, constraints, resolve, reject);
-        });
-      };
-    }
-  }
-}
-
 // ─── Video Recording Manager ──────────────────────────────────────────────────
 let recordCanvas = null;
 let recordCtx = null;
@@ -2958,103 +2941,63 @@ function saveAndDownloadRecording(mimeType = '') {
   showVideoToast(`💾 Recording saved (${sizeMb} MB) & downloaded: ${filename}`);
 }
 
-async function requestCameraAccess(preferredFacing = null) {
-  const facing = preferredFacing || state.currentFacingMode || 'user';
-
-  // If HTTP on non-localhost, warn and redirect to HTTPS because browsers block getUserMedia on insecure origins
-  if (window.location.protocol === 'http:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-    const httpsUrl = window.location.href.replace('http:', 'https:');
-    showVideoToast('🔒 Camera access requires HTTPS. Redirecting to secure connection...');
-    setTimeout(() => { window.location.href = httpsUrl; }, 800);
+async function startCameraWithPermission() {
+  if (!state.voiceSupported) {
+    showVideoToast('⚠️ WebRTC or mediaDevices not supported in this browser');
     return false;
   }
 
-  // Robust cross-browser getUserMedia wrapper
-  const gum = (navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function')
-    ? (constraints) => navigator.mediaDevices.getUserMedia(constraints)
-    : (navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.getUserMedia
-      ? (constraints) => new Promise((resolve, reject) => {
-          (navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.getUserMedia).call(navigator, constraints, resolve, reject);
-        })
-      : null);
-
-  if (!gum) {
-    showVideoToast('⚠️ Camera access is not supported by this browser');
-    return false;
-  }
-
-  let stream = null;
-
-  // Strategy 1: Requested facingMode (ideal for mobile front/back camera)
+  let videoStream = null;
+  // Step A: Ideal resolution & requested facingMode (user or environment)
   try {
-    stream = await gum({
+    videoStream = await navigator.mediaDevices.getUserMedia({
       video: {
-        facingMode: { ideal: facing },
+        facingMode: { ideal: state.currentFacingMode || 'user' },
         width: { ideal: 1280 },
         height: { ideal: 720 },
+        frameRate: { ideal: 30 },
       },
       audio: false,
     });
-  } catch (err1) {
-    console.warn('Strategy 1 (ideal facingMode) failed:', err1);
-    // Strategy 2: Plain facingMode
+  } catch (e1) {
+    // Step B: Facing mode only (mobile phone camera constraint)
     try {
-      stream = await gum({
-        video: { facingMode: facing },
+      videoStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: state.currentFacingMode || 'user' },
         audio: false,
       });
-    } catch (err2) {
-      console.warn('Strategy 2 (simple facingMode) failed:', err2);
-      // Strategy 3: Universal fallback: video: true (triggers native permission prompt on all systems)
+    } catch (e2) {
+      // Step C: Basic video fallback (low-end or virtual webcams)
       try {
-        stream = await gum({
+        videoStream = await navigator.mediaDevices.getUserMedia({
           video: true,
           audio: false,
         });
-      } catch (err3) {
-        console.error('All camera request strategies failed:', err3);
-        if (err3.name === 'NotAllowedError' || err3.name === 'PermissionDeniedError') {
-          showVideoToast('🚫 Camera permission blocked. Please allow camera in your browser settings.');
-          alert('Camera Permission Required:\n\nPlease tap the lock or camera icon in your browser address bar and select "Allow" to enable your camera.');
-        } else if (err3.name === 'NotFoundError' || err3.name === 'DevicesNotFoundError') {
-          showVideoToast('📷 No camera found on this device');
-        } else if (err3.name === 'NotReadableError' || err3.name === 'TrackStartError') {
-          showVideoToast('⚠️ Camera in use by another app. Please close other camera apps and retry.');
-        } else {
-          showVideoToast(`⚠️ Camera error: ${err3.message || err3.name}`);
-        }
+      } catch (e3) {
+        console.warn('Camera access unavailable or denied:', e3);
+        showVideoToast('⚠️ Camera permission denied or camera unavailable');
         return false;
       }
     }
   }
 
-  if (stream) {
-    const track = stream.getVideoTracks()[0];
-    if (track) {
-      if (state.localVideoTrack && state.localVideoTrack !== track) {
-        try { state.localVideoTrack.stop(); } catch (e) {}
-      }
-      state.localVideoTrack = track;
-      state.localVideoStream = stream;
-      state.currentVideoDeviceId = track.getSettings?.()?.deviceId || null;
+  if (videoStream) {
+    const videoTrack = videoStream.getVideoTracks()[0];
+    if (videoTrack) {
+      state.localVideoTrack = videoTrack;
+      state.localVideoStream = videoStream;
+      state.currentVideoDeviceId = videoTrack.getSettings()?.deviceId || null;
       state.localStream.getVideoTracks().forEach(t => state.localStream.removeTrack(t));
-      state.localStream.addTrack(track);
+      state.localStream.addTrack(videoTrack);
       state.isCamOff = false;
-      track.enabled = true;
-
-      const currentSettings = track.getSettings?.();
-      if (currentSettings?.facingMode) {
-        state.currentFacingMode = currentSettings.facingMode;
-      }
+      videoTrack.enabled = true;
 
       if (zoomPreviewVideo) {
-        zoomPreviewVideo.srcObject = stream;
+        zoomPreviewVideo.srcObject = state.localVideoStream;
         zoomPreviewVideo.play().catch(() => {});
       }
 
       syncAllPeerConnections();
-      updateCameraUI();
-      renderZoomGrid();
       return true;
     }
   }
@@ -3062,10 +3005,16 @@ async function requestCameraAccess(preferredFacing = null) {
   state.isCamOff = true;
   state.localVideoTrack = null;
   state.localVideoStream = null;
+  showVideoToast('⚠️ Could not open camera');
   return false;
 }
 
-async function ensureMediaForCall(withVideo = true) {
+async function ensureMediaForCall(withVideo = false) {
+  if (!state.voiceSupported) {
+    showVideoToast('⚠️ WebRTC or mediaDevices not supported in this browser');
+    return false;
+  }
+
   // 1. Ensure Microphone track
   if (!state.localAudioTrack || state.localAudioTrack.readyState !== 'live') {
     try {
@@ -3074,6 +3023,8 @@ async function ensureMediaForCall(withVideo = true) {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
+          channelCount: 1,
+          sampleRate: 48000,
         },
         video: false,
       });
@@ -3097,8 +3048,8 @@ async function ensureMediaForCall(withVideo = true) {
   }
 
   // 2. Ensure Video track if requested
-  if (withVideo) {
-    await requestCameraAccess();
+  if (withVideo && (!state.localVideoTrack || state.localVideoTrack.readyState !== 'live')) {
+    await startCameraWithPermission();
   }
 
   syncAllPeerConnections();
@@ -3116,33 +3067,126 @@ async function flipCamera() {
     flipIcon.classList.add('rotating');
   }
 
-  const nextFacingMode = (state.currentFacingMode === 'user') ? 'environment' : 'user';
-  const label = nextFacingMode === 'user' ? 'Front' : 'Back / Rear';
-  showVideoToast(`🔄 Switching to ${label} Camera...`);
-
-  // Release old track to avoid hardware lock on phones
-  if (state.localVideoTrack) {
-    try { state.localVideoTrack.stop(); } catch (e) {}
-    state.localVideoTrack = null;
+  // If camera is currently off, switch preference and notify
+  if (state.isCamOff || !state.localVideoTrack || state.localVideoTrack.readyState !== 'live') {
+    state.currentFacingMode = (state.currentFacingMode === 'user') ? 'environment' : 'user';
+    const label = state.currentFacingMode === 'user' ? 'Front' : 'Rear / Back';
+    showVideoToast(`🔄 Set camera to ${label}. Touch "Start Video" to begin with ${label} camera.`);
+    return;
   }
 
-  const ok = await requestCameraAccess(nextFacingMode);
-  if (ok) {
-    state.currentFacingMode = nextFacingMode;
-    updateCameraUI();
-    renderZoomGrid();
-    showVideoToast(`📹 Switched to ${label} Camera`);
-  } else {
-    // If flip failed, restore original
-    await requestCameraAccess(state.currentFacingMode);
-    showVideoToast('⚠️ Could not switch camera (device may only have 1 camera)');
+  const targetFacingMode = (state.currentFacingMode === 'user') ? 'environment' : 'user';
+  const targetLabel = (targetFacingMode === 'user') ? 'Front' : 'Rear';
+  showVideoToast(`🔄 Switching to ${targetLabel} Camera...`);
+
+  // STEP 1: Stop existing video track to release mobile camera hardware lock
+  const oldTrack = state.localVideoTrack;
+  if (oldTrack) {
+    try {
+      oldTrack.stop();
+    } catch (e) {
+      console.warn('Error stopping previous track:', e);
+    }
   }
+
+  let newStream = null;
+
+  // STEP 2: Request new camera with ideal facing mode
+  try {
+    newStream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: { ideal: targetFacingMode },
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+        frameRate: { ideal: 30 },
+      },
+      audio: false,
+    });
+  } catch (err1) {
+    console.warn('Ideal facing mode failed:', err1);
+    try {
+      newStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: targetFacingMode },
+        audio: false,
+      });
+    } catch (err2) {
+      console.warn('Plain facing mode failed:', err2);
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoInputs = devices.filter(d => d.kind === 'videoinput');
+        if (videoInputs.length > 1) {
+          let chosen = videoInputs.find(d => {
+            const lbl = (d.label || '').toLowerCase();
+            return targetFacingMode === 'environment'
+              ? (lbl.includes('back') || lbl.includes('rear') || lbl.includes('environment') || lbl.includes('outward'))
+              : (lbl.includes('front') || lbl.includes('user') || lbl.includes('face') || lbl.includes('inward'));
+          });
+          if (!chosen) {
+            chosen = videoInputs.find(d => d.deviceId !== state.currentVideoDeviceId) || videoInputs[1];
+          }
+          if (chosen && chosen.deviceId) {
+            newStream = await navigator.mediaDevices.getUserMedia({
+              video: { deviceId: { exact: chosen.deviceId } },
+              audio: false,
+            });
+          }
+        }
+      } catch (err3) {
+        console.warn('Device enumeration fallback failed:', err3);
+      }
+    }
+  }
+
+  // Fallback to recover original camera if flipping failed
+  if (!newStream) {
+    try {
+      newStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: state.currentFacingMode } },
+        audio: false,
+      });
+    } catch (recoverErr) {
+      console.warn('Failed to recover camera:', recoverErr);
+    }
+
+    if (!newStream) {
+      state.isCamOff = true;
+      state.localVideoTrack = null;
+      updateCameraUI();
+      renderZoomGrid();
+      showVideoToast('⚠️ Could not switch camera (device may only have 1 camera)');
+      return;
+    }
+  }
+
+  // STEP 3: Successfully acquired new camera track
+  state.currentFacingMode = targetFacingMode;
+  const newTrack = newStream.getVideoTracks()[0];
+  state.currentVideoDeviceId = newTrack.getSettings()?.deviceId || null;
+  state.localVideoTrack = newTrack;
+  state.localVideoStream = newStream;
+
+  state.localStream.getVideoTracks().forEach(t => state.localStream.removeTrack(t));
+  state.localStream.addTrack(newTrack);
+  newTrack.enabled = !state.isCamOff;
+
+  if (zoomPreviewVideo) {
+    zoomPreviewVideo.srcObject = newStream;
+    zoomPreviewVideo.play().catch(() => {});
+  }
+
+  // STEP 4: Replace track in all WebRTC peer connections
+  syncAllPeerConnections();
+
+  // STEP 5: Render zoom grid with orientation / mirroring update
+  renderZoomGrid();
+  showVideoToast(`📹 Switched to ${targetLabel} Camera`);
 }
 
 async function toggleCamera() {
   if (state.isCamOff || !state.localVideoTrack || state.localVideoTrack.readyState !== 'live') {
+    // 1. Ask permission for camera
     showVideoToast('📷 Requesting camera permission...');
-    const ok = await requestCameraAccess();
+    const ok = await startCameraWithPermission();
     if (ok) {
       state.isCamOff = false;
       updateCameraUI();
@@ -3153,10 +3197,12 @@ async function toggleCamera() {
         isCamOff: false,
       });
 
+      // 2. Start recording
       startCallRecording();
       showVideoToast('📹 Camera active & recording started');
     }
   } else {
+    // Stop recording and save/download video file
     stopCallRecording();
 
     state.isCamOff = true;
@@ -3444,7 +3490,6 @@ function renderZoomGrid() {
         <div class="zoom-tile-avatar-box hidden">
           <div class="zoom-large-avatar" style="background:${item.color}">${escapeHtml((item.name || 'U').charAt(0).toUpperCase())}</div>
           <span class="zoom-avatar-label">${escapeHtml(item.name)} (Camera Off)</span>
-          ${item.isLocal ? '<button type="button" class="zoom-enable-cam-btn">📷 Turn On Camera</button>' : ''}
         </div>
         <div class="zoom-tile-badge-strip"></div>
         <div class="zoom-tile-name-tag">
@@ -3479,15 +3524,6 @@ function renderZoomGrid() {
       }
     } else if (item.isLocal) {
       videoEl.muted = true;
-
-      const enableBtn = avatarBox?.querySelector('.zoom-enable-cam-btn');
-      if (enableBtn && !enableBtn.dataset.bound) {
-        enableBtn.dataset.bound = 'true';
-        enableBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          toggleCamera();
-        });
-      }
 
       // Handle unmirroring for rear mobile camera vs mirroring for front camera
       if (state.currentFacingMode === 'environment') {
@@ -3547,12 +3583,8 @@ function renderZoomGrid() {
 // ─── Start / Join Video Call ──────────────────────────────────────────────────
 async function joinRoomCall(targetUserId = null, peerName = null, peerColor = null, isCaller = false) {
   setMode('videocall');
-  // Prompt camera and audio permissions immediately upon entering Video Call
-  await ensureMediaForCall(true);
-
-  if (!state.isCamOff && state.localVideoTrack && !state.isRecording) {
-    startCallRecording();
-  }
+  // Connect audio first; camera starts when user touches "Start Video"
+  await ensureMediaForCall(false);
 
   state.isCallActive = true;
   if (targetUserId) {
@@ -3820,12 +3852,21 @@ if (zoomEndCallBtn) {
   });
 }
 
-// Mobile-friendly instant touch & click helper that preserves browser user activation
+// Mobile-friendly instant touch & click helper
 function bindTouchAndClick(element, handler) {
   if (!element) return;
-  element.addEventListener('click', (e) => {
+  let lastActionTime = 0;
+  const dispatch = (e) => {
+    const now = Date.now();
+    if (now - lastActionTime < 350) return;
+    lastActionTime = now;
     handler(e);
-  });
+  };
+  element.addEventListener('click', dispatch);
+  element.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    dispatch(e);
+  }, { passive: false });
 }
 
 if (zoomScreenShareBtn) {

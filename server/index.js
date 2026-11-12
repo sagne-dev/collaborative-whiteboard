@@ -345,14 +345,6 @@ async function getOrCreateSslCert() {
 }
 
 function handleHttpRequest(req, res) {
-  // Enforce HTTPS when deployed on Render / Cloud proxies to ensure camera permissions are allowed
-  if (req.headers['x-forwarded-proto'] === 'http') {
-    res.writeHead(301, {
-      Location: `https://${req.headers.host}${req.url}`,
-    });
-    return res.end();
-  }
-
   // Server discovery & network diagnostics for mobile / PC clients
   if (req.url === '/api/server-info') {
     res.writeHead(200, {
@@ -546,8 +538,7 @@ function handleHttpRequest(req, res) {
         'Content-Length': fileSize,
         'Content-Type': MIME[ext] || 'text/plain',
         'Accept-Ranges': 'bytes',
-        'Cache-Control': ext === '.mp4' ? 'public, max-age=31536000, immutable' : 'public, max-age=3600',
-        'Permissions-Policy': 'camera=*, microphone=*, display-capture=*',
+        'Cache-Control': ext === '.mp4' ? 'public, max-age=31536000, immutable' : 'public, max-age=3600'
       });
       const fileStream = fs.createReadStream(filePath);
       fileStream.pipe(res);

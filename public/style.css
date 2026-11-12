@@ -2700,31 +2700,6 @@ kbd {
   font-weight: 600;
 }
 
-.zoom-enable-cam-btn {
-  margin-top: 6px;
-  background: #ffffff;
-  color: #000000;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  padding: 8px 18px;
-  border-radius: 9999px;
-  font-size: 0.82rem;
-  font-weight: 700;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
-  transition: transform 0.15s ease, background 0.15s ease;
-  pointer-events: auto;
-}
-.zoom-enable-cam-btn:hover {
-  transform: scale(1.05);
-  background: #f0f0f0;
-}
-.zoom-enable-cam-btn:active {
-  transform: scale(0.96);
-}
-
 .zoom-tile-name-tag {
   position: absolute;
   bottom: 12px;
