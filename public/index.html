@@ -623,12 +623,6 @@
                 <span class="meeting-status-dot"></span>
                 <span id="zoom-meeting-title">Video Call</span>
                 <span class="meeting-time-badge" id="zoom-call-duration">00:00</span>
-                <!-- Video Call Recording Badge with Pulsing Dot -->
-                <span class="zoom-rec-badge hidden" id="zoom-rec-badge" title="Recording in progress">
-                  <span class="rec-dot"></span>
-                  <span class="rec-text">REC</span>
-                  <span class="rec-time" id="zoom-rec-time">00:00</span>
-                </span>
                 <span class="sfu-badge" id="zoom-sfu-badge">⚡ High-Def WebRTC</span>
               </div>
               <div class="zoom-stage-top-actions">
@@ -657,14 +651,14 @@
                   <span id="zoom-call-mic-label">Mute</span>
                 </button>
 
-                <!-- 2. Toggle Camera (Starts Video, Prompts Permission & Records) -->
-                <button id="zoom-call-cam-btn" class="zoom-call-control-btn cam-muted" title="Start/Stop Video (Prompts Camera & Records)">
-                  <div class="btn-icon-wrap" id="zoom-call-cam-icon">📷</div>
-                  <span id="zoom-call-cam-label">Start Video</span>
+                <!-- 2. Toggle Camera -->
+                <button id="zoom-call-cam-btn" class="zoom-call-control-btn cam-active" title="Start/Stop Video">
+                  <div class="btn-icon-wrap" id="zoom-call-cam-icon">📹</div>
+                  <span id="zoom-call-cam-label">Stop Video</span>
                 </button>
 
                 <!-- Mobile Camera Flip Toggle -->
-                <button id="zoom-flip-cam-btn" class="zoom-call-control-btn" title="Flip Camera (Front/Back on Mobile)">
+                <button id="zoom-flip-cam-btn" class="zoom-call-control-btn" title="Flip Camera (Front/Back)">
                   <div class="btn-icon-wrap" id="zoom-flip-cam-icon">🔄</div>
                   <span id="zoom-flip-cam-label">Flip Cam</span>
                 </button>
