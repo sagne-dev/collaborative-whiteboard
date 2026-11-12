@@ -43,6 +43,7 @@ const introColCards     = document.querySelectorAll('.intro-col-card');
 const modeWhiteboardBtn = document.getElementById('mode-whiteboard-btn');
 const modeWatchPartyBtn = document.getElementById('mode-watchparty-btn');
 const modeVideoCallBtn  = document.getElementById('mode-videocall-btn');
+const modeAiWorkspaceBtn= document.getElementById('mode-aiworkspace-btn');
 const navChatBadge      = document.getElementById('nav-chat-badge');
 const navRoomBadge      = document.getElementById('nav-room-badge');
 const navRoomLabel      = document.getElementById('nav-room-label');
@@ -62,6 +63,7 @@ const remoteAudiosContainer = document.getElementById('remote-audios-container')
 const whiteboardView    = document.getElementById('whiteboard-view');
 const watchpartyView    = document.getElementById('watchparty-view');
 const videocallView     = document.getElementById('videocall-view');
+const aiworkspaceView   = document.getElementById('aiworkspace-view');
 
 // Zoom-Style Direct Video Calling Elements
 const zoomLobbyView          = document.getElementById('zoom-lobby-view');
@@ -256,10 +258,12 @@ function setMode(newMode) {
   modeWhiteboardBtn.classList.toggle('active', newMode === 'whiteboard');
   modeWatchPartyBtn.classList.toggle('active', newMode === 'watchparty');
   if (modeVideoCallBtn) modeVideoCallBtn.classList.toggle('active', newMode === 'videocall');
+  if (modeAiWorkspaceBtn) modeAiWorkspaceBtn.classList.toggle('active', newMode === 'aiworkspace');
 
   whiteboardView.classList.toggle('active', newMode === 'whiteboard');
   watchpartyView.classList.toggle('active', newMode === 'watchparty');
   if (videocallView) videocallView.classList.toggle('active', newMode === 'videocall');
+  if (aiworkspaceView) aiworkspaceView.classList.toggle('active', newMode === 'aiworkspace');
 
   if (newMode === 'whiteboard') {
     if (chatSidebar) chatSidebar.classList.add('mode-hidden');
@@ -284,10 +288,13 @@ function setMode(newMode) {
     } else {
       renderZoomGrid();
     }
+  } else if (newMode === 'aiworkspace') {
+    if (chatSidebar) chatSidebar.classList.add('mode-hidden');
+    if (window._aiWorkspaceOnOpen) window._aiWorkspaceOnOpen();
   }
 
   // Route remote audio: In 'videocall' mode, the tile's <video> plays audio for native lip-sync.
-  // In whiteboard / watchparty mode, background audioEl plays audio for voice chat.
+  // In whiteboard / watchparty / aiworkspace mode, background audioEl plays audio for voice chat.
   for (const [, conn] of state.voiceConnections) {
     if (conn.audioEl) {
       conn.audioEl.muted = (newMode === 'videocall');
@@ -301,6 +308,10 @@ function setMode(newMode) {
 if (modeWhiteboardBtn) modeWhiteboardBtn.addEventListener('click', () => setMode('whiteboard'));
 if (modeWatchPartyBtn) modeWatchPartyBtn.addEventListener('click', () => setMode('watchparty'));
 if (modeVideoCallBtn)  modeVideoCallBtn.addEventListener('click',  () => setMode('videocall'));
+if (modeAiWorkspaceBtn) modeAiWorkspaceBtn.addEventListener('click', () => setMode('aiworkspace'));
+
+window._appSetMode = setMode;
+window._appGetMode = () => state.currentMode;
 
 // ─── Canvas Resizing & Rendering ───────────────────────────────────────────────
 function resizeCanvas() {
@@ -330,6 +341,73 @@ window.addEventListener('orientationchange', () => {
 });
 
 function renderStroke(stroke) {
+  if (stroke.type === 'sticky') {
+    ctx.save();
+    const x = stroke.x || (stroke.points && stroke.points[0] ? stroke.points[0][0] : 100);
+    const y = stroke.y || (stroke.points && stroke.points[0] ? stroke.points[0][1] : 100);
+    const w = stroke.w || 230;
+    const h = stroke.h || 140;
+
+    // Card shadow & background
+    ctx.fillStyle = stroke.bgColor || '#fef08a';
+    ctx.shadowColor = 'rgba(0,0,0,0.35)';
+    ctx.shadowBlur = 10;
+    ctx.shadowOffsetX = 2;
+    ctx.shadowOffsetY = 4;
+    ctx.beginPath();
+    if (typeof ctx.roundRect === 'function') {
+      ctx.roundRect(x, y, w, h, 8);
+    } else {
+      ctx.rect(x, y, w, h);
+    }
+    ctx.fill();
+
+    // Subtle header accent strip
+    ctx.shadowColor = 'transparent';
+    ctx.fillStyle = 'rgba(0,0,0,0.08)';
+    ctx.fillRect(x, y, w, 22);
+
+    // Title / author tag
+    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    ctx.font = 'bold 10px system-ui, -apple-system, sans-serif';
+    ctx.fillText('✨ AI WORKSPACE NOTE', x + 10, y + 15);
+
+    // Border
+    ctx.strokeStyle = 'rgba(0,0,0,0.18)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Body text word wrap
+    ctx.fillStyle = '#1e1e1e';
+    ctx.font = '12px system-ui, -apple-system, sans-serif';
+    const rawWords = (stroke.text || '').replace(/\r?\n/g, ' \n ').split(' ');
+    const lines = [];
+    let curLine = '';
+    for (const wd of rawWords) {
+      if (wd === '\n') {
+        lines.push(curLine);
+        curLine = '';
+        continue;
+      }
+      const test = curLine ? curLine + ' ' + wd : wd;
+      if (ctx.measureText(test).width > w - 24) {
+        lines.push(curLine);
+        curLine = wd;
+      } else {
+        curLine = test;
+      }
+    }
+    if (curLine) lines.push(curLine);
+
+    let textY = y + 42;
+    for (let li = 0; li < Math.min(lines.length, 6); li++) {
+      ctx.fillText(lines[li] || '', x + 12, textY);
+      textY += 16;
+    }
+    ctx.restore();
+    return;
+  }
+
   const pts = stroke.points;
   if (!pts || pts.length < 1) return;
   const isLight = document.body.classList.contains('light-theme') || 
@@ -423,12 +501,56 @@ function wsSend(obj) {
   }
 }
 
-// Expose internals for AI features module
+// Expose internals for AI features module & AI Workspace
 window._appWs = () => state.ws;
 window._appSetTool = (tool) => { state.tool = tool; };
 window._appGetActiveTool = () => state.tool;
 window._appGetStrokes = () => [...state.strokes.values()].filter(s => !state.deleted.has(s.id));
 window._aiWsSend = wsSend;
+window._appGetUserName = () => state.userName || 'Sagne mieso';
+
+window._appInsertStickyNote = function(text, x, y, color = '#fef08a') {
+  if (!text) return null;
+  const id = 'note_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+  const dpr = window.devicePixelRatio || 1;
+  const canvasW = canvas.width / dpr;
+  const canvasH = canvas.height / dpr;
+  const cardW = 230;
+  const cardH = 140;
+  
+  // Stagger new notes slightly
+  const noteCount = [...state.strokes.values()].filter(s => s.type === 'sticky').length;
+  const posX = typeof x === 'number' ? x : Math.max(40, (canvasW / 2 - 115) + (noteCount % 4) * 30);
+  const posY = typeof y === 'number' ? y : Math.max(60, (canvasH / 2 - 70) + (noteCount % 4) * 30);
+
+  const stroke = {
+    id,
+    type: 'sticky',
+    text: text.trim(),
+    x: posX,
+    y: posY,
+    w: cardW,
+    h: cardH,
+    color: '#000000',
+    bgColor: color,
+    width: 2,
+    ts: Date.now(),
+    userId: state.userId
+  };
+
+  state.strokes.set(id, stroke);
+  wsSend({ type: 'stroke', ...stroke });
+  scheduleRedraw();
+  return stroke;
+};
+
+window._appGetCanvasImage = function() {
+  try {
+    return canvas.toDataURL('image/png');
+  } catch (e) {
+    return null;
+  }
+};
 
 // ─── Message Dispatcher ───────────────────────────────────────────────────────
 function handleMessage(msg) {

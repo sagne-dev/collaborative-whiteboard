@@ -404,6 +404,15 @@
           <span class="tab-label-full">Video Call</span>
           <span class="tab-label-short">Call</span>
         </button>
+        <button id="mode-aiworkspace-btn" class="mode-tab ai-nav-tab" data-mode="aiworkspace" title="AI Workspace Mode">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="3" y1="9" x2="21" y2="9"></line>
+            <line x1="9" y1="21" x2="9" y2="9"></line>
+          </svg>
+          <span class="tab-label-full">AI Workspace</span>
+          <span class="tab-label-short">AI</span>
+        </button>
       </nav>
 
       <!-- Right Meta Bar -->
@@ -720,6 +729,361 @@
       </div>
 
       <!-- ══════════════════════════════════════
+           4. DEDICATED AI WORKSPACE MODE VIEW
+      ══════════════════════════════════════ -->
+      <div id="aiworkspace-view" class="view-panel">
+        
+        <!-- Expandable Left Sidebar Layout (Matching Reference Design) -->
+        <aside id="ai-sidebar" class="ai-sidebar" aria-label="AI Workspace Sidebar">
+          
+          <!-- Sidebar Header -->
+          <div class="ai-sidebar-header">
+            <div class="ai-brand-group" id="ai-brand-toggle" title="AI Workspace">
+              <span class="ai-brand-icon" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="3" y1="9" x2="21" y2="9"></line>
+                  <line x1="9" y1="21" x2="9" y2="9"></line>
+                </svg>
+              </span>
+              <span class="ai-brand-title">AI Workspace</span>
+            </div>
+            
+            <div class="ai-sidebar-header-actions">
+              <button type="button" id="ai-sidebar-search-btn" class="ai-header-icon-btn" title="Search Chat History" aria-label="Search Chat History">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+              </button>
+              <button type="button" id="ai-sidebar-toggle-btn" class="ai-header-icon-btn" title="Collapse / Expand Sidebar" aria-label="Toggle Sidebar">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="9" y1="3" x2="9" y2="21"></line>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Prominent "New Chat" Button -->
+          <div class="ai-new-chat-wrap">
+            <button type="button" id="ai-new-chat-btn" class="ai-new-chat-btn" title="Start New Chat">
+              <span class="ai-new-chat-icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 20h9"></path>
+                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                </svg>
+              </span>
+              <span class="ai-new-chat-label">New chat</span>
+            </button>
+          </div>
+
+          <!-- Inline Search Input (Toggleable via Search Icon) -->
+          <div id="ai-history-search-wrap" class="ai-history-search-wrap hidden">
+            <input type="text" id="ai-history-search-input" placeholder="Search past conversations..." autocomplete="off" />
+            <button type="button" id="ai-history-search-clear" class="ai-search-clear-btn" title="Clear search">✕</button>
+          </div>
+
+          <!-- Streamlined Chat History Section (Zero clutter: stripped library, images, notebooks) -->
+          <div class="ai-history-section">
+            <div class="ai-history-header">
+              <span class="ai-history-heading">Recent</span>
+              <button type="button" id="ai-clear-all-history-btn" class="ai-history-clear-btn" title="Clear all chat history">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              </button>
+            </div>
+            
+            <div id="ai-chat-history-list" class="ai-chat-history-list" role="list">
+              <!-- Populated dynamically from localStorage & default sample chats -->
+            </div>
+          </div>
+
+          <!-- User Profile Bottom Area (Matching Reference Image) -->
+          <div class="ai-user-profile-bottom">
+            <div class="ai-profile-info" id="ai-profile-info-btn" title="User Profile">
+              <div class="ai-avatar-circle" id="ai-user-avatar">S</div>
+              <div class="ai-user-details">
+                <span class="ai-user-name" id="ai-user-name-display">Sagne mieso</span>
+                <span class="ai-user-badge">Pro</span>
+              </div>
+            </div>
+            <button type="button" id="ai-settings-btn" class="ai-settings-icon-btn" title="AI Settings & Models" aria-label="AI Settings">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+              </svg>
+            </button>
+          </div>
+
+        </aside>
+
+        <!-- Main AI Workspace Area -->
+        <main id="ai-main-area" class="ai-main-area">
+          
+          <!-- Top Right Actions Bar -->
+          <div class="ai-workspace-topbar">
+            <div class="ai-topbar-left">
+              <button type="button" id="ai-mobile-menu-btn" class="ai-mobile-menu-btn" title="Open Sidebar" aria-label="Open Sidebar">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+              </button>
+            </div>
+            <div class="ai-topbar-right">
+              <!-- "Get app" button matching reference design -->
+              <button type="button" id="ai-get-app-btn" class="ai-pill-action-btn" title="Download CollabSpace Desktop App / PWA">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                <span>Get app</span>
+              </button>
+              
+              <!-- Quick Switch Back to Whiteboard Canvas -->
+              <button type="button" id="ai-back-to-whiteboard-btn" class="ai-pill-action-btn whiteboard-switch-btn" title="Switch to Collaborative Whiteboard">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+                </svg>
+                <span>Whiteboard</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- View 1: Centered Landing Screen (Matches Reference Image Exactly) -->
+          <div id="ai-hero-view" class="ai-hero-view">
+            
+            <div class="ai-hero-center-content">
+              <!-- Headline -->
+              <h1 class="ai-hero-headline">Where should we start?</h1>
+
+              <!-- Prominent Floating Search/Prompt Input Bar -->
+              <div class="ai-prompt-box-wrap" id="ai-prompt-box-wrap">
+                
+                <!-- Attachment Button (+) -->
+                <div class="ai-attach-wrap">
+                  <button type="button" id="ai-attach-btn" class="ai-input-btn ai-attach-btn" title="Add attachment or whiteboard snapshot" aria-label="Add attachment">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                  </button>
+                  <input type="file" id="ai-file-input" class="hidden" accept="image/*,.txt,.pdf,.md,.json" />
+                  
+                  <!-- Attachment Popup Menu -->
+                  <div id="ai-attach-menu" class="ai-attach-menu hidden">
+                    <button type="button" id="ai-attach-whiteboard-btn" class="ai-attach-menu-item">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                      <span>Capture Whiteboard Snapshot</span>
+                    </button>
+                    <button type="button" id="ai-attach-file-btn" class="ai-attach-menu-item">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                      <span>Upload Image or Document</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Input Textarea / Input Field -->
+                <div class="ai-input-core">
+                  <div id="ai-attached-chips" class="ai-attached-chips hidden"></div>
+                  <textarea id="ai-prompt-input" class="ai-prompt-input" placeholder="Ask AI..." rows="1" autocomplete="off" spellcheck="false"></textarea>
+                </div>
+
+                <!-- Right Tools: Model Selector Badge, Mic Icon, Send Button -->
+                <div class="ai-input-right-tools">
+                  
+                  <!-- Model Selector Dropdown Badge (e.g. Flash-Lite ▾) -->
+                  <div class="ai-model-badge-wrap">
+                    <button type="button" id="ai-model-selector-btn" class="ai-model-badge-btn" title="Select AI Model">
+                      <span id="ai-model-badge-text">Flash-Lite</span>
+                      <svg class="ai-chevron-down" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+
+                    <!-- Dropdown Menu -->
+                    <div id="ai-model-dropdown" class="ai-model-dropdown hidden" role="menu">
+                      <div class="ai-dropdown-header">100% Free Available Models</div>
+                      <button type="button" class="ai-dropdown-item active" data-model="flash-lite" role="menuitem">
+                        <div class="ai-item-meta">
+                          <span class="ai-item-title">Flash-Lite</span>
+                          <span class="ai-item-desc">Fast free reasoning & instant responses</span>
+                        </div>
+                        <span class="ai-item-check">✓</span>
+                      </button>
+                      <button type="button" class="ai-dropdown-item" data-model="pro" role="menuitem">
+                        <div class="ai-item-meta">
+                          <span class="ai-item-title">Pro 1.5</span>
+                          <span class="ai-item-desc">Complex problem solving, coding & math</span>
+                        </div>
+                        <span class="ai-item-check hidden">✓</span>
+                      </button>
+                      <button type="button" class="ai-dropdown-item" data-model="claude" role="menuitem">
+                        <div class="ai-item-meta">
+                          <span class="ai-item-title">Claude Hybrid</span>
+                          <span class="ai-item-desc">Creative writing, nuanced conversations</span>
+                        </div>
+                        <span class="ai-item-check hidden">✓</span>
+                      </button>
+                      <button type="button" class="ai-dropdown-item" data-model="mistral" role="menuitem">
+                        <div class="ai-item-meta">
+                          <span class="ai-item-title">Mistral Large</span>
+                          <span class="ai-item-desc">Concise technical analysis & architecture</span>
+                        </div>
+                        <span class="ai-item-check hidden">✓</span>
+                      </button>
+                      <button type="button" class="ai-dropdown-item" data-model="webllm" role="menuitem">
+                        <div class="ai-item-meta">
+                          <span class="ai-item-title">WebLLM Local</span>
+                          <span class="ai-item-desc">In-browser offline, private execution</span>
+                        </div>
+                        <span class="ai-item-check hidden">✓</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Microphone Voice Prompt Button -->
+                  <button type="button" id="ai-mic-btn" class="ai-input-btn ai-mic-btn" title="Speak Prompt (Voice Input)" aria-label="Microphone">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                      <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                      <line x1="12" y1="19" x2="12" y2="23"></line>
+                      <line x1="8" y1="23" x2="16" y2="23"></line>
+                    </svg>
+                  </button>
+
+                  <!-- Send Button -->
+                  <button type="button" id="ai-send-btn" class="ai-input-btn ai-send-btn" title="Send message" aria-label="Send message">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="22" y1="2" x2="11" y2="13"></line>
+                      <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                  </button>
+
+                </div>
+              </div>
+
+              <!-- Secondary "Chat / Task" Toggle Buttons (Centered directly beneath input box) -->
+              <div class="ai-mode-toggle-cluster" role="radiogroup" aria-label="AI Mode Selection">
+                <button type="button" id="ai-mode-chat-btn" class="ai-mode-btn active" role="radio" aria-checked="true">
+                  <span>Chat</span>
+                </button>
+                <button type="button" id="ai-mode-task-btn" class="ai-mode-btn" role="radio" aria-checked="false">
+                  <span>Task</span>
+                </button>
+              </div>
+
+              <!-- Prompt Suggestion Pills Underneath (Monochrome Black & White) -->
+              <div class="ai-suggestions-container">
+                <div class="ai-suggestions-list">
+                  <button type="button" class="ai-suggestion-pill" data-prompt="Visualize my listening history as art">
+                    <span class="ai-pill-icon">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v8M8 12h8"/></svg>
+                    </span>
+                    <span class="ai-pill-text">Visualize my listening history as art</span>
+                  </button>
+                  <button type="button" class="ai-suggestion-pill" data-prompt="Navigate a difficult conversation">
+                    <span class="ai-pill-icon">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    </span>
+                    <span class="ai-pill-text">Navigate a difficult conversation</span>
+                  </button>
+                  <button type="button" class="ai-suggestion-pill" data-prompt="Troubleshoot storage space">
+                    <span class="ai-pill-icon">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    </span>
+                    <span class="ai-pill-text">Troubleshoot storage space</span>
+                  </button>
+                  <button type="button" class="ai-suggestion-pill" data-prompt="Design a poster based on my taste">
+                    <span class="ai-pill-icon">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                    </span>
+                    <span class="ai-pill-text">Design a poster based on my taste</span>
+                  </button>
+                  <button type="button" class="ai-suggestion-pill" data-prompt="Help me practice for my upcoming exam">
+                    <span class="ai-pill-icon">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                    </span>
+                    <span class="ai-pill-text">Help me practice for my upcoming exam</span>
+                  </button>
+                  <button type="button" class="ai-suggestion-pill" data-prompt="Improve my English vocabulary">
+                    <span class="ai-pill-icon">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    </span>
+                    <span class="ai-pill-text">Improve my English vocabulary</span>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- View 2: Live Conversation Stream (Visible when chat has messages) -->
+          <div id="ai-conversation-view" class="ai-conversation-view hidden">
+            
+            <!-- Message Stream Thread -->
+            <div id="ai-message-thread" class="ai-message-thread" role="log" aria-live="polite">
+              <!-- Dynamically populated with chat bubbles & AI responses -->
+            </div>
+
+            <!-- Persistent Bottom Docked Prompt Box -->
+            <div class="ai-bottom-dock">
+              <div class="ai-bottom-dock-inner">
+                <div class="ai-prompt-box-wrap compact" id="ai-prompt-box-dock">
+                  <!-- Same dynamic attachment, input, model badge, mic, send -->
+                </div>
+                <div class="ai-bottom-disclaimer">
+                  <span>AI can make mistakes. Verify important info. Zero subscription required · 100% Free.</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </main>
+
+        <!-- AI Settings Modal -->
+        <div id="ai-settings-modal" class="ai-settings-modal hidden" role="dialog" aria-modal="true" aria-labelledby="ai-settings-title">
+          <div class="ai-settings-card">
+            <div class="ai-settings-header">
+              <div class="ai-settings-title-group">
+                <span class="ai-brand-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M3 9h18M9 21V9"/></svg>
+                </span>
+                <h3 id="ai-settings-title">AI Workspace Settings</h3>
+              </div>
+              <button type="button" id="ai-settings-close-btn" class="ai-modal-close-btn">✕</button>
+            </div>
+            <div class="ai-settings-body">
+              <div class="ai-settings-group">
+                <label class="ai-settings-label">Default Free Model</label>
+                <select id="ai-setting-default-model" class="ai-select-input">
+                  <option value="flash-lite">Flash-Lite (Fast, 100% Free)</option>
+                  <option value="pro">Pro 1.5 (Advanced, 100% Free)</option>
+                  <option value="claude">Claude Hybrid (Free Tier)</option>
+                  <option value="mistral">Mistral Large (Free Tier)</option>
+                  <option value="webllm">WebLLM Local (Offline)</option>
+                </select>
+                <span class="ai-field-hint">All models run free out of the box with zero subscription required.</span>
+              </div>
+
+              <div class="ai-settings-group">
+                <label class="ai-settings-label">Custom API Key (Optional)</label>
+                <input type="password" id="ai-setting-api-key" class="ai-text-input" placeholder="Enter API key (leave blank for built-in free tier)" />
+                <span class="ai-field-hint">Optional: Enter your own API key for higher rate limits.</span>
+              </div>
+
+              <div class="ai-settings-group">
+                <label class="ai-settings-label">Display User Name in AI Workspace</label>
+                <input type="text" id="ai-setting-username" class="ai-text-input" placeholder="Sagne mieso" />
+              </div>
+
+              <div class="ai-settings-actions">
+                <button type="button" id="ai-export-history-btn" class="ai-btn secondary">Export Chat History (JSON)</button>
+                <button type="button" id="ai-settings-save-btn" class="ai-btn primary">Save & Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ══════════════════════════════════════
            4. COLLAPSIBLE TEXT CHAT SIDEBAR (Shared Room Chat)
       ══════════════════════════════════════ -->
       <aside id="chat-sidebar" class="chat-sidebar mode-hidden">
@@ -884,6 +1248,7 @@
   <!-- Daily.co SDK (@daily-co/daily-js) for Multi-Person SFU Routing -->
   <script src="js/daily.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/ai-workspace.js"></script>
   <!-- AI Feature CDN Libraries -->
   <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjs@13/lib/browser/math.js"></script>
