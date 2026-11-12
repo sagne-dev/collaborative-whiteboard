@@ -1019,10 +1019,15 @@ wss.on('connection', (ws) => {
       case 'ai_3d_model': {
         if (!room) return;
         broadcast(room, {
-          type     : 'ai_3d_model',
-          points   : msg.points,
-          strokeId : msg.strokeId,
-          userName : room.users.get(userId)?.name || 'User',
+          type       : 'ai_3d_model',
+          shapeType  : msg.shapeType || 'extrude',
+          dimensions : msg.dimensions || null,
+          confidence : msg.confidence || null,
+          label      : msg.label || null,
+          points     : msg.points || [],
+          strokes    : msg.strokes || null,
+          strokeId   : msg.strokeId,
+          userName   : room.users.get(userId)?.name || 'User',
         }, ws);
         break;
       }
@@ -1033,6 +1038,8 @@ wss.on('connection', (ws) => {
           type       : 'ai_math_graph',
           expression : msg.expression,
           latex      : msg.latex,
+          xMin       : typeof msg.xMin === 'number' ? msg.xMin : undefined,
+          xMax       : typeof msg.xMax === 'number' ? msg.xMax : undefined,
           userName   : room.users.get(userId)?.name || 'User',
         }, ws);
         break;

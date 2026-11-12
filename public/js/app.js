@@ -426,6 +426,8 @@ function wsSend(obj) {
 // Expose internals for AI features module
 window._appWs = () => state.ws;
 window._appSetTool = (tool) => { state.tool = tool; };
+window._appGetActiveTool = () => state.tool;
+window._appGetStrokes = () => [...state.strokes.values()].filter(s => !state.deleted.has(s.id));
 window._aiWsSend = wsSend;
 
 // ─── Message Dispatcher ───────────────────────────────────────────────────────
@@ -670,15 +672,15 @@ function handleMessage(msg) {
 
     // ── AI Features ──
     case 'ai_3d_model': {
-      if (msg.points && window._aiShow3D) {
-        window._aiShow3D(msg.points);
+      if ((msg.points || msg.shapeType) && window._aiShow3D) {
+        window._aiShow3D(msg);
       }
       break;
     }
 
     case 'ai_math_graph': {
       if (msg.expression && window._aiShowMathPanel) {
-        window._aiShowMathPanel(msg.expression);
+        window._aiShowMathPanel(msg);
       }
       break;
     }
@@ -694,6 +696,7 @@ function getPos(e) {
 
 canvas.addEventListener('mousedown', (e) => {
   e.preventDefault();
+  if (window._aiOnStrokeStart) window._aiOnStrokeStart(state.tool);
   const [x, y] = getPos(e);
   const id = state.userId + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5);
   state.isDrawing = true;
@@ -732,6 +735,7 @@ function finishStroke() {
   state.strokes.set(stroke.id, stroke);
   wsSend({ type: 'stroke', ...stroke });
   scheduleRedraw();
+  if (window._aiOnStrokeFinish) window._aiOnStrokeFinish(stroke, state.tool);
 }
 
 canvas.addEventListener('mouseup',    finishStroke);
@@ -816,6 +820,7 @@ toolBtns.forEach(btn => {
     toolBtns.forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     state.tool = btn.dataset.tool;
+    if (window._aiOnToolChange) window._aiOnToolChange(state.tool);
   });
 });
 

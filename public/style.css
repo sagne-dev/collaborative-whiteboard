@@ -6661,6 +6661,330 @@ body.light-theme #ai-math-info code {
   background: rgba(37, 99, 235, 0.08);
 }
 
+/* ── AI Session Action Bar (Delayed-Trigger Controls) ─────────────────────────── */
+.ai-session-bar {
+  position: fixed;
+  bottom: 46px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 8000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 14px 10px;
+  background: rgba(13, 13, 17, 0.94);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(96, 165, 250, 0.28);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
+  max-width: calc(100vw - 100px);
+  overflow: hidden;
+}
+
+.ai-session-bar.hidden {
+  display: none !important;
+}
+
+body.light-theme .ai-session-bar {
+  background: rgba(250, 250, 252, 0.96);
+  border-color: rgba(37, 99, 235, 0.28);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.14);
+}
+
+.ai-session-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.ai-session-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 3px 7px;
+  border-radius: 6px;
+  background: rgba(96, 165, 250, 0.18);
+  color: #60a5fa;
+  white-space: nowrap;
+}
+
+.ai-session-badge.mode-math {
+  background: rgba(167, 139, 250, 0.18);
+  color: #a78bfa;
+}
+
+.ai-session-status {
+  font-size: 12px;
+  color: #e4e4e7;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+body.light-theme .ai-session-status {
+  color: #18181b;
+}
+
+.ai-session-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.ai-auto-toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: #a1a1aa;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.ai-auto-toggle input {
+  accent-color: #60a5fa;
+  cursor: pointer;
+}
+
+.ai-session-btn {
+  border: none;
+  border-radius: 7px;
+  padding: 5px 11px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+  white-space: nowrap;
+}
+
+.ai-session-btn:hover {
+  opacity: 0.9;
+}
+
+.ai-session-btn:active {
+  transform: scale(0.97);
+}
+
+.ai-session-btn.primary {
+  background: #3b82f6;
+  color: #ffffff;
+}
+
+.ai-session-btn.secondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: #d4d4d8;
+}
+
+body.light-theme .ai-session-btn.secondary {
+  background: rgba(0, 0, 0, 0.07);
+  color: #27272a;
+}
+
+.ai-session-progress-track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.ai-session-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #60a5fa, #a78bfa);
+  transition: width 40ms linear;
+}
+
+/* ── 3D Panel Toolbar & Projected Labels ──────────────────────────────────────── */
+.ai-detected-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.16);
+  color: #93c5fd;
+  border: 1px solid rgba(96, 165, 250, 0.25);
+  white-space: nowrap;
+}
+
+body.light-theme .ai-detected-badge {
+  background: rgba(37, 99, 235, 0.1);
+  color: #1d4ed8;
+}
+
+.ai-3d-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+  flex-wrap: wrap;
+}
+
+body.light-theme .ai-3d-toolbar {
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.ai-mini-select,
+.ai-mini-btn {
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e4e4e7;
+  cursor: pointer;
+}
+
+.ai-mini-select option {
+  background: #141418;
+  color: #e4e4e7;
+}
+
+body.light-theme .ai-mini-select,
+body.light-theme .ai-mini-btn {
+  border-color: rgba(0, 0, 0, 0.14);
+  background: #ffffff;
+  color: #18181b;
+}
+
+body.light-theme .ai-mini-select option {
+  background: #ffffff;
+  color: #18181b;
+}
+
+.ai-mini-btn.active {
+  border-color: rgba(96, 165, 250, 0.5);
+  background: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+}
+
+body.light-theme .ai-mini-btn.active {
+  color: #1d4ed8;
+  background: rgba(37, 99, 235, 0.12);
+}
+
+.ai-mini-btn.primary {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.ai-3d-labels-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.ai-3d-proj-label {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 5px;
+  white-space: nowrap;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+  backdrop-filter: blur(4px);
+}
+
+.ai-3d-proj-label.surface {
+  background: rgba(15, 23, 42, 0.78);
+  color: #93c5fd;
+  border: 1px solid rgba(96, 165, 250, 0.35);
+}
+
+.ai-3d-proj-label.angle {
+  background: rgba(88, 28, 135, 0.78);
+  color: #e9d5ff;
+  border: 1px solid rgba(192, 132, 252, 0.45);
+}
+
+/* ── Smart Math Panel Formula Form & Error ────────────────────────────────────── */
+.ai-math-form {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+body.light-theme .ai-math-form {
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.ai-math-fn-prefix {
+  font-size: 12px;
+  font-weight: 600;
+  color: #a78bfa;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  white-space: nowrap;
+}
+
+.ai-math-input {
+  flex: 1;
+  min-width: 0;
+  padding: 5px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.35);
+  color: #ededf0;
+  font-size: 12px;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+body.light-theme .ai-math-input {
+  background: #ffffff;
+  color: #18181b;
+  border-color: rgba(0, 0, 0, 0.16);
+}
+
+.ai-math-error {
+  padding: 7px 12px;
+  font-size: 11px;
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.12);
+  border-bottom: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.ai-math-error.hidden {
+  display: none !important;
+}
+
+body.light-theme .ai-math-error {
+  color: #b91c1c;
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.ai-panel-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ai-math-latex {
+  font-size: 10px;
+  color: #a78bfa;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 170px;
+}
+
 /* ── Responsive: stack panels on narrow screens ───────────────────────────────── */
 @media (max-width: 520px) {
   .ai-float-panel,
@@ -6669,5 +6993,12 @@ body.light-theme #ai-math-info code {
     right: 12px;
     left: 12px;
     top: 60px;
+  }
+
+  .ai-session-bar {
+    bottom: 38px;
+    max-width: calc(100vw - 20px);
+    flex-wrap: wrap;
+    padding: 7px 10px 9px;
   }
 }

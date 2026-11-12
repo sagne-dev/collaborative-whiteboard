@@ -493,6 +493,25 @@
           <div id="cursor-overlay"></div>
         </main>
 
+        <!-- AI Session Action Bar (for 3D Sketch & Math Graph delayed-trigger workflow) -->
+        <div id="ai-session-bar" class="ai-session-bar hidden" role="region" aria-label="AI Tool Controls">
+          <div class="ai-session-left">
+            <span id="ai-session-badge" class="ai-session-badge">3D SKETCH</span>
+            <span id="ai-session-status" class="ai-session-status">Draw a shape on the board…</span>
+          </div>
+          <div class="ai-session-actions">
+            <label class="ai-auto-toggle" title="Automatically run after you pause drawing">
+              <input type="checkbox" id="ai-auto-trigger-cb" checked />
+              <span>Auto on pause</span>
+            </label>
+            <button type="button" id="ai-session-clear-btn" class="ai-session-btn secondary" title="Clear pending sketch strokes">Clear</button>
+            <button type="button" id="ai-session-run-btn" class="ai-session-btn primary" title="Run AI conversion now">Convert Now</button>
+          </div>
+          <div class="ai-session-progress-track">
+            <div id="ai-session-progress-fill" class="ai-session-progress-fill"></div>
+          </div>
+        </div>
+
         <!-- Hint bar -->
         <div id="hint-bar">
           <kbd>Ctrl+Z</kbd> Undo &nbsp;·&nbsp; <kbd>Ctrl+Y</kbd> Redo &nbsp;·&nbsp; Click room ID above to share link
@@ -743,12 +762,29 @@
           3D Sketch Viewer
         </span>
         <div class="ai-panel-actions">
-          <span class="ai-panel-hint">Drag to rotate</span>
-          <button class="ai-panel-close" id="ai-3d-close" title="Close">✕</button>
+          <span id="ai-3d-detected-badge" class="ai-detected-badge">Analyzing…</span>
+          <button type="button" class="ai-panel-close" id="ai-3d-close" title="Close">✕</button>
         </div>
+      </div>
+      <div class="ai-3d-toolbar">
+        <select id="ai-3d-shape-select" class="ai-mini-select" title="Detected or override 3D shape">
+          <option value="cube">Cube</option>
+          <option value="box">Rectangular Box</option>
+          <option value="sphere">Sphere</option>
+          <option value="cylinder">Cylinder</option>
+          <option value="cone">Cone</option>
+          <option value="pyramid">Square Pyramid</option>
+          <option value="prism">Triangular Prism</option>
+          <option value="torus">Torus / Ring</option>
+          <option value="extrude">Custom Extrude</option>
+        </select>
+        <button type="button" id="ai-3d-labels-toggle" class="ai-mini-btn active" title="Toggle Surface & Angle Labels">Labels: ON</button>
+        <button type="button" id="ai-3d-wire-toggle" class="ai-mini-btn active" title="Toggle Edge Wireframe">Edges</button>
+        <button type="button" id="ai-3d-reset-btn" class="ai-mini-btn" title="Reset 3D Camera">Reset</button>
       </div>
       <div id="ai-3d-canvas-wrap" class="ai-3d-canvas-wrap">
         <canvas id="ai-3d-canvas"></canvas>
+        <div id="ai-3d-labels-layer" class="ai-3d-labels-layer"></div>
         <div class="ai-3d-labels">
           <span class="ai-axis-label axis-x">X</span>
           <span class="ai-axis-label axis-y">Y</span>
@@ -757,7 +793,7 @@
         <div id="ai-3d-status" class="ai-3d-status">Processing sketch...</div>
       </div>
       <div class="ai-panel-footer">
-        <span id="ai-3d-info">Rotate: drag · Zoom: scroll</span>
+        <span id="ai-3d-info">Drag to rotate · Scroll to zoom · Synced to room</span>
       </div>
     </div>
 
@@ -766,22 +802,34 @@
       <div class="ai-panel-header" id="ai-math-panel-header">
         <span class="ai-panel-title">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-          Math Graph
+          Smart Math Graph
         </span>
         <div class="ai-panel-actions">
           <span id="ai-math-expr-display" class="ai-math-expr"></span>
-          <button class="ai-panel-close" id="ai-math-close" title="Close">✕</button>
+          <button type="button" class="ai-panel-close" id="ai-math-close" title="Close">✕</button>
         </div>
       </div>
-      <div id="ai-math-status" class="ai-math-status ai-scanning">
+      <form id="ai-math-form" class="ai-math-form" autocomplete="off">
+        <span class="ai-math-fn-prefix">f(x) =</span>
+        <input id="ai-math-input" type="text" class="ai-math-input" placeholder="e.g. x^2 - 4, sin(x), 2*x + 1" aria-label="Mathematical expression" />
+        <select id="ai-math-domain" class="ai-mini-select" title="X-Axis Domain">
+          <option value="pi">[-2π, 2π]</option>
+          <option value="10" selected>[-10, 10]</option>
+          <option value="25">[-25, 25]</option>
+        </select>
+        <button type="submit" id="ai-math-generate-btn" class="ai-mini-btn primary" title="Generate Graph">Generate</button>
+      </form>
+      <div id="ai-math-error" class="ai-math-error hidden"></div>
+      <div id="ai-math-status" class="ai-math-status ai-scanning" style="display:none;">
         <div class="ai-scan-anim">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <span id="ai-math-status-text">Scanning handwriting...</span>
         </div>
       </div>
       <div id="ai-plotly-chart" class="ai-plotly-chart"></div>
       <div class="ai-panel-footer">
-        <span id="ai-math-info">Recognized: <code id="ai-math-recognized">—</code></span>
+        <span id="ai-math-info">Expression: <code id="ai-math-recognized">—</code></span>
+        <span id="ai-math-latex-preview" class="ai-math-latex"></span>
       </div>
     </div>
 
