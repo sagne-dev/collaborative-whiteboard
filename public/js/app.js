@@ -279,7 +279,7 @@ function setMode(newMode) {
     scrollToChatBottom();
 
     if (zoomActiveMeetingView) zoomActiveMeetingView.classList.remove('hidden');
-    if (!state.isCallActive) {
+    if (!state.isCallActive || !state.localVideoTrack || state.localVideoTrack.readyState !== 'live') {
       joinRoomCall();
     } else {
       renderZoomGrid();
@@ -2007,7 +2007,8 @@ function launchWorkspace() {
     resizeCanvas();
   });
 
-  initVoiceChat().finally(() => {
+  // Prompt and acquire camera + microphone immediately while user click gesture is active
+  ensureMediaForCall(true).finally(() => {
     connect(room, name);
   });
 }
@@ -2737,11 +2738,83 @@ const httpsNoticeCloseBtn   = document.getElementById('https-notice-close-btn');
 
 async function ensureMediaForCall(withVideo = true) {
   if (!state.voiceSupported) {
-    showVideoToast('⚠️ WebRTC or mediaDevices not supported (HTTPS required for mobile/LAN)');
+    if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+      location.replace('https:' + location.href.substring(5));
+      return false;
+    }
+    showVideoToast('⚠️ WebRTC or mediaDevices not supported (HTTPS required for camera & mic)');
     return false;
   }
 
-  // 1. Ensure Microphone track
+  const needAudio = !state.localAudioTrack || state.localAudioTrack.readyState !== 'live';
+  const needVideo = withVideo && (!state.localVideoTrack || state.localVideoTrack.readyState !== 'live');
+
+  // Step 1: If both audio and video are needed, request both in ONE unified getUserMedia call
+  // This preserves user gesture activation on mobile browsers (iOS Safari, Android Chrome)
+  // and produces a single unified permission prompt for both camera & mic.
+  if (needAudio && needVideo) {
+    let combinedStream = null;
+    try {
+      combinedStream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+        video: {
+          facingMode: state.currentFacingMode || 'user',
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          frameRate: { ideal: 30 },
+        },
+      });
+    } catch (e1) {
+      try {
+        combinedStream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+          video: { facingMode: state.currentFacingMode || 'user' },
+        });
+      } catch (e2) {
+        try {
+          combinedStream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+            video: true,
+          });
+        } catch (e3) {
+          console.warn('Combined audio+video getUserMedia failed, will attempt separate requests:', e3);
+        }
+      }
+    }
+
+    if (combinedStream) {
+      const aTrack = combinedStream.getAudioTracks()[0];
+      const vTrack = combinedStream.getVideoTracks()[0];
+      if (aTrack) {
+        state.localAudioTrack = aTrack;
+        state.localAudioStream = new MediaStream([aTrack]);
+        state.localStream.getAudioTracks().forEach(t => state.localStream.removeTrack(t));
+        state.localStream.addTrack(aTrack);
+        state.isMicMuted = false;
+        setupAudioActivityMeter(state.localAudioStream);
+        updateVoiceUI('active', 'Voice Active');
+      }
+      if (vTrack) {
+        state.localVideoTrack = vTrack;
+        state.localVideoStream = new MediaStream([vTrack]);
+        state.localStream.getVideoTracks().forEach(t => state.localStream.removeTrack(t));
+        state.localStream.addTrack(vTrack);
+        state.isCamOff = false;
+        vTrack.enabled = true;
+
+        if (zoomPreviewVideo) {
+          zoomPreviewVideo.srcObject = state.localVideoStream;
+          zoomPreviewVideo.play().catch(() => {});
+        }
+      }
+    }
+  }
+
+  // Step 2: Ensure Microphone track if still needed
   if (!state.localAudioTrack || state.localAudioTrack.readyState !== 'live') {
     let audioStream = null;
     try {
@@ -2780,7 +2853,7 @@ async function ensureMediaForCall(withVideo = true) {
     }
   }
 
-  // 2. Ensure Video track (if withVideo requested)
+  // Step 3: Ensure Video track if still needed (e.g. combined failed, or video toggled on)
   if (withVideo && (!state.localVideoTrack || state.localVideoTrack.readyState !== 'live')) {
     let videoStream = null;
     // Step A: Ideal resolution & preferred facing mode (Laptop / Desktop / Phone)
@@ -3220,7 +3293,20 @@ function renderZoomGrid() {
     } else if (item.isLocal) {
       videoEl.muted = true;
       if (item.isCamOff || !item.track || item.track.readyState !== 'live') {
-        if (avatarBox) avatarBox.classList.remove('hidden');
+        if (avatarBox) {
+          avatarBox.classList.remove('hidden');
+          if (!avatarBox.querySelector('.zoom-enable-cam-btn')) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'zoom-enable-cam-btn';
+            btn.innerHTML = '📷 Turn On Camera';
+            btn.onclick = (e) => {
+              e.stopPropagation();
+              toggleCamera();
+            };
+            avatarBox.appendChild(btn);
+          }
+        }
         videoEl.srcObject = null;
       } else {
         if (avatarBox) avatarBox.classList.add('hidden');
