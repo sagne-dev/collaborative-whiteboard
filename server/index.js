@@ -683,6 +683,11 @@ wss.on('connection', (ws) => {
         break;
       }
 
+      case 'leave': {
+        leave();
+        break;
+      }
+
       // ── Whiteboard drawing actions ──
       case 'stroke': {
         if (!room) return;

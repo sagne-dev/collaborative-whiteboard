@@ -49,6 +49,7 @@ const navRoomLabel      = document.getElementById('nav-room-label');
 const copyHint          = document.getElementById('copy-hint');
 const navUserDot        = document.getElementById('nav-user-dot');
 const navUserName       = document.getElementById('nav-user-name');
+const leaveRoomBtn      = document.getElementById('leave-room-btn');
 const statusEl          = document.getElementById('status');
 
 // Voice Chat Elements
@@ -439,6 +440,7 @@ function handleMessage(msg) {
       if (navUserDot) navUserDot.style.background = msg.color;
       if (navUserName) navUserName.textContent = state.userName;
       if (navRoomLabel) navRoomLabel.textContent = 'Room: ' + msg.roomId;
+      if (navRoomBadge) navRoomBadge.title = `Current Room: ${msg.roomId} (Click to copy invite link)`;
       if (roomLabel) roomLabel.textContent = '';
 
       state.strokes.clear();
@@ -1952,10 +1954,110 @@ if (navRoomBadge) {
     navigator.clipboard.writeText(url).then(() => {
       if (copyHint) copyHint.classList.add('show');
       setTimeout(() => copyHint && copyHint.classList.remove('show'), 2000);
+      showVideoToast(`📋 Room "${state.roomId || 'lobby'}" invite link copied!`);
     }).catch(() => {
       prompt('Share this URL to invite friends:', url);
     });
   });
+}
+
+// ─── Leave Room & Return to Sign-In ──────────────────────────────────────────
+async function leaveRoomToSignIn() {
+  const currentRoom = state.roomId || 'lobby';
+  const currentName = state.userName || 'Guest';
+
+  // 1. Leave any active call
+  if (state.callTimerInterval) {
+    clearInterval(state.callTimerInterval);
+    state.callTimerInterval = null;
+  }
+  state.isCallActive = false;
+
+  if (state.isScreenSharing) {
+    try { await stopScreenShare(); } catch (_) {}
+  }
+
+  // 2. Stop camera hardware
+  if (state.localVideoTrack) {
+    try { state.localVideoTrack.stop(); } catch (_) {}
+    state.localVideoTrack = null;
+  }
+  if (state.localVideoStream) {
+    try { state.localVideoStream.getTracks().forEach(t => t.stop()); } catch (_) {}
+    state.localVideoStream = null;
+  }
+
+  // 3. Stop microphone hardware
+  if (state.localAudioTrack) {
+    try { state.localAudioTrack.stop(); } catch (_) {}
+    state.localAudioTrack = null;
+  }
+  if (state.localAudioStream) {
+    try { state.localAudioStream.getTracks().forEach(t => t.stop()); } catch (_) {}
+    state.localAudioStream = null;
+  }
+
+  // 4. Stop combined stream
+  if (state.localStream) {
+    try { state.localStream.getTracks().forEach(t => t.stop()); } catch (_) {}
+    state.localStream = new MediaStream();
+  }
+
+  if (state.voiceVisualizerInterval) {
+    clearInterval(state.voiceVisualizerInterval);
+    state.voiceVisualizerInterval = null;
+  }
+  if (voiceWave) voiceWave.classList.remove('talking');
+
+  // 5. Close WebRTC peer connections
+  for (const [, conn] of state.voiceConnections) {
+    if (conn.pc) {
+      try { conn.pc.close(); } catch (_) {}
+    }
+    if (conn.audioEl) {
+      try { conn.audioEl.pause(); conn.audioEl.srcObject = null; conn.audioEl.remove(); } catch (_) {}
+    }
+  }
+  state.voiceConnections.clear();
+
+  // 6. Gracefully close WebSocket without auto-reconnect
+  if (state.ws) {
+    try {
+      wsSend({ type: 'leave' });
+    } catch (_) {}
+    state.ws.onclose = null;
+    state.ws.onerror = null;
+    try { state.ws.close(); } catch (_) {}
+    state.ws = null;
+  }
+
+  // 7. Clear participants and canvas state
+  state.userMap.clear();
+  renderUserList();
+  if (userCursors) userCursors.innerHTML = '';
+  if (zoomVideoStageGrid) zoomVideoStageGrid.innerHTML = '';
+  state.strokes.clear();
+  state.deleted.clear();
+  state.currentStroke = null;
+  if (ctx && canvas) ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  state.activeCall = null;
+  state.pendingIncomingCall = null;
+  state.pendingOutgoingCall = null;
+  state.isCamOff = false;
+  state.isMicMuted = false;
+
+  // 8. Pre-fill sign-in inputs so user can change either username or room ID
+  if (nameInput) nameInput.value = currentName;
+  if (roomInput) roomInput.value = currentRoom;
+
+  // 9. Show Sign-In screen
+  showSignIn();
+  showVideoToast(`👋 Left room "${currentRoom}". Change username or room ID to join.`);
+}
+
+if (leaveRoomBtn) {
+  leaveRoomBtn.addEventListener('click', leaveRoomToSignIn);
 }
 
 // ─── Join Flow ────────────────────────────────────────────────────────────────
@@ -1996,6 +2098,10 @@ function launchWorkspace() {
   const name = nameInput.value.trim() || 'Guest';
   state.roomId = room;
   state.userName = name;
+
+  if (navRoomLabel) navRoomLabel.textContent = 'Room: ' + room;
+  if (navUserName) navUserName.textContent = name;
+  if (navRoomBadge) navRoomBadge.title = `Current Room: ${room} (Click to copy invite link)`;
 
   history.replaceState(null, '', '?room=' + encodeURIComponent(room));
 

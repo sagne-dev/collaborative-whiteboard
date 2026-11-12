@@ -656,10 +656,73 @@ body.light-theme .theme-icon-svg {
 
 .room-pill {
   cursor: pointer;
+  background: #0d0d0d;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  user-select: none;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.18s ease;
 }
 .room-pill:hover {
   border-color: #ffffff;
-  background: #171717;
+  background: #1c1c1e;
+  transform: translateY(-1px);
+}
+.room-pill:active {
+  transform: translateY(0);
+}
+.room-pill .room-icon {
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+#nav-room-label {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.user-pill {
+  user-select: none;
+  font-weight: 600;
+  gap: 7px;
+}
+
+.nav-leave-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
+  padding: 5px 13px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.nav-leave-btn:hover {
+  background: #ffffff;
+  color: #000000;
+  border-color: #ffffff;
+  box-shadow: 0 0 14px rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+.nav-leave-btn:active {
+  transform: translateY(0);
+}
+.nav-leave-btn svg {
+  stroke: currentColor;
+  flex-shrink: 0;
+  transition: transform 0.18s ease;
+}
+.nav-leave-btn:hover svg {
+  transform: translateX(1.5px);
 }
 
 /* ── Voice Chat Pill (Monochrome) ── */
@@ -3132,7 +3195,7 @@ kbd {
   }
 
   #nav-room-badge {
-    max-width: 85px;
+    max-width: 130px;
     padding: 4px 8px;
   }
 
@@ -3141,6 +3204,11 @@ kbd {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .nav-leave-btn {
+    padding: 4px 8px;
+    font-size: 0.74rem;
   }
 
   /* ── B. Whiteboard View (Native App Bottom Toolbar Layout) ── */
@@ -3673,8 +3741,15 @@ kbd {
   }
 
   #nav-room-badge {
-    max-width: 72px;
+    max-width: 95px;
     padding: 4px 6px;
+  }
+
+  .nav-leave-btn {
+    padding: 4px 7px;
+  }
+  .nav-leave-btn .leave-btn-text {
+    display: none;
   }
 
   /* Join Screen on Mobile */
@@ -5779,12 +5854,22 @@ body.light-theme #nav-voice-btn,
 
 body.light-theme #nav-room-badge,
 body.light-theme #nav-user-pill,
+body.light-theme .nav-leave-btn,
 [data-theme="light"] #nav-room-badge,
-[data-theme="light"] #nav-user-pill {
+[data-theme="light"] #nav-user-pill,
+[data-theme="light"] .nav-leave-btn {
   background: #edeef1 !important;
   border: 1px solid rgba(0, 0, 0, 0.12) !important;
   color: #121214 !important;
   font-weight: 600 !important;
+}
+
+body.light-theme .nav-leave-btn:hover,
+[data-theme="light"] .nav-leave-btn:hover {
+  background: #121214 !important;
+  color: #ffffff !important;
+  border-color: #121214 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
 }
 
 body.light-theme #theme-toggle-nav,
