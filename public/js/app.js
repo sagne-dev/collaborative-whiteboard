@@ -423,6 +423,11 @@ function wsSend(obj) {
   }
 }
 
+// Expose internals for AI features module
+window._appWs = () => state.ws;
+window._appSetTool = (tool) => { state.tool = tool; };
+window._aiWsSend = wsSend;
+
 // ─── Message Dispatcher ───────────────────────────────────────────────────────
 function handleMessage(msg) {
   switch (msg.type) {
@@ -660,6 +665,21 @@ function handleMessage(msg) {
     // ── Chat Messages ──
     case 'chat_message': {
       appendChatMessage(msg.message, true);
+      break;
+    }
+
+    // ── AI Features ──
+    case 'ai_3d_model': {
+      if (msg.points && window._aiShow3D) {
+        window._aiShow3D(msg.points);
+      }
+      break;
+    }
+
+    case 'ai_math_graph': {
+      if (msg.expression && window._aiShowMathPanel) {
+        window._aiShowMathPanel(msg.expression);
+      }
       break;
     }
   }

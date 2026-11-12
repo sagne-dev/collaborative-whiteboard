@@ -1016,6 +1016,28 @@ wss.on('connection', (ws) => {
         break;
       }
 
+      case 'ai_3d_model': {
+        if (!room) return;
+        broadcast(room, {
+          type     : 'ai_3d_model',
+          points   : msg.points,
+          strokeId : msg.strokeId,
+          userName : room.users.get(userId)?.name || 'User',
+        }, ws);
+        break;
+      }
+
+      case 'ai_math_graph': {
+        if (!room) return;
+        broadcast(room, {
+          type       : 'ai_math_graph',
+          expression : msg.expression,
+          latex      : msg.latex,
+          userName   : room.users.get(userId)?.name || 'User',
+        }, ws);
+        break;
+      }
+
       default:
         console.warn('Unknown message type:', msg.type);
     }

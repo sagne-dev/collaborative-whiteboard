@@ -449,6 +449,16 @@
                 <path d="M20 20H7L3 16l13-13 7 7-3 10z"/>
               </svg>
             </button>
+            <button class="tool-btn" data-tool="sketch3d" id="btn-sketch3d" title="Convert Sketch to 3D">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+              </svg>
+            </button>
+            <button class="tool-btn" data-tool="mathgraph" id="btn-mathgraph" title="Graph Handwritten Math">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+              </svg>
+            </button>
           </div>
 
           <div class="toolbar-section">
@@ -725,6 +735,56 @@
 
     </div><!-- /#workspace-views -->
 
+    <!-- AI 3D Sketch Panel -->
+    <div id="ai-3d-panel" class="ai-float-panel hidden" role="dialog" aria-label="3D Sketch Viewer">
+      <div class="ai-panel-header" id="ai-3d-panel-header">
+        <span class="ai-panel-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          3D Sketch Viewer
+        </span>
+        <div class="ai-panel-actions">
+          <span class="ai-panel-hint">Drag to rotate</span>
+          <button class="ai-panel-close" id="ai-3d-close" title="Close">✕</button>
+        </div>
+      </div>
+      <div id="ai-3d-canvas-wrap" class="ai-3d-canvas-wrap">
+        <canvas id="ai-3d-canvas"></canvas>
+        <div class="ai-3d-labels">
+          <span class="ai-axis-label axis-x">X</span>
+          <span class="ai-axis-label axis-y">Y</span>
+          <span class="ai-axis-label axis-z">Z</span>
+        </div>
+        <div id="ai-3d-status" class="ai-3d-status">Processing sketch...</div>
+      </div>
+      <div class="ai-panel-footer">
+        <span id="ai-3d-info">Rotate: drag · Zoom: scroll</span>
+      </div>
+    </div>
+
+    <!-- AI Math Graph Panel -->
+    <div id="ai-math-panel" class="ai-float-panel hidden" role="dialog" aria-label="Math Graph">
+      <div class="ai-panel-header" id="ai-math-panel-header">
+        <span class="ai-panel-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Math Graph
+        </span>
+        <div class="ai-panel-actions">
+          <span id="ai-math-expr-display" class="ai-math-expr"></span>
+          <button class="ai-panel-close" id="ai-math-close" title="Close">✕</button>
+        </div>
+      </div>
+      <div id="ai-math-status" class="ai-math-status ai-scanning">
+        <div class="ai-scan-anim">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <span id="ai-math-status-text">Scanning handwriting...</span>
+        </div>
+      </div>
+      <div id="ai-plotly-chart" class="ai-plotly-chart"></div>
+      <div class="ai-panel-footer">
+        <span id="ai-math-info">Recognized: <code id="ai-math-recognized">—</code></span>
+      </div>
+    </div>
+
     <!-- ─── 4. GLOBAL OUTGOING CALLING MODAL (Ringing...) ─── -->
     <div id="zoom-calling-overlay" class="zoom-modal-backdrop hidden">
       <div class="zoom-calling-card">
@@ -776,5 +836,18 @@
   <!-- Daily.co SDK (@daily-co/daily-js) for Multi-Person SFU Routing -->
   <script src="js/daily.js"></script>
   <script src="js/app.js"></script>
+  <!-- AI Feature CDN Libraries -->
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjs@13/lib/browser/math.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module" src="js/ai-features.js"></script>
 </body>
 </html>
