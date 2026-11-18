@@ -465,9 +465,38 @@ function scheduleRedraw() {
 }
 
 // ─── WebSocket Connection ─────────────────────────────────────────────────────
-function connect(roomId, name) {
+function getWebSocketUrl() {
+  // 1. URL parameter override: ?server=your-railway-url.up.railway.app
+  const params = new URLSearchParams(window.location.search);
+  const serverParam = params.get('server');
+  if (serverParam) {
+    let url = serverParam.trim();
+    if (!url.startsWith('ws://') && !url.startsWith('wss://')) {
+      const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+      url = `${proto}://${url}`;
+    }
+    return url;
+  }
+
+  // 2. Config file override (public/config.js)
+  if (window.WS_BACKEND_URL && window.WS_BACKEND_URL.trim() !== '') {
+    let url = window.WS_BACKEND_URL.trim();
+    if (!url.startsWith('ws://') && !url.startsWith('wss://')) {
+      const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+      url = `${proto}://${url}`;
+    }
+    return url;
+  }
+
+  // 3. Fallback to same host
   const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-  const ws = new WebSocket(`${proto}://${location.host}`);
+  return `${proto}://${location.host}`;
+}
+
+function connect(roomId, name) {
+  const wsUrl = getWebSocketUrl();
+  console.log('Connecting to WebSocket server at:', wsUrl);
+  const ws = new WebSocket(wsUrl);
   state.ws = ws;
 
   ws.onopen = () => {
