@@ -23,82 +23,7 @@
   const STORAGE_API_KEY      = 'collab_ai_custom_api_key';
   const STORAGE_USER_NAME    = 'collab_ai_user_name';
 
-  // ─── Default Sample Chat Sessions (Matching Reference Image) ──────────────
-  const DEFAULT_SAMPLE_CHATS = [
-    {
-      id: 'sample_1',
-      title: 'Adding Watch Party to Whiteboard',
-      mode: 'task',
-      model: 'flash-lite',
-      createdAt: Date.now() - 3600000 * 2,
-      messages: [
-        { role: 'user', content: 'How can we integrate synchronized watch party features directly into our collaborative whiteboard suite?' },
-        {
-          role: 'assistant',
-          content: `### 🎬 Watch Party Integration Architecture for Collaborative Whiteboard\n\n` +
-            `Integrating synchronized media playback alongside an infinite canvas requires separating video sync clocks from whiteboard stroke broadcasts:\n\n` +
-            `1. **Dual-Buffer HTML5 & YouTube Engine:**\n` +
-            `   - Use standard HTML5 \`<video>\` with Range HTTP headers for direct MP4 streaming.\n` +
-            `   - Use the YouTube IFrame API with millisecond play/pause drift correction.\n\n` +
-            `2. **Room Sync Protocol via WebSocket:**\n` +
-            `   - Broadcast \`video_play\`, \`video_pause\`, and \`video_seek\` packets to all room participants.\n` +
-            `   - Auto-resync clients if playback drift exceeds 1.5 seconds.\n\n` +
-            `3. **Whiteboard Canvas Overlay:**\n` +
-            `   - Allow team members to draw annotations, arrows, and sticky notes directly on or beside the video stage!`,
-          model: 'Flash-Lite'
-        }
-      ]
-    },
-    {
-      id: 'sample_2',
-      title: 'Troubleshooting 5 GHz Wi-Fi Connection...',
-      mode: 'chat',
-      model: 'flash-lite',
-      createdAt: Date.now() - 3600000 * 5,
-      messages: [
-        { role: 'user', content: 'Why is my device dropping 5 GHz Wi-Fi while 2.4 GHz stays connected?' },
-        {
-          role: 'assistant',
-          content: `### 📶 Troubleshooting 5 GHz Wi-Fi Disconnections\n\n` +
-            `5 GHz signals provide higher bandwidth but have shorter range and weaker wall penetration than 2.4 GHz. Here are the primary reasons and fixes:\n\n` +
-            `- **DFS (Dynamic Frequency Selection) Channels:** In many areas, radar sweeps force routers off DFS channels (52-144). Switch your router to fixed channel 36, 40, 44, or 149.\n` +
-            `- **Band Steering Glitches:** If your router combines 2.4 GHz and 5 GHz under one SSID, split them into separate names (e.g. *Home-5G*).\n` +
-            `- **Channel Width (80MHz vs 160MHz):** Set channel width to 80MHz for significantly better stability.`,
-          model: 'Flash-Lite'
-        }
-      ]
-    },
-    {
-      id: 'sample_3',
-      title: 'Singing Video Generation Success',
-      mode: 'chat',
-      model: 'flash-lite',
-      createdAt: Date.now() - 3600000 * 24,
-      messages: [
-        { role: 'user', content: 'Our audio-driven facial animation pipeline just rendered with zero lip-sync latency!' },
-        {
-          role: 'assistant',
-          content: `### 🌟 Fantastic Milestone!\n\nZero-latency phoneme-to-viseme alignment in real-time WebRTC streams is a huge breakthrough for collaborative virtual spaces. Your team can now sketch character storyboards on the whiteboard while previewing live generated video!`,
-          model: 'Flash-Lite'
-        }
-      ]
-    },
-    {
-      id: 'sample_4',
-      title: 'Remastering the Hero Section Prompt',
-      mode: 'task',
-      model: 'flash-lite',
-      createdAt: Date.now() - 3600000 * 48,
-      messages: [
-        { role: 'user', content: 'Create a prompt for a sleek dark-mode AI hero interface with expandable sidebar.' },
-        {
-          role: 'assistant',
-          content: `### 🎨 UI Design Specs for AI Workspace\n\n- **Color Palette:** Pure dark obsidian background (\`#08090d\`) with subtle deep indigo radial bloom (\`#151d38\`).\n- **Sidebar:** Expandable left navigation rail with prominent "New chat", clean history list, and user profile badge at bottom.\n- **Hero:** Centered "Where should we start?" with floating prompt bar, model selector, mic icon, and Chat/Task toggle pills.`,
-          model: 'Flash-Lite'
-        }
-      ]
-    }
-  ];
+  // No default/sample fake chats - history strictly reflects actual user conversations.
 
   // ─── Application State ────────────────────────────────────────────────────
   const state = {
@@ -122,6 +47,8 @@
       viewPanel             : document.getElementById('aiworkspace-view'),
       sidebar               : document.getElementById('ai-sidebar'),
       sidebarToggleBtn      : document.getElementById('ai-sidebar-toggle-btn'),
+      historyToggleBtn      : document.getElementById('ai-history-toggle-btn'),
+      topbarNewChatBtn      : document.getElementById('ai-topbar-new-chat-btn'),
       brandToggle           : document.getElementById('ai-brand-toggle'),
       searchToggleBtn       : document.getElementById('ai-sidebar-search-btn'),
       searchWrap            : document.getElementById('ai-history-search-wrap'),
@@ -182,13 +109,16 @@
     try {
       const rawChats = localStorage.getItem(STORAGE_CHATS_KEY);
       if (rawChats) {
-        state.chats = JSON.parse(rawChats);
+        const parsed = JSON.parse(rawChats);
+        // Exclude legacy sample chats if they were previously saved
+        state.chats = Array.isArray(parsed)
+          ? parsed.filter(c => c && typeof c.id === 'string' && !c.id.startsWith('sample_'))
+          : [];
       } else {
-        state.chats = [...DEFAULT_SAMPLE_CHATS];
-        saveChats();
+        state.chats = [];
       }
     } catch (e) {
-      state.chats = [...DEFAULT_SAMPLE_CHATS];
+      state.chats = [];
     }
 
     try {
@@ -224,6 +154,10 @@
     state.isSidebarCollapsed = collapsed;
     if (el.sidebar) {
       el.sidebar.classList.toggle('collapsed', collapsed);
+    }
+    if (el.historyToggleBtn) {
+      el.historyToggleBtn.classList.toggle('active', !collapsed);
+      el.historyToggleBtn.setAttribute('aria-expanded', !collapsed ? 'true' : 'false');
     }
     try {
       localStorage.setItem(STORAGE_SIDEBAR_KEY, collapsed ? 'true' : 'false');
@@ -286,27 +220,7 @@
 
   // ─── Chat Session Management ──────────────────────────────────────────────
   function createNewChat() {
-    // If current chat is empty, just focus input and stay in hero
-    const cur = getCurrentChat();
-    if (cur && cur.messages.length === 0) {
-      focusPromptInput();
-      return;
-    }
-
-    const newId = 'chat_' + Date.now();
-    const newSession = {
-      id: newId,
-      title: 'New conversation',
-      mode: state.activeMode,
-      model: state.activeModel,
-      createdAt: Date.now(),
-      messages: []
-    };
-
-    state.chats.unshift(newSession);
-    saveChats();
-    saveActiveChatId(newId);
-    
+    saveActiveChatId(null);
     renderChatHistory();
     renderActiveView();
     focusPromptInput();
@@ -375,7 +289,14 @@
     if (list.length === 0) {
       const emptyItem = document.createElement('div');
       emptyItem.className = 'ai-history-empty';
-      emptyItem.textContent = filter ? 'No conversations found' : 'No past conversations';
+      emptyItem.innerHTML = `
+        <div class="ai-empty-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+        </div>
+        <p class="ai-empty-text">${filter ? 'No matching conversations' : 'No history yet.'}</p>
+      `;
       el.chatHistoryList.appendChild(emptyItem);
       return;
     }
@@ -448,9 +369,8 @@
       }
     } else {
       const centerWrap = el.heroView ? el.heroView.querySelector('.ai-hero-center-content') : null;
-      const toggleCluster = el.heroView ? el.heroView.querySelector('.ai-mode-toggle-cluster') : null;
-      if (centerWrap && toggleCluster && !centerWrap.contains(el.promptBoxWrap)) {
-        centerWrap.insertBefore(el.promptBoxWrap, toggleCluster);
+      if (centerWrap && !centerWrap.contains(el.promptBoxWrap)) {
+        centerWrap.appendChild(el.promptBoxWrap);
       }
     }
   }
@@ -1172,10 +1092,14 @@
       });
     }
 
-    // 6. Navigation Topbar Actions
+    // 6. Navigation Topbar Actions & History Toggle Controls
+    if (el.sidebarToggleBtn) el.sidebarToggleBtn.addEventListener('click', toggleSidebar);
+    if (el.historyToggleBtn) el.historyToggleBtn.addEventListener('click', toggleSidebar);
+    if (el.topbarNewChatBtn) el.topbarNewChatBtn.addEventListener('click', createNewChat);
+
     if (el.mobileMenuBtn) {
       el.mobileMenuBtn.addEventListener('click', () => {
-        if (el.sidebar) el.sidebar.classList.toggle('mobile-open');
+        toggleSidebar();
       });
     }
 

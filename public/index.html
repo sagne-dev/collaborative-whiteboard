@@ -733,121 +733,46 @@
       ══════════════════════════════════════ -->
       <div id="aiworkspace-view" class="view-panel">
         
-        <!-- Expandable Left Sidebar Layout (Matching Reference Design) -->
-        <aside id="ai-sidebar" class="ai-sidebar" aria-label="AI Workspace Sidebar">
+        <!-- Main AI Workspace Area (Left / Center) -->
+        <main id="ai-main-area" class="ai-main-area">
           
-          <!-- Sidebar Header -->
-          <div class="ai-sidebar-header">
-            <div class="ai-brand-group" id="ai-brand-toggle" title="AI Workspace">
-              <span class="ai-brand-icon" aria-hidden="true">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                  <line x1="3" y1="9" x2="21" y2="9"></line>
-                  <line x1="9" y1="21" x2="9" y2="9"></line>
-                </svg>
-              </span>
-              <span class="ai-brand-title">AI Workspace</span>
-            </div>
-            
-            <div class="ai-sidebar-header-actions">
-              <button type="button" id="ai-sidebar-search-btn" class="ai-header-icon-btn" title="Search Chat History" aria-label="Search Chat History">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                </svg>
+          <!-- Top Actions Bar -->
+          <div class="ai-workspace-topbar">
+            <div class="ai-topbar-left">
+              <button type="button" id="ai-mobile-menu-btn" class="ai-mobile-menu-btn" title="Open History" aria-label="Open History">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
               </button>
-              <button type="button" id="ai-sidebar-toggle-btn" class="ai-header-icon-btn" title="Collapse / Expand Sidebar" aria-label="Toggle Sidebar">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                  <line x1="9" y1="3" x2="9" y2="21"></line>
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <!-- Prominent "New Chat" Button -->
-          <div class="ai-new-chat-wrap">
-            <button type="button" id="ai-new-chat-btn" class="ai-new-chat-btn" title="Start New Chat">
-              <span class="ai-new-chat-icon" aria-hidden="true">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <div class="ai-topbar-brand">
+                <span class="ai-brand-icon" aria-hidden="true">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                    <line x1="3" y1="9" x2="21" y2="9"></line>
+                    <line x1="9" y1="21" x2="9" y2="9"></line>
+                  </svg>
+                </span>
+                <span class="ai-brand-title">AI Workspace</span>
+              </div>
+              <button type="button" id="ai-topbar-new-chat-btn" class="ai-topbar-btn" title="Start New Chat" aria-label="Start New Chat">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M12 20h9"></path>
                   <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
                 </svg>
-              </span>
-              <span class="ai-new-chat-label">New chat</span>
-            </button>
-          </div>
-
-          <!-- Inline Search Input (Toggleable via Search Icon) -->
-          <div id="ai-history-search-wrap" class="ai-history-search-wrap hidden">
-            <input type="text" id="ai-history-search-input" placeholder="Search past conversations..." autocomplete="off" />
-            <button type="button" id="ai-history-search-clear" class="ai-search-clear-btn" title="Clear search">✕</button>
-          </div>
-
-          <!-- Streamlined Chat History Section (Zero clutter: stripped library, images, notebooks) -->
-          <div class="ai-history-section">
-            <div class="ai-history-header">
-              <span class="ai-history-heading">Recent</span>
-              <button type="button" id="ai-clear-all-history-btn" class="ai-history-clear-btn" title="Clear all chat history">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-              </button>
-            </div>
-            
-            <div id="ai-chat-history-list" class="ai-chat-history-list" role="list">
-              <!-- Populated dynamically from localStorage & default sample chats -->
-            </div>
-          </div>
-
-          <!-- User Profile Bottom Area (Matching Reference Image) -->
-          <div class="ai-user-profile-bottom">
-            <div class="ai-profile-info" id="ai-profile-info-btn" title="User Profile">
-              <div class="ai-avatar-circle" id="ai-user-avatar">S</div>
-              <div class="ai-user-details">
-                <span class="ai-user-name" id="ai-user-name-display">Sagne mieso</span>
-                <span class="ai-user-badge">Pro</span>
-              </div>
-            </div>
-            <button type="button" id="ai-settings-btn" class="ai-settings-icon-btn" title="AI Settings & Models" aria-label="AI Settings">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="3"></circle>
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-              </svg>
-            </button>
-          </div>
-
-        </aside>
-
-        <!-- Main AI Workspace Area -->
-        <main id="ai-main-area" class="ai-main-area">
-          
-          <!-- Top Right Actions Bar -->
-          <div class="ai-workspace-topbar">
-            <div class="ai-topbar-left">
-              <button type="button" id="ai-mobile-menu-btn" class="ai-mobile-menu-btn" title="Open Sidebar" aria-label="Open Sidebar">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                <span>New chat</span>
               </button>
             </div>
             <div class="ai-topbar-right">
-              <!-- "Get app" button matching reference design -->
-              <button type="button" id="ai-get-app-btn" class="ai-pill-action-btn" title="Download CollabSpace Desktop App / PWA">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                  <polyline points="7 10 12 15 17 10"></polyline>
-                  <line x1="12" y1="15" x2="12" y2="3"></line>
+              <!-- Clear control to expand/collapse the Right-Side History Panel -->
+              <button type="button" id="ai-history-toggle-btn" class="ai-topbar-history-btn" title="Toggle Conversation History" aria-label="Toggle Conversation History" aria-expanded="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
                 </svg>
-                <span>Get app</span>
-              </button>
-              
-              <!-- Quick Switch Back to Whiteboard Canvas -->
-              <button type="button" id="ai-back-to-whiteboard-btn" class="ai-pill-action-btn whiteboard-switch-btn" title="Switch to Collaborative Whiteboard">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
-                </svg>
-                <span>Whiteboard</span>
+                <span>History</span>
               </button>
             </div>
           </div>
 
-          <!-- View 1: Centered Landing Screen (Matches Reference Image Exactly) -->
+          <!-- View 1: Centered Landing Screen -->
           <div id="ai-hero-view" class="ai-hero-view">
             
             <div class="ai-hero-center-content">
@@ -886,57 +811,8 @@
                   <textarea id="ai-prompt-input" class="ai-prompt-input" placeholder="Ask AI..." rows="1" autocomplete="off" spellcheck="false"></textarea>
                 </div>
 
-                <!-- Right Tools: Model Selector Badge, Mic Icon, Send Button -->
+                <!-- Right Tools: Mic Icon, Send Button -->
                 <div class="ai-input-right-tools">
-                  
-                  <!-- Model Selector Dropdown Badge (e.g. Flash-Lite ▾) -->
-                  <div class="ai-model-badge-wrap">
-                    <button type="button" id="ai-model-selector-btn" class="ai-model-badge-btn" title="Select AI Model">
-                      <span id="ai-model-badge-text">Flash-Lite</span>
-                      <svg class="ai-chevron-down" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                    </button>
-
-                    <!-- Dropdown Menu -->
-                    <div id="ai-model-dropdown" class="ai-model-dropdown hidden" role="menu">
-                      <div class="ai-dropdown-header">100% Free Available Models</div>
-                      <button type="button" class="ai-dropdown-item active" data-model="flash-lite" role="menuitem">
-                        <div class="ai-item-meta">
-                          <span class="ai-item-title">Flash-Lite</span>
-                          <span class="ai-item-desc">Fast free reasoning & instant responses</span>
-                        </div>
-                        <span class="ai-item-check">✓</span>
-                      </button>
-                      <button type="button" class="ai-dropdown-item" data-model="pro" role="menuitem">
-                        <div class="ai-item-meta">
-                          <span class="ai-item-title">Pro 1.5</span>
-                          <span class="ai-item-desc">Complex problem solving, coding & math</span>
-                        </div>
-                        <span class="ai-item-check hidden">✓</span>
-                      </button>
-                      <button type="button" class="ai-dropdown-item" data-model="claude" role="menuitem">
-                        <div class="ai-item-meta">
-                          <span class="ai-item-title">Claude Hybrid</span>
-                          <span class="ai-item-desc">Creative writing, nuanced conversations</span>
-                        </div>
-                        <span class="ai-item-check hidden">✓</span>
-                      </button>
-                      <button type="button" class="ai-dropdown-item" data-model="mistral" role="menuitem">
-                        <div class="ai-item-meta">
-                          <span class="ai-item-title">Mistral Large</span>
-                          <span class="ai-item-desc">Concise technical analysis & architecture</span>
-                        </div>
-                        <span class="ai-item-check hidden">✓</span>
-                      </button>
-                      <button type="button" class="ai-dropdown-item" data-model="webllm" role="menuitem">
-                        <div class="ai-item-meta">
-                          <span class="ai-item-title">WebLLM Local</span>
-                          <span class="ai-item-desc">In-browser offline, private execution</span>
-                        </div>
-                        <span class="ai-item-check hidden">✓</span>
-                      </button>
-                    </div>
-                  </div>
-
                   <!-- Microphone Voice Prompt Button -->
                   <button type="button" id="ai-mic-btn" class="ai-input-btn ai-mic-btn" title="Speak Prompt (Voice Input)" aria-label="Microphone">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -958,58 +834,6 @@
                 </div>
               </div>
 
-              <!-- Secondary "Chat / Task" Toggle Buttons (Centered directly beneath input box) -->
-              <div class="ai-mode-toggle-cluster" role="radiogroup" aria-label="AI Mode Selection">
-                <button type="button" id="ai-mode-chat-btn" class="ai-mode-btn active" role="radio" aria-checked="true">
-                  <span>Chat</span>
-                </button>
-                <button type="button" id="ai-mode-task-btn" class="ai-mode-btn" role="radio" aria-checked="false">
-                  <span>Task</span>
-                </button>
-              </div>
-
-              <!-- Prompt Suggestion Pills Underneath (Monochrome Black & White) -->
-              <div class="ai-suggestions-container">
-                <div class="ai-suggestions-list">
-                  <button type="button" class="ai-suggestion-pill" data-prompt="Visualize my listening history as art">
-                    <span class="ai-pill-icon">
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v8M8 12h8"/></svg>
-                    </span>
-                    <span class="ai-pill-text">Visualize my listening history as art</span>
-                  </button>
-                  <button type="button" class="ai-suggestion-pill" data-prompt="Navigate a difficult conversation">
-                    <span class="ai-pill-icon">
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                    </span>
-                    <span class="ai-pill-text">Navigate a difficult conversation</span>
-                  </button>
-                  <button type="button" class="ai-suggestion-pill" data-prompt="Troubleshoot storage space">
-                    <span class="ai-pill-icon">
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-                    </span>
-                    <span class="ai-pill-text">Troubleshoot storage space</span>
-                  </button>
-                  <button type="button" class="ai-suggestion-pill" data-prompt="Design a poster based on my taste">
-                    <span class="ai-pill-icon">
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                    </span>
-                    <span class="ai-pill-text">Design a poster based on my taste</span>
-                  </button>
-                  <button type="button" class="ai-suggestion-pill" data-prompt="Help me practice for my upcoming exam">
-                    <span class="ai-pill-icon">
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-                    </span>
-                    <span class="ai-pill-text">Help me practice for my upcoming exam</span>
-                  </button>
-                  <button type="button" class="ai-suggestion-pill" data-prompt="Improve my English vocabulary">
-                    <span class="ai-pill-icon">
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                    </span>
-                    <span class="ai-pill-text">Improve my English vocabulary</span>
-                  </button>
-                </div>
-              </div>
-
             </div>
           </div>
 
@@ -1025,10 +849,10 @@
             <div class="ai-bottom-dock">
               <div class="ai-bottom-dock-inner">
                 <div class="ai-prompt-box-wrap compact" id="ai-prompt-box-dock">
-                  <!-- Same dynamic attachment, input, model badge, mic, send -->
+                  <!-- Dynamic prompt box docked here during conversation -->
                 </div>
                 <div class="ai-bottom-disclaimer">
-                  <span>AI can make mistakes. Verify important info. Zero subscription required · 100% Free.</span>
+                  <span>AI can make mistakes. Verify important info.</span>
                 </div>
               </div>
             </div>
@@ -1036,6 +860,77 @@
           </div>
 
         </main>
+
+        <!-- Fully Collapsible Right-Side Conversation History Panel -->
+        <aside id="ai-sidebar" class="ai-sidebar" aria-label="AI Conversation History">
+          
+          <!-- Sidebar Header with Clear Collapse Control -->
+          <div class="ai-sidebar-header">
+            <div class="ai-sidebar-title-wrap">
+              <span class="ai-sidebar-heading">History</span>
+            </div>
+            
+            <div class="ai-sidebar-header-actions">
+              <button type="button" id="ai-sidebar-search-btn" class="ai-header-icon-btn" title="Search Chat History" aria-label="Search Chat History">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+              </button>
+              <button type="button" id="ai-clear-all-history-btn" class="ai-header-icon-btn" title="Clear all history" aria-label="Clear all history">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              </button>
+              <button type="button" id="ai-sidebar-toggle-btn" class="ai-header-icon-btn ai-sidebar-close-btn" title="Collapse History Panel" aria-label="Collapse History Panel">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Prominent "New Chat" Button in Panel -->
+          <div class="ai-new-chat-wrap">
+            <button type="button" id="ai-new-chat-btn" class="ai-new-chat-btn" title="Start New Chat">
+              <span class="ai-new-chat-icon" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 20h9"></path>
+                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                </svg>
+              </span>
+              <span class="ai-new-chat-label">New chat</span>
+            </button>
+          </div>
+
+          <!-- Inline Search Input (Toggleable via Search Icon) -->
+          <div id="ai-history-search-wrap" class="ai-history-search-wrap hidden">
+            <input type="text" id="ai-history-search-input" placeholder="Search past conversations..." autocomplete="off" />
+            <button type="button" id="ai-history-search-clear" class="ai-search-clear-btn" title="Clear search">✕</button>
+          </div>
+
+          <!-- Streamlined Chat History Section -->
+          <div class="ai-history-section">
+            <div id="ai-chat-history-list" class="ai-chat-history-list" role="list">
+              <!-- Populated dynamically with actual user conversations or empty state -->
+            </div>
+          </div>
+
+          <!-- User Profile Bottom Area -->
+          <div class="ai-user-profile-bottom">
+            <div class="ai-profile-info" id="ai-profile-info-btn" title="User Profile">
+              <div class="ai-avatar-circle" id="ai-user-avatar">S</div>
+              <div class="ai-user-details">
+                <span class="ai-user-name" id="ai-user-name-display">Sagne mieso</span>
+                <span class="ai-user-badge">Workspace</span>
+              </div>
+            </div>
+            <button type="button" id="ai-settings-btn" class="ai-settings-icon-btn" title="AI Settings" aria-label="AI Settings">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+              </svg>
+            </button>
+          </div>
+
+        </aside>
 
         <!-- AI Settings Modal -->
         <div id="ai-settings-modal" class="ai-settings-modal hidden" role="dialog" aria-modal="true" aria-labelledby="ai-settings-title">
