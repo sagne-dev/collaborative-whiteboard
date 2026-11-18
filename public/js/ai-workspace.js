@@ -394,8 +394,11 @@
           </div>
         `;
       } else {
-        const formattedHtml = parseMarkdownToHtml(msg.content);
-        const modelBadge = msg.model || MODEL_DISPLAY_NAMES[state.activeModel] || 'Flash-Lite';
+        const isThinking = msg.content === 'Thinking…';
+        const formattedHtml = isThinking
+          ? `<div class="ai-typing-indicator" aria-label="Thinking"><span></span><span></span><span></span></div>`
+          : parseMarkdownToHtml(msg.content);
+        const modelBadge = msg.model || 'Groq LLaMA 3.3';
         
         msgCard.innerHTML = `
           <div class="ai-msg-avatar ai">
@@ -405,7 +408,7 @@
               <line x1="9" y1="21" x2="9" y2="9"></line>
             </svg>
           </div>
-          <div class="ai-msg-bubble ai">
+          <div class="ai-msg-bubble ai ${msg.isError ? 'error-bubble' : ''}">
             <div class="ai-bubble-header">
               <span class="ai-bubble-model-tag">${escapeHtml(modelBadge)}</span>
             </div>
@@ -581,19 +584,22 @@
     chat.messages.push(assistantMsg);
     renderMessageThread(chat.messages);
 
-    // Execute Free AI Call
+    // Execute Real AI Call
     try {
-      const responseText = await queryFreeAiEngine({
+      const result = await queryAiEngine({
         prompt: text,
         mode: state.activeMode,
         model: state.activeModel,
         messages: chat.messages.slice(0, -1) // exclude placeholder
       });
 
-      assistantMsg.content = responseText;
+      assistantMsg.content = result.text;
+      assistantMsg.model = result.model || 'Groq LLaMA 3.3';
+      assistantMsg.provider = result.provider || 'groq';
     } catch (err) {
-      console.warn('AI Query issue, using smart local engine fallback:', err);
-      assistantMsg.content = generateLocalSmartResponse(text, state.activeMode);
+      console.warn('Real AI query issue:', err);
+      assistantMsg.content = `⚠️ **AI Service Notice:** ${err.message || 'Unable to connect to AI provider. Please try again or configure your free GROQ_API_KEY.'}`;
+      assistantMsg.isError = true;
     } finally {
       state.isGenerating = false;
       updateGeneratingState(false);
@@ -610,13 +616,29 @@
     }
   }
 
-  // ─── 100% Free AI Engine Query Strategy ───────────────────────────────────
-  async function queryFreeAiEngine({ prompt, mode, model, messages }) {
-    const customKey = localStorage.getItem(STORAGE_API_KEY) || '';
+  // ─── Real AI Engine Query Strategy (Groq / Free Provider) ─────────────────
+  function getAiApiUrl() {
+    if (window.WS_BACKEND_URL && window.location.hostname !== 'localhost') {
+      const httpBase = window.WS_BACKEND_URL.replace(/^ws(s?):/, 'http$1:').replace(/\/+$/, '');
+      return httpBase + '/api/ai/chat';
+    }
+    return '/api/ai/chat';
+  }
 
-    // Strategy A: Call internal /api/ai/chat endpoint (handles Pollinations & AI with zero key required)
+  async function queryAiEngine({ prompt, mode, model, messages }) {
+    const customKey = localStorage.getItem(STORAGE_API_KEY) || '';
+    const apiUrl = getAiApiUrl();
+
+    // Prepare clean message payload containing full conversational history
+    const cleanMessages = messages.map(m => ({
+      role: m.role === 'assistant' ? 'assistant' : 'user',
+      content: m.content
+    }));
+
+    // Primary: Call the dedicated backend /api/ai/chat endpoint
+    let primaryError = null;
     try {
-      const res = await fetch('/api/ai/chat', {
+      const res = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -627,28 +649,39 @@
           mode,
           model,
           apiKey: customKey,
-          messages: messages.map(m => ({ role: m.role, content: m.content }))
+          messages: cleanMessages
         })
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data && data.text) return data.text;
+      const data = await res.json().catch(() => null);
+
+      if (res.ok && data && data.text) {
+        return {
+          text: data.text,
+          model: data.model || 'Groq LLaMA 3.3',
+          provider: data.provider || 'groq'
+        };
       }
-    } catch (e) {
-      console.info('Backend /api/ai/chat unreachable, routing directly to browser free tier:', e.message);
+
+      if (data && data.error) {
+        primaryError = new Error(data.error);
+      } else {
+        primaryError = new Error(`AI service returned HTTP ${res.status}`);
+      }
+    } catch (netErr) {
+      primaryError = netErr;
+      console.warn('Backend AI endpoint fetch failed, trying direct provider fallback:', netErr.message);
     }
 
-    // Strategy B: Direct browser fetch to Pollinations AI (100% free, zero key required)
+    // Direct browser fallback to Pollinations if backend is temporarily unreachable
     try {
-      const mappedModel = model === 'pro' ? 'mistral' : (model === 'claude' ? 'claude-hybrid' : 'openai');
       const systemPrompt = mode === 'task'
         ? 'You are an AI Workspace Task Specialist for CollabSpace. Deliver clear, actionable task breakdowns, checklist items, and step-by-step milestones using clean Markdown.'
         : 'You are the AI Assistant in CollabSpace AI Workspace. Provide insightful, articulate, beautifully structured answers with markdown, headings, and code blocks.';
 
       const pollMessages = [
         { role: 'system', content: systemPrompt },
-        ...messages.map(m => ({ role: m.role, content: m.content })),
+        ...cleanMessages,
         { role: 'user', content: prompt }
       ];
 
@@ -657,101 +690,25 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: pollMessages,
-          model: mappedModel,
+          model: 'openai',
           seed: Math.floor(Math.random() * 100000)
         })
       });
 
       if (pRes.ok) {
         const txt = await pRes.text();
-        if (txt && txt.trim()) return txt;
+        if (txt && txt.trim() && !txt.includes('Free limit reached')) {
+          return {
+            text: txt,
+            model: 'OpenAI Free Tier',
+            provider: 'free-tier'
+          };
+        }
       }
-    } catch (e) {
-      console.warn('Direct free provider unreachable:', e.message);
-    }
+    } catch (pErr) {}
 
-    // Strategy C: Client-Side Intelligent Offline Engine (Instant, Zero Network Dependency)
-    return generateLocalSmartResponse(prompt, mode);
-  }
-
-  // ─── Local Intelligent Fallback Engine ─────────────────────────────────────
-  function generateLocalSmartResponse(query, mode) {
-    const qLower = (query || '').toLowerCase();
-
-    if (mode === 'task') {
-      return `### 📋 Action Plan & Task Breakdown: "${query || 'New Task'}"\n\n` +
-        `**Status:** In Progress · **Priority:** High · **Target Canvas:** Collaborative Whiteboard\n\n` +
-        `#### Key Milestones & Action Items:\n` +
-        `- [ ] **Phase 1: Discovery & Architecture**\n` +
-        `  - Outline core project scope and verify stakeholder deliverables.\n` +
-        `  - Draft initial wireframes and interactive sticky notes on the whiteboard.\n` +
-        `- [ ] **Phase 2: Execution & Implementation**\n` +
-        `  - Build foundational components and setup testing benchmarks.\n` +
-        `  - Sync progress across room participants in real time.\n` +
-        `- [ ] **Phase 3: Review & Finalization**\n` +
-        `  - Conduct group whiteboard walk-through and verify QA acceptance criteria.\n` +
-        `  - Export final notes or snapshot to your project repository.\n\n` +
-        `💡 *Tip: Click "Add to Whiteboard" below to pin these actionable items directly to your canvas as sticky notes!*`;
-    }
-
-    if (qLower.includes('listening history') || qLower.includes('art')) {
-      return `### 🎨 Visualizing Your Listening History as Generative Art\n\n` +
-        `Transforming your acoustic footprint into visual canvas art is an inspiring creative exercise:\n\n` +
-        `1. **Tempo & Rhythm to Geometry:**\n` +
-        `   - High-BPM energetic tracks (120-140+ BPM) translate to sharp, geometric polygons and vibrant amber/violet gradients.\n` +
-        `   - Ambient, lo-fi, and acoustic tracks manifest as undulating sine-wave ribbons with smooth pastel indigo blends.\n\n` +
-        `2. **Frequency Spectrum Color Palettes:**\n` +
-        `   - **Deep Bass (20-150Hz):** Rich obsidian blacks and midnight indigos anchoring the lower canvas.\n` +
-        `   - **Mid Vocals (500-2kHz):** Radiant cyan and coral blooms reflecting emotional lyrical peaks.\n` +
-        `   - **High Treble (6k-16kHz):** Shimmering starlight particles and gold speckles.\n\n` +
-        `3. **Collaborative Whiteboard Palette:**\n` +
-        `   You can sketch concentric radial harmonic rings directly on this whiteboard to represent monthly top artists!`;
-    }
-
-    if (qLower.includes('difficult conversation')) {
-      return `### 🤝 Navigating a Difficult Conversation with Clarity and Empathy\n\n` +
-        `Navigating high-stakes discussions successfully requires preparation, emotional regulation, and structured communication.\n\n` +
-        `#### 1. Ground Yourself Before the Conversation\n` +
-        `- **Define the Core Outcome:** What is the single mutual goal you want to achieve?\n` +
-        `- **Separate Intent from Impact:** Acknowledge that misunderstandings often arise from perceived intent rather than malice.\n\n` +
-        `#### 2. The 4-Step Communication Framework\n` +
-        `1. **Objective Observation:** State the specific observable facts without evaluation or judgment.\n` +
-        `2. **Express Feeling / Perspective:** *"When this happened, I felt concerned about our project timeline."*\n` +
-        `3. **Clarify the Need:** *"I need us to have transparent communication so we can hit our targets comfortably."*\n` +
-        `4. **Actionable Request:** *"Can we agree on a 10-minute daily check-in for the next two weeks?"*\n\n` +
-        `#### 3. Active Listening & De-escalation\n` +
-        `- Pause 3 seconds before responding.\n` +
-        `- Mirror their words: *"What I'm hearing is that you feel overloaded by the recent changes..."*\n` +
-        `- Aim for resolution, not victory.`;
-    }
-
-    if (qLower.includes('storage space') || qLower.includes('troubleshoot')) {
-      return `### 🛠️ Step-by-Step Storage Space Troubleshooting Guide\n\n` +
-        `Here is a rapid, systematic approach to recovering disk space safely on your system:\n\n` +
-        `#### 1. Fast Wins (Zero Risk)\n` +
-        `- **Empty Recycle Bin / Trash:** Often holds tens of gigabytes of forgotten media.\n` +
-        `- **Clear Browser Caches:** Clear cached images and temporary files in Chrome/Edge.\n` +
-        `- **Windows Disk Cleanup:** Run \`cleanmgr\` and check "Temporary Files" and "System Error Memory Dumps".\n\n` +
-        `#### 2. Developer & Project Cache Purging\n` +
-        `- **Node.js:** Check for redundant \`node_modules\` directories in inactive projects.\n` +
-        `- **Package Manager Caches:** Run \`npm cache clean --force\` or prune unused Docker images with \`docker system prune -a\`.\n` +
-        `- **Temp Folders:** Check \`%temp%\` and remove obsolete installer packages.\n\n` +
-        `#### 3. Deep Analysis Tools\n` +
-        `Use visual tree tools like **TreeSize Free** or **WizTree** to immediately spot rogue video files or forgotten VM images.`;
-    }
-
-    return `### ✨ Insights on: "${query}"\n\n` +
-      `Here is a comprehensive overview to help you explore and tackle this:\n\n` +
-      `1. **Core Concept:**\n` +
-      `   Exploring this topic unlocks great potential for creative collaboration, clear architectural planning, and real-time execution.\n\n` +
-      `2. **Strategic Recommendations:**\n` +
-      `   - Break complex ideas into distinct components or modules.\n` +
-      `   - Leverage visual mapping and sticky notes on the Whiteboard to align team members.\n` +
-      `   - Iterate rapidly with quick feedback loops.\n\n` +
-      `3. **Next Steps:**\n` +
-      `   - Switch to **Task Mode** if you want a granular checklist.\n` +
-      `   - Click **Add to Whiteboard** to turn key takeaways into interactive sticky notes!\n\n` +
-      `Feel free to ask follow-up questions, request code, or explore alternative angles!`;
+    // If both backend and direct fallback fail, return the actual error message
+    throw primaryError || new Error('AI service unavailable. Please check your network or configure GROQ_API_KEY in .env.');
   }
 
   // ─── Attachments (Whiteboard Snapshot & Files) ────────────────────────────

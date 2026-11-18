@@ -22,6 +22,31 @@ const HTTPS_PORT  = parseInt(process.env.HTTPS_PORT || '3443', 10);
 
 // Resolve paths relative to THIS file
 const ROOT_DIR    = path.join(__dirname, '..');
+
+// ─── Load Environment Variables from .env ──────────────────────────────────
+const envPath = path.join(ROOT_DIR, '.env');
+if (fs.existsSync(envPath)) {
+  try {
+    const rawEnv = fs.readFileSync(envPath, 'utf8');
+    rawEnv.split(/\r?\n/).forEach(line => {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) return;
+      const eqIdx = trimmed.indexOf('=');
+      if (eqIdx > 0) {
+        const key = trimmed.slice(0, eqIdx).trim();
+        let val = trimmed.slice(eqIdx + 1).trim();
+        if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+          val = val.slice(1, -1);
+        }
+        if (!process.env[key]) {
+          process.env[key] = val;
+        }
+      }
+    });
+  } catch (err) {
+    console.warn('⚠️ Could not read .env file:', err.message);
+  }
+}
 const PUBLIC_DIR  = path.join(ROOT_DIR, 'public');
 const PERSIST_DIR = path.join(ROOT_DIR, 'data');
 
@@ -345,6 +370,16 @@ async function getOrCreateSslCert() {
 }
 
 function handleHttpRequest(req, res) {
+  // CORS Preflight handler for API endpoints
+  if (req.method === 'OPTIONS' && req.url.startsWith('/api/')) {
+    res.writeHead(204, {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-api-key',
+      'Access-Control-Max-Age': '86400',
+    });
+    return res.end();
+  }
   // Enforce HTTPS when deployed on Render / Cloud proxies to ensure camera permissions are allowed
   if (req.headers['x-forwarded-proto'] === 'http') {
     res.writeHead(301, {
@@ -496,7 +531,7 @@ function handleHttpRequest(req, res) {
     return;
   }
 
-  // ─── 100% Free AI Workspace Chat API Endpoint ──────────────────────────────
+  // ─── Real Free AI Workspace Chat API Endpoint (Groq / Free Provider) ──────
   if (req.url === '/api/ai/chat' && req.method === 'POST') {
     let rawBody = '';
     req.on('data', chunk => { rawBody += chunk; });
@@ -505,7 +540,10 @@ function handleHttpRequest(req, res) {
       try {
         bodyData = JSON.parse(rawBody || '{}');
       } catch (e) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.writeHead(400, {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        });
         return res.end(JSON.stringify({ success: false, error: 'Invalid JSON payload' }));
       }
 
@@ -513,233 +551,199 @@ function handleHttpRequest(req, res) {
       function sendJsonResponse(statusCode, data) {
         if (hasResponded || res.headersSent) return;
         hasResponded = true;
-        res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+        res.writeHead(statusCode, {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-api-key'
+        });
         res.end(JSON.stringify(data));
       }
 
-      const messages = bodyData.messages || [];
-      const userPrompt = bodyData.prompt || (messages.length ? messages[messages.length - 1].content : '');
-      const model = (bodyData.model || 'flash-lite').toLowerCase();
+      const rawMessages = Array.isArray(bodyData.messages) ? bodyData.messages : [];
+      const userPrompt = (bodyData.prompt || (rawMessages.length ? rawMessages[rawMessages.length - 1].content : '') || '').trim();
       const mode = (bodyData.mode || 'chat').toLowerCase();
-      const geminiKey = bodyData.apiKey || req.headers['x-api-key'] || req.headers['x-gemini-key'] || process.env.GEMINI_API_KEY;
+      
+      if (!userPrompt && rawMessages.length === 0) {
+        return sendJsonResponse(400, { success: false, error: 'Message content cannot be empty.' });
+      }
+
+      const groqKey = (bodyData.apiKey || req.headers['x-api-key'] || process.env.GROQ_API_KEY || '').trim();
 
       const systemInstruction = mode === 'task'
         ? 'You are an expert AI Workspace Productivity Agent for CollabSpace. Provide structured, actionable task breakdowns, checklist items, milestones, and step-by-step whiteboard recommendations. Format with clean Markdown, checkboxes [ ], clear headers, and concise bullet points.'
-        : 'You are the AI Assistant in the minimalist AI Workspace. Provide insightful, friendly, articulate, and beautifully formatted answers with markdown, headings, bullet points, and code blocks where relevant.';
+        : 'You are the AI Assistant in CollabSpace AI Workspace. Provide insightful, friendly, articulate, and beautifully formatted answers with markdown, headings, bullet points, and code blocks where relevant.';
 
-      // Strategy 1: Google Gemini API (if key provided or configured in env)
-      if (geminiKey) {
+      // Format multi-turn conversation context for LLM
+      const formattedMessages = [{ role: 'system', content: systemInstruction }];
+      
+      // Preserve conversational history (last 14 messages for rich context within free limits)
+      const recentHistory = rawMessages.slice(-14);
+      recentHistory.forEach(m => {
+        if (m && m.role && m.content) {
+          formattedMessages.push({
+            role: m.role === 'assistant' ? 'assistant' : 'user',
+            content: String(m.content).trim()
+          });
+        }
+      });
+
+      // Ensure latest prompt is present at the end
+      if (formattedMessages[formattedMessages.length - 1]?.role !== 'user' && userPrompt) {
+        formattedMessages.push({ role: 'user', content: userPrompt });
+      }
+
+      // ── Strategy 1: GroqCloud Free AI Provider (Recommended) ───────────────
+      if (groqKey) {
         try {
-          const geminiModel = model.includes('pro') ? 'gemini-1.5-pro' : 'gemini-1.5-flash';
-          const geminiContents = messages.map(m => ({
-            role: m.role === 'assistant' ? 'model' : 'user',
-            parts: [{ text: m.content }]
-          }));
-          if (geminiContents.length === 0 && userPrompt) {
-            geminiContents.push({ role: 'user', parts: [{ text: userPrompt }] });
-          }
-
-          const geminiPayload = JSON.stringify({
-            contents: geminiContents,
-            systemInstruction: { parts: [{ text: systemInstruction }] },
-            generationConfig: {
-              temperature: 0.7,
-              maxOutputTokens: 2048
-            }
-          });
-
-          const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiKey}`;
-          const gReq = https.request(geminiUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Content-Length': Buffer.byteLength(geminiPayload)
-            }
-          }, (gRes) => {
-            let gBody = '';
-            gRes.on('data', c => gBody += c);
-            gRes.on('end', () => {
-              try {
-                const gData = JSON.parse(gBody);
-                const text = gData.candidates?.[0]?.content?.parts?.[0]?.text;
-                if (text) {
-                  return sendJsonResponse(200, { success: true, text, model: geminiModel, mode, provider: 'ai' });
-                }
-              } catch (err) {}
-              // Fallback to Pollinations
-              queryFreePollinations();
+          const preferredModel = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
+          let groqResult;
+          try {
+            groqResult = await queryGroqChat({
+              apiKey: groqKey,
+              model: preferredModel,
+              messages: formattedMessages
             });
-          });
-          gReq.on('error', () => {
-            if (!hasResponded) queryFreePollinations();
-          });
-          gReq.setTimeout(12000, () => {
-            gReq.destroy();
-            if (!hasResponded) queryFreePollinations();
-          });
-          gReq.write(geminiPayload);
-          gReq.end();
-          return;
-        } catch (e) {
-          // Fall through to Pollinations
-        }
-      }
-
-      // Strategy 2: 100% Free Public Pollinations AI (Zero Key Required)
-      function queryFreePollinations() {
-        if (hasResponded) return;
-
-        let pollinationsModel = 'openai';
-        if (model.includes('pro')) pollinationsModel = 'mistral';
-        else if (model.includes('claude')) pollinationsModel = 'claude-hybrid';
-        else if (model.includes('mistral')) pollinationsModel = 'mistral';
-
-        const pollinationsMessages = [
-          { role: 'system', content: systemInstruction },
-          ...messages
-        ];
-        if (pollinationsMessages.length === 1 && userPrompt) {
-          pollinationsMessages.push({ role: 'user', content: userPrompt });
-        }
-
-        const pollPayload = JSON.stringify({
-          messages: pollinationsMessages,
-          model: pollinationsModel,
-          seed: Math.floor(Math.random() * 100000)
-        });
-
-        const pReq = https.request('https://text.pollinations.ai/', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Content-Length': Buffer.byteLength(pollPayload),
-            'User-Agent': 'CollabSpace-AI-Workspace/1.0'
-          }
-        }, (pRes) => {
-          let pData = '';
-          pRes.on('data', chunk => pData += chunk);
-          pRes.on('end', () => {
-            if (pRes.statusCode >= 200 && pRes.statusCode < 300 && pData.trim()) {
-              return sendJsonResponse(200, {
-                success: true,
-                text: pData,
-                model: `${model} (${pollinationsModel})`,
-                mode,
-                provider: 'free-tier'
+          } catch (primaryErr) {
+            // Auto fallback from 70B to 8B instant if rate-limited or busy
+            if ((primaryErr.status === 429 || primaryErr.status === 503) && preferredModel !== 'llama-3.1-8b-instant') {
+              console.warn(`Groq ${preferredModel} rate limited/busy, retrying with llama-3.1-8b-instant...`);
+              groqResult = await queryGroqChat({
+                apiKey: groqKey,
+                model: 'llama-3.1-8b-instant',
+                messages: formattedMessages
               });
+            } else {
+              throw primaryErr;
             }
-            // Fallback to Intelligent Offline Generator
-            deliverIntelligentFallback(userPrompt, mode, model);
+          }
+
+          return sendJsonResponse(200, {
+            success: true,
+            text: groqResult.text,
+            model: groqResult.model,
+            mode,
+            provider: 'groq'
           });
-        });
-
-        pReq.on('error', () => {
-          deliverIntelligentFallback(userPrompt, mode, model);
-        });
-        pReq.setTimeout(14000, () => {
-          pReq.destroy();
-          deliverIntelligentFallback(userPrompt, mode, model);
-        });
-        pReq.write(pollPayload);
-        pReq.end();
+        } catch (groqErr) {
+          console.warn('Groq API error:', groqErr.message);
+          return sendJsonResponse(groqErr.status || 500, {
+            success: false,
+            error: groqErr.message || 'Error communicating with Groq API'
+          });
+        }
       }
 
-      // Strategy 3: Intelligent Offline Knowledge Engine
-      function deliverIntelligentFallback(query, qMode, qModel) {
-        if (hasResponded || res.headersSent) return;
-        const fallbackText = generateIntelligentResponse(query, qMode);
-        sendJsonResponse(200, {
+      // ── Strategy 2: Direct Free AI Fallback (Pollinations AI) ─────────────
+      // Used when no GROQ_API_KEY is configured yet
+      try {
+        const pollResult = await queryFreePollinationsChat({
+          messages: formattedMessages
+        });
+        return sendJsonResponse(200, {
           success: true,
-          text: fallbackText,
-          model: `${qModel} (Local Intelligent Engine)`,
-          mode: qMode,
-          provider: 'local-free-engine'
+          text: pollResult.text,
+          model: pollResult.model,
+          mode,
+          provider: 'free-tier'
+        });
+      } catch (pollErr) {
+        console.warn('Free fallback error:', pollErr.message);
+        return sendJsonResponse(503, {
+          success: false,
+          error: 'No AI response received. Please configure your free GROQ_API_KEY in .env or Settings for unlimited high-speed AI responses (get a free key at https://console.groq.com/keys).'
         });
       }
-
-      queryFreePollinations();
     });
     return;
   }
 
-  // Helper response generator for zero-failure fallback
-  function generateIntelligentResponse(prompt, mode) {
-    const pLower = (prompt || '').toLowerCase();
-    if (mode === 'task') {
-      return `### 📋 Action Plan & Task Breakdown: "${prompt || 'New Task'}"\n\n` +
-        `**Status:** In Progress · **Priority:** High · **Target Canvas:** Collaborative Whiteboard\n\n` +
-        `#### Key Milestones & Action Items:\n` +
-        `- [ ] **Phase 1: Discovery & Architecture**\n` +
-        `  - Outline core project scope and verify stakeholder deliverables.\n` +
-        `  - Draft initial wireframes and interactive sticky notes on the whiteboard.\n` +
-        `- [ ] **Phase 2: Execution & Implementation**\n` +
-        `  - Build foundational components and setup testing benchmarks.\n` +
-        `  - Sync progress across room participants in real time.\n` +
-        `- [ ] **Phase 3: Review & Finalization**\n` +
-        `  - Conduct group whiteboard walk-through and verify QA acceptance criteria.\n` +
-        `  - Export final notes or snapshot to your project repository.\n\n` +
-        `💡 *Tip: Click "Add to Whiteboard" below to pin these actionable items directly to your canvas as sticky notes!*`;
-    }
+  // ─── Real AI Provider Helpers ──────────────────────────────────────────────
+  function queryGroqChat({ apiKey, model, messages }) {
+    const chosenModel = model || 'llama-3.3-70b-versatile';
+    const postData = JSON.stringify({
+      model: chosenModel,
+      messages,
+      temperature: 0.7,
+      max_tokens: 2048,
+    });
 
-    if (pLower.includes('listening history') || pLower.includes('art')) {
-      return `### 🎨 Visualizing Your Listening History as Generative Art\n\n` +
-        `Here is an inspiring conceptual framework to transform your acoustic footprint into visual canvas art:\n\n` +
-        `1. **Tempo & Rhythm to Geometry:**\n` +
-        `   - High-BPM energetic tracks (120-140+ BPM) translate to sharp, geometric polygons and vibrant amber/violet gradients.\n` +
-        `   - Ambient, lo-fi, and acoustic tracks manifest as undulating sine-wave ribbons with smooth pastel indigo blends.\n\n` +
-        `2. **Frequency Spectrum Color Palettes:**\n` +
-        `   - **Deep Bass (20-150Hz):** Rich obsidian blacks and midnight indigos anchoring the lower canvas.\n` +
-        `   - **Mid Vocals (500-2kHz):** Radiant cyan and coral blooms reflecting emotional lyrical peaks.\n` +
-        `   - **High Treble (6k-16kHz):** Shimmering starlight particles and gold speckles.\n\n` +
-        `3. **Collaborative Whiteboard Palette:**\n` +
-        `   You can sketch concentric radial harmonic rings directly on this whiteboard to represent monthly top artists!\n\n` +
-        `Would you like me to generate a specific SVG color palette or layout schema for your board?`;
-    }
+    return new Promise((resolve, reject) => {
+      const req = https.request('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Length': Buffer.byteLength(postData),
+          'User-Agent': 'CollabSpace-AI/1.0'
+        }
+      }, (res) => {
+        let b = '';
+        res.on('data', chunk => b += chunk);
+        res.on('end', () => {
+          try {
+            const parsed = JSON.parse(b);
+            if (res.statusCode >= 200 && res.statusCode < 300) {
+              const text = parsed.choices?.[0]?.message?.content;
+              if (text) {
+                return resolve({ text, model: chosenModel, provider: 'groq' });
+              }
+            }
+            const errMsg = parsed.error?.message || `Groq returned HTTP ${res.statusCode}: ${b.slice(0, 200)}`;
+            const errCode = parsed.error?.code || res.statusCode;
+            reject({ message: errMsg, code: errCode, status: res.statusCode });
+          } catch (e) {
+            reject({ message: `Failed to parse Groq response (HTTP ${res.statusCode})`, status: res.statusCode });
+          }
+        });
+      });
 
-    if (pLower.includes('difficult conversation')) {
-      return `### 🤝 Navigating a Difficult Conversation with Clarity and Empathy\n\n` +
-        `Navigating high-stakes discussions successfully requires preparation, emotional regulation, and structured communication.\n\n` +
-        `#### 1. Ground Yourself Before the Conversation\n` +
-        `- **Define the Core Outcome:** What is the single mutual goal you want to achieve?\n` +
-        `- **Separate Intent from Impact:** Acknowledge that misunderstandings often arise from perceived intent rather than malice.\n\n` +
-        `#### 2. The 4-Step Communication Framework\n` +
-        `1. **Objective Observation:** State the specific observable facts without evaluation or judgment.\n` +
-        `2. **Express Feeling / Perspective:** *"When this happened, I felt concerned about our project timeline."*\n` +
-        `3. **Clarify the Need:** *"I need us to have transparent communication so we can hit our targets comfortably."*\n` +
-        `4. **Actionable Request:** *"Can we agree on a 10-minute daily check-in for the next two weeks?"*\n\n` +
-        `#### 3. Active Listening & De-escalation\n` +
-        `- Pause 3 seconds before responding.\n` +
-        `- Mirror their words: *"What I'm hearing is that you feel overloaded by the recent changes..."*\n` +
-        `- Aim for resolution, not victory.`;
-    }
+      req.on('error', (err) => reject({ message: `Network error connecting to Groq: ${err.message}`, status: 502 }));
+      req.setTimeout(25000, () => {
+        req.destroy();
+        reject({ message: 'Groq API request timed out after 25s', status: 504 });
+      });
+      req.write(postData);
+      req.end();
+    });
+  }
 
-    if (pLower.includes('storage space') || pLower.includes('troubleshoot')) {
-      return `### 🛠️ Step-by-Step Storage Space Troubleshooting Guide\n\n` +
-        `Here is a rapid, systematic approach to recovering disk space safely on your system:\n\n` +
-        `#### 1. Fast Wins (Zero Risk)\n` +
-        `- **Empty Recycle Bin / Trash:** Often holds tens of gigabytes of forgotten media.\n` +
-        `- **Clear Browser Caches:** Clear cached images and temporary files in Chrome/Edge.\n` +
-        `- **Windows Disk Cleanup:** Run \`cleanmgr\` and check "Temporary Files" and "System Error Memory Dumps".\n\n` +
-        `#### 2. Developer & Project Cache Purging\n` +
-        `- **Node.js:** Check for redundant \`node_modules\` directories in inactive projects.\n` +
-        `- **Package Manager Caches:** Run \`npm cache clean --force\` or prune unused Docker images with \`docker system prune -a\`.\n` +
-        `- **Temp Folders:** Check \`%temp%\` and remove obsolete installer packages.\n\n` +
-        `#### 3. Deep Analysis Tools\n` +
-        `Use visual tree tools like **TreeSize Free** or **WizTree** to immediately spot rogue video files or forgotten VM images.`;
-    }
+  function queryFreePollinationsChat({ messages }) {
+    const postData = JSON.stringify({
+      messages,
+      model: 'openai',
+      seed: Math.floor(Math.random() * 100000)
+    });
 
-    return `### ✨ Insights on: "${prompt}"\n\n` +
-      `Here is a comprehensive overview to help you explore and tackle this:\n\n` +
-      `1. **Core Concept:**\n` +
-      `   Exploring this topic unlocks great potential for creative collaboration, clear architectural planning, and real-time execution.\n\n` +
-      `2. **Strategic Recommendations:**\n` +
-      `   - Break complex ideas into distinct components or modules.\n` +
-      `   - Leverage visual mapping and sticky notes on the Whiteboard to align team members.\n` +
-      `   - Iterate rapidly with quick feedback loops.\n\n` +
-      `3. **Next Steps:**\n` +
-      `   - Switch to **Task Mode** if you want a granular checklist.\n` +
-      `   - Click **Add to Whiteboard** to turn key takeaways into interactive sticky notes!\n\n` +
-      `Feel free to ask follow-up questions, request code, or explore alternative angles!`;
+    return new Promise((resolve, reject) => {
+      const req = https.request('https://text.pollinations.ai/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(postData),
+          'User-Agent': 'CollabSpace-AI/1.0'
+        }
+      }, (res) => {
+        let b = '';
+        res.on('data', chunk => b += chunk);
+        res.on('end', () => {
+          if (res.statusCode >= 200 && res.statusCode < 300 && b.trim()) {
+            if (b.includes('Free limit reached') || b.includes('rate limit')) {
+              return reject({ message: 'Free tier rate limit reached. Please wait or set GROQ_API_KEY in .env.', status: 429 });
+            }
+            return resolve({ text: b.trim(), model: 'openai', provider: 'free-tier' });
+          }
+          reject({ message: `Free provider returned HTTP ${res.statusCode}`, status: res.statusCode });
+        });
+      });
+
+      req.on('error', (err) => reject({ message: `Free provider network error: ${err.message}`, status: 502 }));
+      req.setTimeout(18000, () => {
+        req.destroy();
+        reject({ message: 'Free provider request timed out', status: 504 });
+      });
+      req.write(postData);
+      req.end();
+    });
   }
 
   // Strip query strings from URL

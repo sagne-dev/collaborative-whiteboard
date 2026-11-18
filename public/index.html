@@ -946,21 +946,19 @@
             </div>
             <div class="ai-settings-body">
               <div class="ai-settings-group">
-                <label class="ai-settings-label">Default Free Model</label>
+                <label class="ai-settings-label">Free AI Model</label>
                 <select id="ai-setting-default-model" class="ai-select-input">
-                  <option value="flash-lite">Flash-Lite (Fast, 100% Free)</option>
-                  <option value="pro">Pro 1.5 (Advanced, 100% Free)</option>
-                  <option value="claude">Claude Hybrid (Free Tier)</option>
-                  <option value="mistral">Mistral Large (Free Tier)</option>
-                  <option value="webllm">WebLLM Local (Offline)</option>
+                  <option value="llama-3.3-70b-versatile">Meta LLaMA 3.3 70B (Groq, 100% Free)</option>
+                  <option value="llama-3.1-8b-instant">Meta LLaMA 3.1 8B Instant (Ultra-Fast Free)</option>
+                  <option value="mixtral-8x7b-32768">Mixtral 8x7B (Groq Free Tier)</option>
                 </select>
-                <span class="ai-field-hint">All models run free out of the box with zero subscription required.</span>
+                <span class="ai-field-hint">Powered by Groq ultra-fast LPU inference engine.</span>
               </div>
 
               <div class="ai-settings-group">
-                <label class="ai-settings-label">Custom API Key (Optional)</label>
-                <input type="password" id="ai-setting-api-key" class="ai-text-input" placeholder="Enter API key (leave blank for built-in free tier)" />
-                <span class="ai-field-hint">Optional: Enter your own API key for higher rate limits.</span>
+                <label class="ai-settings-label">Groq API Key (100% Free)</label>
+                <input type="password" id="ai-setting-api-key" class="ai-text-input" placeholder="gsk_... (or leave empty to use server GROQ_API_KEY)" />
+                <span class="ai-field-hint">Get a 100% free key with no credit card required at <a href="https://console.groq.com/keys" target="_blank" rel="noopener" style="color:var(--ai-text-main);text-decoration:underline;">console.groq.com/keys</a></span>
               </div>
 
               <div class="ai-settings-group">
