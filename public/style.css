@@ -1585,6 +1585,9 @@ kbd {
   color: #000000;
   background: #ffffff;
 }
+.theater-chat-toggle.hidden {
+  display: none !important;
+}
 .chat-badge {
   background: #ffffff;
   color: #000000;
@@ -2350,10 +2353,15 @@ kbd {
   font-family: inherit;
 }
 
-.zoom-top-btn:hover {
+.zoom-top-btn:hover,
+.zoom-top-btn.active {
   background: #ffffff;
   color: #000000;
   border-color: #ffffff;
+}
+.zoom-top-btn:hover svg,
+.zoom-top-btn.active svg {
+  stroke: #000000;
 }
 
 /* Video Stage Grid & Layouts */
@@ -3395,11 +3403,14 @@ kbd {
   }
 
   .theater-chat-toggle {
-    display: inline-flex !important;
+    display: inline-flex;
     min-height: 38px;
     padding: 5px 12px;
     font-size: 0.78rem;
     border-radius: 8px;
+  }
+  .theater-chat-toggle.hidden {
+    display: none !important;
   }
 
   /* ── D. Video Call View (Dynamic Grid & Bottom Controls) ── */

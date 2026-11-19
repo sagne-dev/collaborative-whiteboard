@@ -220,7 +220,7 @@ const state = {
   lastYTReportedTime: 0,
 
   // Chat state
-  isChatCollapsed   : false,
+  isChatCollapsed   : true,
   unreadMessages    : 0,
 
   // WebRTC Voice & Video Calling state (Synchronized Audio/Video & Lip-Sync)
@@ -251,6 +251,16 @@ const state = {
 };
 
 // ─── Seamless Mode Switcher ────────────────────────────────────────────────────
+function updateZoomChatButton(isOpen) {
+  if (!zoomChatToggleBtn) return;
+  const labelSpan = zoomChatToggleBtn.querySelector('span:not(.chat-badge)');
+  if (labelSpan) {
+    labelSpan.textContent = isOpen ? 'Hide Chat' : 'Show Chat';
+  }
+  zoomChatToggleBtn.classList.toggle('active', isOpen);
+  zoomChatToggleBtn.setAttribute('title', isOpen ? 'Hide Chat Sidebar' : 'Show Chat Sidebar');
+}
+
 function setMode(newMode) {
   if (state.currentMode === newMode) return;
   state.currentMode = newMode;
@@ -267,20 +277,31 @@ function setMode(newMode) {
 
   if (newMode === 'whiteboard') {
     if (chatSidebar) chatSidebar.classList.add('mode-hidden');
+    if (theaterChatBtn) theaterChatBtn.classList.add('hidden');
     requestAnimationFrame(() => {
       resizeCanvas();
       redrawAll();
     });
   } else if (newMode === 'watchparty') {
-    if (chatSidebar) chatSidebar.classList.remove('mode-hidden');
-    state.unreadMessages = 0;
-    updateChatBadges();
+    // Keep Room Chat hidden initially by default; display the main Watch Party interface
+    if (chatSidebar) {
+      chatSidebar.classList.remove('mode-hidden');
+      chatSidebar.classList.add('collapsed');
+    }
+    state.isChatCollapsed = true;
+    if (theaterChatBtn) theaterChatBtn.classList.remove('hidden');
+    updateZoomChatButton(false);
 
     wsSend({ type: 'video_sync_request' });
-    scrollToChatBottom();
   } else if (newMode === 'videocall') {
-    if (chatSidebar) chatSidebar.classList.remove('mode-hidden');
-    scrollToChatBottom();
+    // Keep Room Chat hidden initially by default; display the main Video Call interface
+    if (chatSidebar) {
+      chatSidebar.classList.remove('mode-hidden');
+      chatSidebar.classList.add('collapsed');
+    }
+    state.isChatCollapsed = true;
+    if (theaterChatBtn) theaterChatBtn.classList.add('hidden');
+    updateZoomChatButton(false);
 
     if (zoomActiveMeetingView) zoomActiveMeetingView.classList.remove('hidden');
     if (!state.isCallActive || !state.localVideoTrack || state.localVideoTrack.readyState !== 'live') {
@@ -290,6 +311,7 @@ function setMode(newMode) {
     }
   } else if (newMode === 'aiworkspace') {
     if (chatSidebar) chatSidebar.classList.add('mode-hidden');
+    if (theaterChatBtn) theaterChatBtn.classList.add('hidden');
     if (window._aiWorkspaceOnOpen) window._aiWorkspaceOnOpen();
   }
 
@@ -1881,10 +1903,14 @@ function toggleChatSidebar(collapse) {
     chatSidebar.classList.add('collapsed');
     if (state.currentMode === 'watchparty') {
       theaterChatBtn.classList.remove('hidden');
+    } else {
+      theaterChatBtn.classList.add('hidden');
     }
+    updateZoomChatButton(false);
   } else {
     chatSidebar.classList.remove('collapsed');
     theaterChatBtn.classList.add('hidden');
+    updateZoomChatButton(true);
     state.unreadMessages = 0;
     updateChatBadges();
     scrollToChatBottom();
@@ -1902,14 +1928,22 @@ function scrollToChatBottom() {
 }
 
 function updateChatBadges() {
+  const zoomChatBadge = document.getElementById('zoom-chat-badge');
   if (state.unreadMessages > 0) {
     navChatBadge.textContent = state.unreadMessages;
     navChatBadge.classList.remove('hidden');
     theaterChatBadge.textContent = state.unreadMessages;
     theaterChatBadge.classList.remove('hidden');
+    if (zoomChatBadge) {
+      zoomChatBadge.textContent = state.unreadMessages;
+      zoomChatBadge.classList.remove('hidden');
+    }
   } else {
     navChatBadge.classList.add('hidden');
     theaterChatBadge.classList.add('hidden');
+    if (zoomChatBadge) {
+      zoomChatBadge.classList.add('hidden');
+    }
   }
 }
 
