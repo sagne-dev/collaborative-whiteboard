@@ -537,6 +537,10 @@ window._appGetActiveTool = () => state.tool;
 window._appGetStrokes = () => [...state.strokes.values()].filter(s => !state.deleted.has(s.id));
 window._aiWsSend = wsSend;
 window._appGetUserName = () => state.userName || 'Sagne mieso';
+window._appGetRoomId = () => state.roomId;
+window._appGetUserId = () => state.userId;
+window._appGetUserColor = () => state.userColor;
+window._appGetUsers = () => [...state.userMap.values()];
 
 window._appInsertStickyNote = function(text, x, y, color = '#fef08a') {
   if (!text) return null;
@@ -652,6 +656,18 @@ function handleMessage(msg) {
 
       if (videoUrlInput) videoUrlInput.value = '';
       if (chatInput) chatInput.value = '';
+
+      // AI Workspace: initialize shared room conversation
+      if (window._aiWorkspaceOnInit) {
+        window._aiWorkspaceOnInit({
+          roomId: msg.roomId,
+          userId: msg.userId,
+          userName: state.userName,
+          userColor: msg.color,
+          users: msg.users || [],
+          aiWorkspace: msg.aiWorkspace || { messages: [], mode: 'chat', model: 'flash-lite', isGenerating: false }
+        });
+      }
       break;
     }
 
@@ -705,6 +721,9 @@ function handleMessage(msg) {
         }
       }
       renderZoomGrid();
+      if (window._aiWorkspaceOnUserJoined) {
+        window._aiWorkspaceOnUserJoined(msg);
+      }
       break;
     }
 
@@ -727,6 +746,9 @@ function handleMessage(msg) {
         state.pendingIncomingCall = null;
         stopRingtone();
         if (zoomIncomingOverlay) zoomIncomingOverlay.classList.add('hidden');
+      }
+      if (window._aiWorkspaceOnUserLeft) {
+        window._aiWorkspaceOnUserLeft(msg);
       }
       break;
     }
@@ -832,6 +854,19 @@ function handleMessage(msg) {
     case 'ai_math_graph': {
       if (msg.expression && window._aiShowMathPanel) {
         window._aiShowMathPanel(msg);
+      }
+      break;
+    }
+
+    // ── Collaborative AI Workspace ──
+    case 'ai_workspace_update':
+    case 'ai_workspace_response':
+    case 'ai_workspace_status':
+    case 'ai_workspace_clear':
+    case 'ai_workspace_mode':
+    case 'ai_workspace_model': {
+      if (window._aiWorkspaceHandleEvent) {
+        window._aiWorkspaceHandleEvent(msg);
       }
       break;
     }

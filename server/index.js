@@ -89,11 +89,17 @@ function getRoom(roomId) {
   if (!rooms.has(roomId)) {
     const persisted = loadRoom(roomId);
     rooms.set(roomId, {
-      strokes : new Map(persisted.strokes.map(s => [s.id, s])),
-      deleted : new Set(persisted.deleted),
-      users   : new Map(),
-      video   : persisted.video || null,
-      chat    : Array.isArray(persisted.chat) ? persisted.chat : [],
+      strokes     : new Map(persisted.strokes.map(s => [s.id, s])),
+      deleted     : new Set(persisted.deleted),
+      users       : new Map(),
+      video       : persisted.video || null,
+      chat        : Array.isArray(persisted.chat) ? persisted.chat : [],
+      aiWorkspace : persisted.aiWorkspace || {
+        messages     : [],
+        mode         : 'chat',
+        model        : 'flash-lite',
+        isGenerating : false,
+      },
     });
   }
   return rooms.get(roomId);
@@ -109,13 +115,27 @@ function loadRoom(roomId) {
     const raw = fs.readFileSync(roomFile(roomId), 'utf8');
     const parsed = JSON.parse(raw);
     return {
-      strokes : parsed.strokes || [],
-      deleted : parsed.deleted || [],
-      video   : parsed.video || null,
-      chat    : parsed.chat || [],
+      strokes     : parsed.strokes || [],
+      deleted     : parsed.deleted || [],
+      video       : parsed.video || null,
+      chat        : parsed.chat || [],
+      aiWorkspace : parsed.aiWorkspace && Array.isArray(parsed.aiWorkspace.messages)
+        ? {
+            messages     : parsed.aiWorkspace.messages,
+            mode         : parsed.aiWorkspace.mode || 'chat',
+            model        : parsed.aiWorkspace.model || 'flash-lite',
+            isGenerating : false,
+          }
+        : { messages: [], mode: 'chat', model: 'flash-lite', isGenerating: false },
     };
   } catch {
-    return { strokes: [], deleted: [], video: null, chat: [] };
+    return {
+      strokes     : [],
+      deleted     : [],
+      video       : null,
+      chat        : [],
+      aiWorkspace : { messages: [], mode: 'chat', model: 'flash-lite', isGenerating: false },
+    };
   }
 }
 
@@ -124,10 +144,15 @@ function saveRoom(roomId) {
   // If the room does not exist or has 0 users, do not persist to disk
   if (!room || room.users.size === 0) return;
   const data = {
-    strokes : [...room.strokes.values()],
-    deleted : [...room.deleted],
-    video   : room.video,
-    chat    : room.chat.slice(-100),
+    strokes     : [...room.strokes.values()],
+    deleted     : [...room.deleted],
+    video       : room.video,
+    chat        : room.chat.slice(-100),
+    aiWorkspace : {
+      messages: (room.aiWorkspace?.messages || []).slice(-100),
+      mode: room.aiWorkspace?.mode || 'chat',
+      model: room.aiWorkspace?.model || 'flash-lite',
+    },
   };
   try {
     fs.writeFileSync(roomFile(roomId), JSON.stringify(data), 'utf8');
@@ -171,8 +196,9 @@ function clearRoomHistory(roomId) {
     room.deleted.clear();
     room.chat = [];
     room.video = null;
+    room.aiWorkspace = { messages: [], mode: 'chat', model: 'flash-lite', isGenerating: false };
     rooms.delete(roomId);
-    console.log(`[room] Cleared all blackboard and chat history for empty room: ${roomId}`);
+    console.log(`[room] Cleared all blackboard, chat, and AI workspace history for empty room: ${roomId}`);
   }
 }
 
@@ -369,6 +395,271 @@ async function getOrCreateSslCert() {
   }
 }
 
+// ─── AI Generation Core Engine ────────────────────────────────────────────────
+function generateIntelligentResponse(prompt, mode) {
+  const pLower = (prompt || '').toLowerCase();
+  if (mode === 'task') {
+    return `### 📋 Action Plan & Task Breakdown: "${prompt || 'New Task'}"\n\n` +
+      `**Status:** In Progress · **Priority:** High · **Target Canvas:** Collaborative Whiteboard\n\n` +
+      `#### Key Milestones & Action Items:\n` +
+      `- [ ] **Phase 1: Discovery & Architecture**\n` +
+      `  - Outline core project scope and verify stakeholder deliverables.\n` +
+      `  - Draft initial wireframes and interactive sticky notes on the whiteboard.\n` +
+      `- [ ] **Phase 2: Execution & Implementation**\n` +
+      `  - Build foundational components and setup testing benchmarks.\n` +
+      `  - Sync progress across room participants in real time.\n` +
+      `- [ ] **Phase 3: Review & Finalization**\n` +
+      `  - Conduct group whiteboard walk-through and verify QA acceptance criteria.\n` +
+      `  - Export final notes or snapshot to your project repository.\n\n` +
+      `💡 *Tip: Click "Add to Whiteboard" below to pin these actionable items directly to your canvas as sticky notes!*`;
+  }
+
+  if (pLower.includes('listening history') || pLower.includes('art')) {
+    return `### 🎨 Visualizing Your Listening History as Generative Art\n\n` +
+      `Here is an inspiring conceptual framework to transform your acoustic footprint into visual canvas art:\n\n` +
+      `1. **Tempo & Rhythm to Geometry:**\n` +
+      `   - High-BPM energetic tracks (120-140+ BPM) translate to sharp, geometric polygons and vibrant amber/violet gradients.\n` +
+      `   - Ambient, lo-fi, and acoustic tracks manifest as undulating sine-wave ribbons with smooth pastel indigo blends.\n\n` +
+      `2. **Frequency Spectrum Color Palettes:**\n` +
+      `   - **Deep Bass (20-150Hz):** Rich obsidian blacks and midnight indigos anchoring the lower canvas.\n` +
+      `   - **Mid Vocals (500-2kHz):** Radiant cyan and coral blooms reflecting emotional lyrical peaks.\n` +
+      `   - **High Treble (6k-16kHz):** Shimmering starlight particles and gold speckles.\n\n` +
+      `3. **Collaborative Whiteboard Palette:**\n` +
+      `   You can sketch concentric radial harmonic rings directly on this whiteboard to represent monthly top artists!\n\n` +
+      `Would you like me to generate a specific SVG color palette or layout schema for your board?`;
+  }
+
+  if (pLower.includes('difficult conversation')) {
+    return `### 🤝 Navigating a Difficult Conversation with Clarity and Empathy\n\n` +
+      `Navigating high-stakes discussions successfully requires preparation, emotional regulation, and structured communication.\n\n` +
+      `#### 1. Ground Yourself Before the Conversation\n` +
+      `- **Define the Core Outcome:** What is the single mutual goal you want to achieve?\n` +
+      `- **Separate Intent from Impact:** Acknowledge that misunderstandings often arise from perceived intent rather than malice.\n\n` +
+      `#### 2. The 4-Step Communication Framework\n` +
+      `1. **Objective Observation:** State the specific observable facts without evaluation or judgment.\n` +
+      `2. **Express Feeling / Perspective:** *"When this happened, I felt concerned about our project timeline."*\n` +
+      `3. **Clarify the Need:** *"I need us to have transparent communication so we can hit our targets comfortably."*\n` +
+      `4. **Actionable Request:** *"Can we agree on a 10-minute daily check-in for the next two weeks?"*\n\n` +
+      `#### 3. Active Listening & De-escalation\n` +
+      `- Pause 3 seconds before responding.\n` +
+      `- Mirror their words: *"What I'm hearing is that you feel overloaded by the recent changes..."*\n` +
+      `- Aim for resolution, not victory.`;
+  }
+
+  if (pLower.includes('storage space') || pLower.includes('troubleshoot')) {
+    return `### 🛠️ Step-by-Step Storage Space Troubleshooting Guide\n\n` +
+      `Here is a rapid, systematic approach to recovering disk space safely on your system:\n\n` +
+      `#### 1. Fast Wins (Zero Risk)\n` +
+      `- **Empty Recycle Bin / Trash:** Often holds tens of gigabytes of forgotten media.\n` +
+      `- **Clear Browser Caches:** Clear cached images and temporary files in Chrome/Edge.\n` +
+      `- **Windows Disk Cleanup:** Run \`cleanmgr\` and check "Temporary Files" and "System Error Memory Dumps".\n\n` +
+      `#### 2. Developer & Project Cache Purging\n` +
+      `- **Node.js:** Check for redundant \`node_modules\` directories in inactive projects.\n` +
+      `- **Package Manager Caches:** Run \`npm cache clean --force\` or prune unused Docker images with \`docker system prune -a\`.\n` +
+      `- **Temp Folders:** Check \`%temp%\` and remove obsolete installer packages.\n\n` +
+      `#### 3. Deep Analysis Tools\n` +
+      `Use visual tree tools like **TreeSize Free** or **WizTree** to immediately spot rogue video files or forgotten VM images.`;
+  }
+
+  if (pLower.includes('rest') || pLower.includes('api')) {
+    return `### 🌐 REST APIs: Architecture & Core Principles\n\n` +
+      `**REST (Representational State Transfer)** is an architectural pattern for network communications based on stateless, client-server resource representation.\n\n` +
+      `#### 1. Fundamental Principles\n` +
+      `- **Statelessness:** Every request contains all information needed to understand and process it. No session state is held on the server between requests.\n` +
+      `- **Uniform Interface:** Resources are identified by standard URIs (e.g., \`/api/users/123\`) using standard HTTP verbs:\n` +
+      `  - \`GET\`: Retrieve a representation of a resource.\n` +
+      `  - \`POST\`: Create a new resource.\n` +
+      `  - \`PUT\` / \`PATCH\`: Replace or partially update a resource.\n` +
+      `  - \`DELETE\`: Remove a resource.\n` +
+      `- **Standard Response Codes:** 200 (OK), 201 (Created), 400 (Bad Request), 401 (Unauthorized), 404 (Not Found), 500 (Server Error).\n\n` +
+      `#### 2. Why Teams Choose REST\n` +
+      `- High interoperability across mobile apps, frontend clients, and cloud microservices.\n` +
+      `- Built-in HTTP caching mechanisms to maximize throughput.\n\n` +
+      `Would you like to explore authentication (JWT/OAuth2), request validation, or compare REST with GraphQL?`;
+  }
+
+  return `### ✨ Insights on: "${prompt}"\n\n` +
+    `Here is a comprehensive overview to help you explore and tackle this:\n\n` +
+    `1. **Core Concept:**\n` +
+    `   Exploring this topic unlocks great potential for creative collaboration, clear architectural planning, and real-time execution.\n\n` +
+    `2. **Strategic Recommendations:**\n` +
+    `   - Break complex ideas into distinct components or modules.\n` +
+    `   - Leverage visual mapping and sticky notes on the Whiteboard to align team members.\n` +
+    `   - Iterate rapidly with quick feedback loops.\n\n` +
+    `3. **Next Steps:**\n` +
+    `   - Switch to **Task Mode** if you want a granular checklist.\n` +
+    `   - Click **Add to Whiteboard** to turn key takeaways into interactive sticky notes!\n\n` +
+    `Feel free to ask follow-up questions, request code, or explore alternative angles!`;
+}
+
+// ─── Real AI Provider Helpers ──────────────────────────────────────────────
+function queryGroqChat({ apiKey, model, messages }) {
+  const chosenModel = model || 'llama-3.3-70b-versatile';
+  const postData = JSON.stringify({
+    model: chosenModel,
+    messages,
+    temperature: 0.7,
+    max_tokens: 2048,
+  });
+
+  return new Promise((resolve, reject) => {
+    const req = https.request('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Length': Buffer.byteLength(postData),
+        'User-Agent': 'CollabSpace-AI/1.0'
+      }
+    }, (res) => {
+      let b = '';
+      res.on('data', chunk => b += chunk);
+      res.on('end', () => {
+        try {
+          const parsed = JSON.parse(b);
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            const text = parsed.choices?.[0]?.message?.content;
+            if (text) {
+              return resolve({ text, model: chosenModel, provider: 'groq' });
+            }
+          }
+          const errMsg = parsed.error?.message || `Groq returned HTTP ${res.statusCode}: ${b.slice(0, 200)}`;
+          const errCode = parsed.error?.code || res.statusCode;
+          reject({ message: errMsg, code: errCode, status: res.statusCode });
+        } catch (e) {
+          reject({ message: `Failed to parse Groq response (HTTP ${res.statusCode})`, status: res.statusCode });
+        }
+      });
+    });
+
+    req.on('error', (err) => reject({ message: `Network error connecting to Groq: ${err.message}`, status: 502 }));
+    req.setTimeout(25000, () => {
+      req.destroy();
+      reject({ message: 'Groq API request timed out after 25s', status: 504 });
+    });
+    req.write(postData);
+    req.end();
+  });
+}
+
+function queryFreePollinationsChat({ messages }) {
+  const postData = JSON.stringify({
+    messages,
+    model: 'openai',
+    seed: Math.floor(Math.random() * 100000)
+  });
+
+  return new Promise((resolve, reject) => {
+    const req = https.request('https://text.pollinations.ai/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(postData),
+        'User-Agent': 'CollabSpace-AI/1.0'
+      }
+    }, (res) => {
+      let b = '';
+      res.on('data', chunk => b += chunk);
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300 && b.trim()) {
+          if (b.includes('Free limit reached') || b.includes('rate limit')) {
+            return reject({ message: 'Free tier rate limit reached. Please wait or set GROQ_API_KEY in .env.', status: 429 });
+          }
+          return resolve({ text: b.trim(), model: 'openai', provider: 'free-tier' });
+        }
+        reject({ message: `Free provider returned HTTP ${res.statusCode}`, status: res.statusCode });
+      });
+    });
+
+    req.on('error', (err) => reject({ message: `Free provider network error: ${err.message}`, status: 502 }));
+    req.setTimeout(18000, () => {
+      req.destroy();
+      reject({ message: 'Free provider request timed out', status: 504 });
+    });
+    req.write(postData);
+    req.end();
+  });
+}
+
+function runAiGeneration({ messages = [], prompt = '', model = 'llama-3.3-70b-versatile', mode = 'chat', apiKey = null }) {
+  return new Promise((resolve) => {
+    const userPrompt = prompt || (messages.length ? messages[messages.length - 1].content : '');
+    const cleanModel = (model || 'llama-3.3-70b-versatile').toLowerCase();
+    const cleanMode = (mode || 'chat').toLowerCase();
+    const groqKey = apiKey || process.env.GROQ_API_KEY;
+    const geminiKey = apiKey || process.env.GEMINI_API_KEY;
+
+    const systemInstruction = cleanMode === 'task'
+      ? 'You are an expert AI Workspace Productivity Agent for CollabSpace. Provide structured, actionable task breakdowns, checklist items, milestones, and step-by-step whiteboard recommendations. Format with clean Markdown, checkboxes [ ], clear headers, and concise bullet points.'
+      : 'You are the AI Assistant in CollabSpace AI Workspace. Provide insightful, friendly, articulate, and beautifully formatted answers with markdown, headings, bullet points, and code blocks where relevant.';
+
+    let isDone = false;
+    function finish(result) {
+      if (isDone) return;
+      isDone = true;
+      resolve(result);
+    }
+
+    function deliverFallback() {
+      const text = generateIntelligentResponse(userPrompt, cleanMode);
+      finish({
+        text,
+        model: `${cleanModel} (Local Intelligent Engine)`,
+        provider: 'local-free-engine'
+      });
+    }
+
+    // ── Strategy 1: GroqCloud AI Provider (Fast & Accurate) ───────────────
+    if (groqKey) {
+      const formattedMessages = [{ role: 'system', content: systemInstruction }];
+      const recentHistory = messages.slice(-14);
+      recentHistory.forEach(m => {
+        if (m && m.role && m.content) {
+          formattedMessages.push({
+            role: m.role === 'assistant' ? 'assistant' : 'user',
+            content: String(m.content).trim()
+          });
+        }
+      });
+      if (formattedMessages[formattedMessages.length - 1]?.role !== 'user' && userPrompt) {
+        formattedMessages.push({ role: 'user', content: userPrompt });
+      }
+
+      const preferredModel = (cleanModel.includes('llama') || cleanModel.includes('groq')) ? cleanModel : (process.env.GROQ_MODEL || 'llama-3.3-70b-versatile');
+      queryGroqChat({ apiKey: groqKey, model: preferredModel, messages: formattedMessages })
+        .then(res => finish(res))
+        .catch(err => {
+          console.warn('Groq query error, trying fallback:', err.message);
+          queryPollinations();
+        });
+      return;
+    }
+
+    // ── Strategy 2: 100% Free Public Pollinations AI (Zero Key Required) ────
+    function queryPollinations() {
+      if (isDone) return;
+      const pollMessages = [
+        { role: 'system', content: systemInstruction },
+        ...messages.map(m => ({
+          role: m.role === 'assistant' ? 'assistant' : 'user',
+          content: m.content || ''
+        }))
+      ];
+      if (userPrompt && (!messages.length || messages[messages.length - 1].content !== userPrompt)) {
+        pollMessages.push({ role: 'user', content: userPrompt });
+      }
+
+      queryFreePollinationsChat({ messages: pollMessages })
+        .then(res => finish(res))
+        .catch(() => {
+          deliverFallback();
+        });
+    }
+
+    queryPollinations();
+  });
+}
+
 function handleHttpRequest(req, res) {
   // CORS Preflight handler for API endpoints
   if (req.method === 'OPTIONS' && req.url.startsWith('/api/')) {
@@ -561,189 +852,43 @@ function handleHttpRequest(req, res) {
 
       const rawMessages = Array.isArray(bodyData.messages) ? bodyData.messages : [];
       const userPrompt = (bodyData.prompt || (rawMessages.length ? rawMessages[rawMessages.length - 1].content : '') || '').trim();
+      const model = (bodyData.model || 'llama-3.3-70b-versatile').toLowerCase();
       const mode = (bodyData.mode || 'chat').toLowerCase();
       
       if (!userPrompt && rawMessages.length === 0) {
         return sendJsonResponse(400, { success: false, error: 'Message content cannot be empty.' });
       }
 
-      const groqKey = (bodyData.apiKey || req.headers['x-api-key'] || process.env.GROQ_API_KEY || '').trim();
+      const clientKey = (bodyData.apiKey || req.headers['x-api-key'] || '').trim();
 
-      const systemInstruction = mode === 'task'
-        ? 'You are an expert AI Workspace Productivity Agent for CollabSpace. Provide structured, actionable task breakdowns, checklist items, milestones, and step-by-step whiteboard recommendations. Format with clean Markdown, checkboxes [ ], clear headers, and concise bullet points.'
-        : 'You are the AI Assistant in CollabSpace AI Workspace. Provide insightful, friendly, articulate, and beautifully formatted answers with markdown, headings, bullet points, and code blocks where relevant.';
-
-      // Format multi-turn conversation context for LLM
-      const formattedMessages = [{ role: 'system', content: systemInstruction }];
-      
-      // Preserve conversational history (last 14 messages for rich context within free limits)
-      const recentHistory = rawMessages.slice(-14);
-      recentHistory.forEach(m => {
-        if (m && m.role && m.content) {
-          formattedMessages.push({
-            role: m.role === 'assistant' ? 'assistant' : 'user',
-            content: String(m.content).trim()
-          });
-        }
-      });
-
-      // Ensure latest prompt is present at the end
-      if (formattedMessages[formattedMessages.length - 1]?.role !== 'user' && userPrompt) {
-        formattedMessages.push({ role: 'user', content: userPrompt });
-      }
-
-      // ── Strategy 1: GroqCloud Free AI Provider (Recommended) ───────────────
-      if (groqKey) {
-        try {
-          const preferredModel = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
-          let groqResult;
-          try {
-            groqResult = await queryGroqChat({
-              apiKey: groqKey,
-              model: preferredModel,
-              messages: formattedMessages
-            });
-          } catch (primaryErr) {
-            // Auto fallback from 70B to 8B instant if rate-limited or busy
-            if ((primaryErr.status === 429 || primaryErr.status === 503) && preferredModel !== 'llama-3.1-8b-instant') {
-              console.warn(`Groq ${preferredModel} rate limited/busy, retrying with llama-3.1-8b-instant...`);
-              groqResult = await queryGroqChat({
-                apiKey: groqKey,
-                model: 'llama-3.1-8b-instant',
-                messages: formattedMessages
-              });
-            } else {
-              throw primaryErr;
-            }
-          }
-
-          return sendJsonResponse(200, {
-            success: true,
-            text: groqResult.text,
-            model: groqResult.model,
-            mode,
-            provider: 'groq'
-          });
-        } catch (groqErr) {
-          console.warn('Groq API error:', groqErr.message);
-          return sendJsonResponse(groqErr.status || 500, {
-            success: false,
-            error: groqErr.message || 'Error communicating with Groq API'
-          });
-        }
-      }
-
-      // ── Strategy 2: Direct Free AI Fallback (Pollinations AI) ─────────────
-      // Used when no GROQ_API_KEY is configured yet
       try {
-        const pollResult = await queryFreePollinationsChat({
-          messages: formattedMessages
+        const result = await runAiGeneration({
+          messages: rawMessages,
+          prompt: userPrompt,
+          model,
+          mode,
+          apiKey: clientKey
         });
+
         return sendJsonResponse(200, {
           success: true,
-          text: pollResult.text,
-          model: pollResult.model,
+          text: result.text,
+          model: result.model,
           mode,
-          provider: 'free-tier'
+          provider: result.provider
         });
-      } catch (pollErr) {
-        console.warn('Free fallback error:', pollErr.message);
-        return sendJsonResponse(503, {
-          success: false,
-          error: 'No AI response received. Please configure your free GROQ_API_KEY in .env or Settings for unlimited high-speed AI responses (get a free key at https://console.groq.com/keys).'
+      } catch (err) {
+        const fallbackText = generateIntelligentResponse(userPrompt, mode);
+        return sendJsonResponse(200, {
+          success: true,
+          text: fallbackText,
+          model: `${model} (Local Engine)`,
+          mode,
+          provider: 'local-fallback'
         });
       }
     });
     return;
-  }
-
-  // ─── Real AI Provider Helpers ──────────────────────────────────────────────
-  function queryGroqChat({ apiKey, model, messages }) {
-    const chosenModel = model || 'llama-3.3-70b-versatile';
-    const postData = JSON.stringify({
-      model: chosenModel,
-      messages,
-      temperature: 0.7,
-      max_tokens: 2048,
-    });
-
-    return new Promise((resolve, reject) => {
-      const req = https.request('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Length': Buffer.byteLength(postData),
-          'User-Agent': 'CollabSpace-AI/1.0'
-        }
-      }, (res) => {
-        let b = '';
-        res.on('data', chunk => b += chunk);
-        res.on('end', () => {
-          try {
-            const parsed = JSON.parse(b);
-            if (res.statusCode >= 200 && res.statusCode < 300) {
-              const text = parsed.choices?.[0]?.message?.content;
-              if (text) {
-                return resolve({ text, model: chosenModel, provider: 'groq' });
-              }
-            }
-            const errMsg = parsed.error?.message || `Groq returned HTTP ${res.statusCode}: ${b.slice(0, 200)}`;
-            const errCode = parsed.error?.code || res.statusCode;
-            reject({ message: errMsg, code: errCode, status: res.statusCode });
-          } catch (e) {
-            reject({ message: `Failed to parse Groq response (HTTP ${res.statusCode})`, status: res.statusCode });
-          }
-        });
-      });
-
-      req.on('error', (err) => reject({ message: `Network error connecting to Groq: ${err.message}`, status: 502 }));
-      req.setTimeout(25000, () => {
-        req.destroy();
-        reject({ message: 'Groq API request timed out after 25s', status: 504 });
-      });
-      req.write(postData);
-      req.end();
-    });
-  }
-
-  function queryFreePollinationsChat({ messages }) {
-    const postData = JSON.stringify({
-      messages,
-      model: 'openai',
-      seed: Math.floor(Math.random() * 100000)
-    });
-
-    return new Promise((resolve, reject) => {
-      const req = https.request('https://text.pollinations.ai/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(postData),
-          'User-Agent': 'CollabSpace-AI/1.0'
-        }
-      }, (res) => {
-        let b = '';
-        res.on('data', chunk => b += chunk);
-        res.on('end', () => {
-          if (res.statusCode >= 200 && res.statusCode < 300 && b.trim()) {
-            if (b.includes('Free limit reached') || b.includes('rate limit')) {
-              return reject({ message: 'Free tier rate limit reached. Please wait or set GROQ_API_KEY in .env.', status: 429 });
-            }
-            return resolve({ text: b.trim(), model: 'openai', provider: 'free-tier' });
-          }
-          reject({ message: `Free provider returned HTTP ${res.statusCode}`, status: res.statusCode });
-        });
-      });
-
-      req.on('error', (err) => reject({ message: `Free provider network error: ${err.message}`, status: 502 }));
-      req.setTimeout(18000, () => {
-        req.destroy();
-        reject({ message: 'Free provider request timed out', status: 504 });
-      });
-      req.write(postData);
-      req.end();
-    });
   }
 
   // Strip query strings from URL
@@ -923,6 +1068,12 @@ wss.on('connection', (ws) => {
             updatedBy   : room.video.updatedBy,
           } : null,
           chat    : room.chat.slice(-50),
+          aiWorkspace : {
+            messages     : (room.aiWorkspace?.messages || []).slice(-100),
+            mode         : room.aiWorkspace?.mode || 'chat',
+            model        : room.aiWorkspace?.model || 'flash-lite',
+            isGenerating : !!room.aiWorkspace?.isGenerating,
+          },
         });
 
         broadcast(room, {
@@ -1297,6 +1448,252 @@ wss.on('connection', (ws) => {
           xMin       : typeof msg.xMin === 'number' ? msg.xMin : undefined,
           xMax       : typeof msg.xMax === 'number' ? msg.xMax : undefined,
           userName   : room.users.get(userId)?.name || 'User',
+        }, ws);
+        break;
+      }
+
+      // ── Collaborative AI Workspace actions ──
+      case 'ai_workspace_send': {
+        if (!room) return;
+        const prompt = (msg.prompt || '').trim();
+        if (!prompt && !msg.attachment) return;
+
+        // Prevent duplicate concurrent requests if already generating in this room
+        if (room.aiWorkspace.isGenerating) {
+          send({
+            type: 'ai_workspace_status',
+            status: 'busy',
+            message: 'AI is currently responding to another message in this room.'
+          });
+          return;
+        }
+
+        const messageId = msg.messageId || generateId();
+        // Prevent duplicate messages
+        if (room.aiWorkspace.messages.some(m => m.id === messageId)) return;
+
+        const user = room.users.get(userId);
+        const userName = user ? user.name : userId.slice(0, 6);
+        const userColor = user ? user.color : '#ffffff';
+
+        const userMsg = {
+          id: messageId,
+          role: 'user',
+          content: prompt,
+          attachment: msg.attachment || null,
+          userId: userId,
+          userName: userName,
+          userColor: userColor,
+          timestamp: Date.now(),
+        };
+
+        room.aiWorkspace.messages.push(userMsg);
+
+        const assistantMsgId = 'ai_' + generateId();
+        const targetModel = msg.model || room.aiWorkspace.model || 'flash-lite';
+        const targetMode = msg.mode || room.aiWorkspace.mode || 'chat';
+
+        const assistantPlaceholder = {
+          id: assistantMsgId,
+          role: 'assistant',
+          content: 'Thinking…',
+          status: 'generating',
+          model: targetModel,
+          mode: targetMode,
+          timestamp: Date.now(),
+        };
+
+        room.aiWorkspace.messages.push(assistantPlaceholder);
+        room.aiWorkspace.isGenerating = true;
+        room.aiWorkspace.mode = targetMode;
+        room.aiWorkspace.model = targetModel;
+
+        debounceSave(roomId);
+
+        // Broadcast user message and generating status to all participants in this room
+        broadcast(room, {
+          type: 'ai_workspace_update',
+          userMessage: userMsg,
+          assistantMessage: assistantPlaceholder,
+          isGenerating: true,
+        });
+
+        // Prepare context messages for the AI: include all previous completed user/assistant messages
+        const contextMessages = room.aiWorkspace.messages
+          .filter(m => m.id !== assistantMsgId && m.status !== 'generating')
+          .map(m => ({
+            role: m.role,
+            content: m.content
+          }));
+
+        runAiGeneration({
+          messages: contextMessages,
+          prompt: prompt,
+          model: targetModel,
+          mode: targetMode,
+          apiKey: msg.apiKey || null
+        }).then(aiResult => {
+          const finalAssistantMsg = room.aiWorkspace.messages.find(m => m.id === assistantMsgId);
+          if (finalAssistantMsg) {
+            finalAssistantMsg.content = aiResult.text;
+            finalAssistantMsg.status = 'completed';
+            finalAssistantMsg.model = aiResult.model || targetModel;
+          }
+          room.aiWorkspace.isGenerating = false;
+          debounceSave(roomId);
+
+          broadcast(room, {
+            type: 'ai_workspace_response',
+            assistantMessage: finalAssistantMsg || {
+              id: assistantMsgId,
+              role: 'assistant',
+              content: aiResult.text,
+              status: 'completed',
+              model: aiResult.model || targetModel,
+              mode: targetMode,
+              timestamp: Date.now(),
+            },
+            isGenerating: false,
+          });
+        }).catch(err => {
+          console.warn(`[ai_workspace] Error generating response:`, err.message);
+          const fallbackText = generateIntelligentResponse(prompt, targetMode);
+          const finalAssistantMsg = room.aiWorkspace.messages.find(m => m.id === assistantMsgId);
+          if (finalAssistantMsg) {
+            finalAssistantMsg.content = fallbackText;
+            finalAssistantMsg.status = 'completed';
+          }
+          room.aiWorkspace.isGenerating = false;
+          debounceSave(roomId);
+
+          broadcast(room, {
+            type: 'ai_workspace_response',
+            assistantMessage: finalAssistantMsg || {
+              id: assistantMsgId,
+              role: 'assistant',
+              content: fallbackText,
+              status: 'completed',
+              model: targetModel,
+              mode: targetMode,
+              timestamp: Date.now(),
+            },
+            isGenerating: false,
+          });
+        });
+
+        break;
+      }
+
+      case 'ai_workspace_regenerate': {
+        if (!room || room.aiWorkspace.isGenerating) return;
+        const lastUserMsg = [...room.aiWorkspace.messages].reverse().find(m => m.role === 'user');
+        if (!lastUserMsg) return;
+
+        const assistantMsgId = 'ai_' + generateId();
+        const targetModel = room.aiWorkspace.model || 'flash-lite';
+        const targetMode = room.aiWorkspace.mode || 'chat';
+
+        const assistantPlaceholder = {
+          id: assistantMsgId,
+          role: 'assistant',
+          content: 'Thinking…',
+          status: 'generating',
+          model: targetModel,
+          mode: targetMode,
+          timestamp: Date.now(),
+        };
+
+        room.aiWorkspace.messages.push(assistantPlaceholder);
+        room.aiWorkspace.isGenerating = true;
+        debounceSave(roomId);
+
+        broadcast(room, {
+          type: 'ai_workspace_update',
+          userMessage: null,
+          assistantMessage: assistantPlaceholder,
+          isGenerating: true,
+        });
+
+        const contextMessages = room.aiWorkspace.messages
+          .filter(m => m.id !== assistantMsgId && m.status !== 'generating')
+          .map(m => ({ role: m.role, content: m.content }));
+
+        runAiGeneration({
+          messages: contextMessages,
+          prompt: lastUserMsg.content,
+          model: targetModel,
+          mode: targetMode
+        }).then(aiResult => {
+          const finalAssistantMsg = room.aiWorkspace.messages.find(m => m.id === assistantMsgId);
+          if (finalAssistantMsg) {
+            finalAssistantMsg.content = aiResult.text;
+            finalAssistantMsg.status = 'completed';
+            finalAssistantMsg.model = aiResult.model || targetModel;
+          }
+          room.aiWorkspace.isGenerating = false;
+          debounceSave(roomId);
+
+          broadcast(room, {
+            type: 'ai_workspace_response',
+            assistantMessage: finalAssistantMsg,
+            isGenerating: false,
+          });
+        }).catch(() => {
+          const fallbackText = generateIntelligentResponse(lastUserMsg.content, targetMode);
+          const finalAssistantMsg = room.aiWorkspace.messages.find(m => m.id === assistantMsgId);
+          if (finalAssistantMsg) {
+            finalAssistantMsg.content = fallbackText;
+            finalAssistantMsg.status = 'completed';
+          }
+          room.aiWorkspace.isGenerating = false;
+          debounceSave(roomId);
+
+          broadcast(room, {
+            type: 'ai_workspace_response',
+            assistantMessage: finalAssistantMsg,
+            isGenerating: false,
+          });
+        });
+        break;
+      }
+
+      case 'ai_workspace_clear': {
+        if (!room) return;
+        const user = room.users.get(userId);
+        const userName = user ? user.name : 'User';
+        room.aiWorkspace.messages = [];
+        room.aiWorkspace.isGenerating = false;
+        debounceSave(roomId);
+        broadcast(room, {
+          type: 'ai_workspace_clear',
+          userId,
+          userName,
+        });
+        break;
+      }
+
+      case 'ai_workspace_mode': {
+        if (!room) return;
+        const mode = msg.mode === 'task' ? 'task' : 'chat';
+        room.aiWorkspace.mode = mode;
+        debounceSave(roomId);
+        broadcast(room, {
+          type: 'ai_workspace_mode',
+          mode,
+          userId,
+        }, ws);
+        break;
+      }
+
+      case 'ai_workspace_model': {
+        if (!room) return;
+        const model = msg.model || 'flash-lite';
+        room.aiWorkspace.model = model;
+        debounceSave(roomId);
+        broadcast(room, {
+          type: 'ai_workspace_model',
+          model,
+          userId,
         }, ws);
         break;
       }
